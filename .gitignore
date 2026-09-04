@@ -1,3 +1,7 @@
 supabase/.temp/
 click-pwa/
 node_modules/
+click-practice/
+desktop-app/dist/
+desktop-app/node_modules/
+*.vsix

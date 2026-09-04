@@ -125,7 +125,7 @@ async function syncAndOpenNext(context: vscode.ExtensionContext, announce = true
     return;
   }
   try {
-    const data = (await api(context, "practiceExtensionSync", { device_token: token })) as {
+    const data = (await api(context, "practiceExtensionSync", { device_token: token })) as unknown as {
       user: { name: string };
       questions: PracticeQuestion[];
     };
@@ -153,7 +153,7 @@ async function claimPairing(context: vscode.ExtensionContext, code: string) {
     const data = (await api(context, "claimPracticePairing", {
       pair_code: code,
       device_name: os.hostname() + " (VS Code)",
-    })) as { device_token: string };
+    })) as unknown as { device_token: string };
     await context.secrets.store(SECRET_DEVICE_TOKEN, data.device_token);
     vscode.window.showInformationMessage("CLICK: paired successfully!");
     await syncAndOpenNext(context, false);
