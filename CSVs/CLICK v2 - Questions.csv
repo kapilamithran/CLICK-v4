@@ -1,0 +1,399 @@
+question_id,stage_id,chapter_id,type,prompt,code,answer,explanation,hint,xp,order,active
+Q000001,STG000,CH0001,BLANK,"Complete the core idea: In this chapter, **character set** means or describes ________.",,"letters, digits, special characters and white space","Character set: The C character set is the collection of characters that can be used to write C source code. It includes letters, digits, special characters, and white-space characters.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000002,STG000,CH0001,FIND_ERROR,You just recalled the rule for **character set**. Which example breaks that rule?,,int age = 18；,"The final mark shown here is a full-width semicolon, not the normal C semicolon ;.","Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000003,STG000,CH0001,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **character set**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ printf(""A""); return 0; }",A,"The program produces `A`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000004,STG000,CH0001,TYPE_CODE,"Gist: A one-line C answer can combine the current **character set** rule with earlier ideas about the earlier C rules. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`int age = 18;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int age = 18;,A suitable answer is `int age = 18;`. It follows the current character set rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000005,STG000,CH0001,MCQ,Final recap: Which choice best follows the chapter rules for **character set**?,,int age = 18;,"`int age = 18;` is the best choice. Uses letters, digits, spaces, = and ; from the C character set. The other choices break a rule from this chapter or one of the earlier ideas.","Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000006,STG000,CH0002,BLANK,"Complete the core idea: In this chapter, **token** means or describes ________.",,smallest meaningful units,Token: A token is one of the smallest meaningful units in a C program. C programs are built by arranging tokens according to C syntax.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000007,STG000,CH0002,FIND_ERROR,You just recalled the rule for **token**. Which example breaks that rule?,,intcount = 10;,"`intcount` is one identifier, not the two tokens `int` and `count`.","Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000008,STG000,CH0002,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **token**. It also reuses the earlier idea of **character set**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ int count=10; printf(""%d"",count); return 0; }",10,"The program produces `10`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000009,STG000,CH0002,TYPE_CODE,"Gist: A one-line C answer can combine the current **token** rule with earlier ideas about character set. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`int count = 10;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int count = 10;,A suitable answer is `int count = 10;`. It follows the current token rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000010,STG000,CH0002,MCQ,Final recap: Which choice best follows the chapter rules for **token** while also respecting the earlier **character set** idea?,,int count = 10;,`int count = 10;` is the best choice. Can be separated into meaningful tokens: int | count | = | 10 | ; The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000011,STG000,CH0003,BLANK,"Complete the core idea: In this chapter, **keyword** means or describes ________.",,predefined meaning,"Keyword: A keyword is a word with a predefined meaning in C. An identifier is a programmer-chosen name for a variable, function, array, or another program element.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000012,STG000,CH0003,FIND_ERROR,You just recalled the rule for **keyword**. Which example breaks that rule?,,int int = 18;,`int` cannot be reused as an identifier.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000013,STG000,CH0003,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **keyword**. It also reuses the earlier idea of **token**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ int age=18; printf(""%d"",age); return 0; }",18,"The program produces `18`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000014,STG000,CH0003,TYPE_CODE,"Gist: A one-line C answer can combine the current **keyword** rule with earlier ideas about token, character set. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`int age = 18;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int age = 18;,A suitable answer is `int age = 18;`. It follows the current keyword rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000015,STG000,CH0003,MCQ,Final recap: Which choice best follows the chapter rules for **keyword** while also respecting the earlier **token** idea and **character set**?,,int age = 18;,`int age = 18;` is the best choice. `int` is a keyword and `age` is an identifier. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000016,STG000,CH0004,BLANK,"Complete the core idea: In this chapter, **identifier** means or describes ________.",,"letters, digits and underscores","Identifier: An identifier is a name used for a program element. In beginner ANSI C, it should begin with a letter, continue with letters, digits, or underscores, contain no spaces, and must not be a keyword.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000017,STG000,CH0004,FIND_ERROR,You just recalled the rule for **identifier**. Which example breaks that rule?,,int 2score = 90;,An identifier cannot begin with a digit.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000018,STG000,CH0004,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **identifier**. It also reuses the earlier idea of **keyword**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ int Score=5; int score=7; printf(""%d %d"",Score,score); return 0; }",5 7,"The program produces `5 7`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000019,STG000,CH0004,TYPE_CODE,"Gist: A one-line C answer can combine the current **identifier** rule with earlier ideas about keyword, token. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`int student_age = 18;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int student_age = 18;,A suitable answer is `int student_age = 18;`. It follows the current identifier rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000020,STG000,CH0004,MCQ,Final recap: Which choice best follows the chapter rules for **identifier** while also respecting the earlier **keyword** idea and **token**?,,int score2 = 90;,`int score2 = 90;` is the best choice. Digit comes after the name starts. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000021,STG000,CH0005,BLANK,"Complete the core idea: In this chapter, **constant** means or describes ________.",,fixed values,"Constant: A constant is a fixed value that does not change while the program is executing. C uses several kinds of constants, including numeric constants and character-related constants.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000022,STG000,CH0005,FIND_ERROR,You just recalled the rule for **constant**. Which example breaks that rule?,,int age = eighteen;,"`eighteen` is treated as an identifier, not the numeric constant 18.","Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000023,STG000,CH0005,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **constant**. It also reuses the earlier idea of **identifier**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ printf(""%d"",25); return 0; }",25,"The program produces `25`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000024,STG000,CH0005,TYPE_CODE,"Gist: A one-line C answer can combine the current **constant** rule with earlier ideas about identifier, keyword. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`int value = 25;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int value = 25;,A suitable answer is `int value = 25;`. It follows the current constant rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000025,STG000,CH0005,MCQ,Final recap: Which choice best follows the chapter rules for **constant** while also respecting the earlier **identifier** idea and **keyword**?,,int age = 18;,`int age = 18;` is the best choice. `18` is an integer constant used to initialize a variable. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000026,STG000,CH0006,BLANK,"Complete the core idea: In this chapter, **integer constant** means or describes ________.",,whole-number literal,Integer constant: A decimal integer constant is a whole-number literal written with decimal digits. It has no decimal point and may have an optional leading sign in an expression.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000027,STG000,CH0006,FIND_ERROR,You just recalled the rule for **integer constant**. Which example breaks that rule?,,"int people = 20,000;",The comma is not a thousands separator in a C integer literal.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000028,STG000,CH0006,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **integer constant**. It also reuses the earlier idea of **constant**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ int n=123; printf(""%d"",n); return 0; }",123,"The program produces `123`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000029,STG000,CH0006,TYPE_CODE,"Gist: A one-line C answer can combine the current **integer constant** rule with earlier ideas about constant, identifier. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`int count = 20000;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int count = 20000;,A suitable answer is `int count = 20000;`. It follows the current integer constant rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000030,STG000,CH0006,MCQ,Final recap: Which choice best follows the chapter rules for **integer constant** while also respecting the earlier **constant** idea and **identifier**?,,int people = 20000;,`int people = 20000;` is the best choice. A plain decimal integer literal. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000031,STG000,CH0007,BLANK,"Complete the core idea: In this chapter, **octal** means or describes ________.",,leading 0,"Octal: C can write integer constants in number bases other than decimal. A leading `0` indicates octal notation, while a leading `0x` or `0X` indicates hexadecimal notation.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000032,STG000,CH0007,FIND_ERROR,You just recalled the rule for **octal**. Which example breaks that rule?,,int a = 089;,An octal constant cannot contain 8 or 9.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000033,STG000,CH0007,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **octal**. It also reuses the earlier idea of **integer constant**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ int n=0xA; printf(""%d"",n); return 0; }",10,"The program produces `10`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000034,STG000,CH0007,TYPE_CODE,"Gist: A one-line C answer can combine the current **octal** rule with earlier ideas about integer constant, constant. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`int mask = 0x0F;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int mask = 0x0F;,A suitable answer is `int mask = 0x0F;`. It follows the current octal rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000035,STG000,CH0007,MCQ,Final recap: Which choice best follows the chapter rules for **octal** while also respecting the earlier **integer constant** idea and **constant**?,,int a = 037;,`int a = 037;` is the best choice. Valid octal integer constant. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000036,STG000,CH0008,BLANK,"Complete the core idea: In this chapter, **suffix** means or describes ________.",,attached letter,Suffix: An integer constant can use suffix letters such as `U`/`u` for unsigned and `L`/`l` for long so the literal is treated with the intended integer category.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000037,STG000,CH0008,FIND_ERROR,You just recalled the rule for **suffix**. Which example breaks that rule?,,long distance = 90000 L;,Do not separate the suffix from the literal with a space.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000038,STG000,CH0008,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **suffix**. It also reuses the earlier idea of **octal**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ unsigned long n=12UL; printf(""%lu"",n); return 0; }",12,"The program produces `12`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000039,STG000,CH0008,TYPE_CODE,"Gist: A one-line C answer can combine the current **suffix** rule with earlier ideas about octal, integer constant. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`unsigned long n = 1234UL;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,unsigned long n = 1234UL;,A suitable answer is `unsigned long n = 1234UL;`. It follows the current suffix rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000040,STG000,CH0008,MCQ,Final recap: Which choice best follows the chapter rules for **suffix** while also respecting the earlier **octal** idea and **integer constant**?,,unsigned long n = 1234UL;,`unsigned long n = 1234UL;` is the best choice. The literal explicitly matches an unsigned long form. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000041,STG000,CH0009,BLANK,"Complete the core idea: In this chapter, **real constant** means or describes ________.",,decimal point,Real constant: A real constant represents a number with a fractional value. In decimal notation it is written with a decimal point and digits before or after the point.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000042,STG000,CH0009,FIND_ERROR,You just recalled the rule for **real constant**. Which example breaks that rule?,,double price = 75 .84;,The space separates the tokens.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000043,STG000,CH0009,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **real constant**. It also reuses the earlier idea of **suffix**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ double x=2.5; printf(""%.1f"",x); return 0; }",2.5,"The program produces `2.5`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000044,STG000,CH0009,TYPE_CODE,"Gist: A one-line C answer can combine the current **real constant** rule with earlier ideas about suffix, octal. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`double price = 75.84;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,double price = 75.84;,A suitable answer is `double price = 75.84;`. It follows the current real constant rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000045,STG000,CH0009,MCQ,Final recap: Which choice best follows the chapter rules for **real constant** while also respecting the earlier **suffix** idea and **octal**?,,double price = 75.84;,`double price = 75.84;` is the best choice. Valid real constant. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000046,STG000,CH0010,BLANK,"Complete the core idea: In this chapter, **scientific notation** means or describes ________.",,mantissa and exponent,Scientific notation: Scientific notation writes a real constant using a mantissa and an exponent separated by `e` or `E`. The exponent tells how many powers of ten scale the mantissa.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000047,STG000,CH0010,FIND_ERROR,You just recalled the rule for **scientific notation**. Which example breaks that rule?,,double x = 1.5E2.5;,Exponent cannot contain a decimal point.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000048,STG000,CH0010,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **scientific notation**. It also reuses the earlier idea of **real constant**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ double x=1E2; printf(""%.0f"",x); return 0; }",100,"The program produces `100`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000049,STG000,CH0010,TYPE_CODE,"Gist: A one-line C answer can combine the current **scientific notation** rule with earlier ideas about real constant, suffix. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`double x = 1.5E-3;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,double x = 1.5E-3;,A suitable answer is `double x = 1.5E-3;`. It follows the current scientific notation rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000050,STG000,CH0010,MCQ,Final recap: Which choice best follows the chapter rules for **scientific notation** while also respecting the earlier **real constant** idea and **suffix**?,,double distance = 1.2E6;,`double distance = 1.2E6;` is the best choice. Valid exponential notation. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000051,STG000,CH0011,BLANK,"Complete the core idea: In this chapter, **character constant** means or describes ________.",,single quotes,"Character constant: A single-character constant represents one character enclosed in single quotation marks, such as `'A'`, `'5'`, or `'x'`.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000052,STG000,CH0011,FIND_ERROR,You just recalled the rule for **character constant**. Which example breaks that rule?,,"char grade = ""A"";","Double quotes make a string, not a single-character constant.","Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000053,STG000,CH0011,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **character constant**. It also reuses the earlier idea of **scientific notation**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ char c='A'; printf(""%c"",c); return 0; }",A,"The program produces `A`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000054,STG000,CH0011,TYPE_CODE,"Gist: A one-line C answer can combine the current **character constant** rule with earlier ideas about scientific notation, real constant. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`char grade = 'A';`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,char grade = 'A';,A suitable answer is `char grade = 'A';`. It follows the current character constant rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000055,STG000,CH0011,MCQ,Final recap: Which choice best follows the chapter rules for **character constant** while also respecting the earlier **scientific notation** idea and **real constant**?,,char grade = 'A';,`char grade = 'A';` is the best choice. One character stored in char. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000056,STG000,CH0012,BLANK,"Complete the core idea: In this chapter, **string constant** means or describes ________.",,double quotes,"String constant: A string constant is a sequence of characters enclosed in double quotation marks. It can contain letters, numbers, symbols, spaces, and escape sequences.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000057,STG000,CH0012,FIND_ERROR,You just recalled the rule for **string constant**. Which example breaks that rule?,,printf('Hello');,Single quotes are not used for a string constant.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000058,STG000,CH0012,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **string constant**. It also reuses the earlier idea of **character constant**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ printf(""Hello""); return 0; }",Hello,"The program produces `Hello`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000059,STG000,CH0012,TYPE_CODE,"Gist: A one-line C answer can combine the current **string constant** rule with earlier ideas about character constant, scientific notation. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`printf(""Hello"");`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,"printf(""Hello"");","A suitable answer is `printf(""Hello"");`. It follows the current string constant rule while keeping the earlier syntax/naming rules intact.","Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000060,STG000,CH0012,MCQ,Final recap: Which choice best follows the chapter rules for **string constant** while also respecting the earlier **character constant** idea and **scientific notation**?,,"printf(""Hello"");","`printf(""Hello"");` is the best choice. Prints a string constant. The other choices break a rule from this chapter or one of the earlier ideas.","Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000061,STG000,CH0013,BLANK,"Complete the core idea: In this chapter, **escape sequence** means or describes ________.",,backslash,Escape sequence: An escape sequence is a backslash-based character notation used to represent special characters that are difficult to type or would otherwise have a special meaning.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000062,STG000,CH0013,FIND_ERROR,You just recalled the rule for **escape sequence**. Which example breaks that rule?,,"printf(""A B"");",A literal source line break inside this string is not the intended way to write newline here.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000063,STG000,CH0013,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **escape sequence**. It also reuses the earlier idea of **string constant**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ printf(""A\nB""); return 0; }","A
+B","The program produces `A
+B`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000064,STG000,CH0013,TYPE_CODE,"Gist: A one-line C answer can combine the current **escape sequence** rule with earlier ideas about string constant, character constant. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`printf(""A\nB"");`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,"printf(""A\nB"");","A suitable answer is `printf(""A\nB"");`. It follows the current escape sequence rule while keeping the earlier syntax/naming rules intact.","Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000065,STG000,CH0013,MCQ,Final recap: Which choice best follows the chapter rules for **escape sequence** while also respecting the earlier **string constant** idea and **character constant**?,,"printf(""A\nB"");","`printf(""A\nB"");` is the best choice. Uses newline escape sequence. The other choices break a rule from this chapter or one of the earlier ideas.","Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000066,STG000,CH0014,BLANK,"Complete the core idea: In this chapter, **variable** means or describes ________.",,named storage,"Variable: A variable is a data name used to store a value. Unlike a literal constant, the value held by a variable may change while the program runs.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000067,STG000,CH0014,FIND_ERROR,You just recalled the rule for **variable**. Which example breaks that rule?,,int int = 18;,"`int` is a keyword, not a legal variable name.","Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000068,STG000,CH0014,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **variable**. It also reuses the earlier idea of **escape sequence**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ int age=18; age=19; printf(""%d"",age); return 0; }",19,"The program produces `19`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000069,STG000,CH0014,TYPE_CODE,"Gist: A one-line C answer can combine the current **variable** rule with earlier ideas about escape sequence, string constant. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`int age = 18;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int age = 18;,A suitable answer is `int age = 18;`. It follows the current variable rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000070,STG000,CH0014,MCQ,Final recap: Which choice best follows the chapter rules for **variable** while also respecting the earlier **escape sequence** idea and **string constant**?,,int age = 18; age = 19;,`int age = 18; age = 19;` is the best choice. The variable `age` changes from 18 to 19. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000071,STG000,CH0015,BLANK,"Complete the core idea: In this chapter, **case sensitivity** means or describes ________.",,uppercase and lowercase are different,"Case sensitivity: C is case-sensitive, so uppercase and lowercase letters are treated as different. `Total`, `TOTAL`, and `total` can refer to different identifiers.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000072,STG000,CH0015,FIND_ERROR,You just recalled the rule for **case sensitivity**. Which example breaks that rule?,,"int total = 5; printf(""%d"", Total);",`Total` is not the same identifier as `total`.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000073,STG000,CH0015,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **case sensitivity**. It also reuses the earlier idea of **variable**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ int score=5, Score=7; printf(""%d %d"",score,Score); return 0; }",5 7,"The program produces `5 7`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000074,STG000,CH0015,TYPE_CODE,"Gist: A one-line C answer can combine the current **case sensitivity** rule with earlier ideas about variable, escape sequence. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`int total = 5;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int total = 5;,A suitable answer is `int total = 5;`. It follows the current case sensitivity rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000075,STG000,CH0015,MCQ,Final recap: Which choice best follows the chapter rules for **case sensitivity** while also respecting the earlier **variable** idea and **escape sequence**?,,int total = 5; int Total = 7;,`int total = 5; int Total = 7;` is the best choice. Two different variables are declared. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000076,STG000,CH0016,BLANK,"Complete the core idea: In this chapter, **data type** means or describes ________.",,kind of data,Data type: A data type tells C what kind of data a value represents and guides how the compiler stores and operates on that data.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000077,STG000,CH0016,FIND_ERROR,You just recalled the rule for **data type**. Which example breaks that rule?,,void count = 10;,`void` is not a normal object type for storing a number.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000078,STG000,CH0016,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **data type**. It also reuses the earlier idea of **case sensitivity**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ int count=3; double price=2.5; printf(""%d %.1f"",count,price); return 0; }",3 2.5,"The program produces `3 2.5`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000079,STG000,CH0016,TYPE_CODE,"Gist: A one-line C answer can combine the current **data type** rule with earlier ideas about case sensitivity, variable. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`double price = 75.84;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,double price = 75.84;,A suitable answer is `double price = 75.84;`. It follows the current data type rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000080,STG000,CH0016,MCQ,Final recap: Which choice best follows the chapter rules for **data type** while also respecting the earlier **case sensitivity** idea and **variable**?,,int count = 10;,`int count = 10;` is the best choice. Whole-number data. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000081,STG000,CH0017,BLANK,"Complete the core idea: In this chapter, **integer type** means or describes ________.",,whole numbers,"Integer type: Integer types store whole numbers. C provides forms such as `short int`, `int`, `long int`, and signed or unsigned versions so programs can choose different integer ranges and representations.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000082,STG000,CH0017,FIND_ERROR,You just recalled the rule for **integer type**. Which example breaks that rule?,,unsigned items = -5;,"The declaration is syntactically possible, but a negative value conflicts with the beginner purpose of an unsigned quantity.","Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000083,STG000,CH0017,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **integer type**. It also reuses the earlier idea of **data type**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ unsigned int n=25U; printf(""%u"",n); return 0; }",25,"The program produces `25`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000084,STG000,CH0017,TYPE_CODE,"Gist: A one-line C answer can combine the current **integer type** rule with earlier ideas about data type, case sensitivity. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`unsigned int items = 25U;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,unsigned int items = 25U;,A suitable answer is `unsigned int items = 25U;`. It follows the current integer type rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000085,STG000,CH0017,MCQ,Final recap: Which choice best follows the chapter rules for **integer type** while also respecting the earlier **data type** idea and **case sensitivity**?,,unsigned int items = 25U;,`unsigned int items = 25U;` is the best choice. Unsigned object with unsigned literal. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000086,STG000,CH0018,BLANK,"Complete the core idea: In this chapter, **floating-point type** means or describes ________.",,fractional values,"Floating-point type: Floating-point types store real-number approximations, including values with fractional parts. C commonly provides `float`, `double`, and `long double`.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000087,STG000,CH0018,FIND_ERROR,You just recalled the rule for **floating-point type**. Which example breaks that rule?,,int temperature = 36.5;,Fractional information is not properly represented by an integer type.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000088,STG000,CH0018,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **floating-point type**. It also reuses the earlier idea of **integer type**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ double x=3.5; printf(""%.1f"",x); return 0; }",3.5,"The program produces `3.5`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000089,STG000,CH0018,TYPE_CODE,"Gist: A one-line C answer can combine the current **floating-point type** rule with earlier ideas about integer type, data type. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`float temperature = 36.5f;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,float temperature = 36.5f;,A suitable answer is `float temperature = 36.5f;`. It follows the current floating-point type rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000090,STG000,CH0018,MCQ,Final recap: Which choice best follows the chapter rules for **floating-point type** while also respecting the earlier **integer type** idea and **data type**?,,float amount = 30.75f;,`float amount = 30.75f;` is the best choice. Explicit float literal. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000091,STG000,CH0019,BLANK,"Complete the core idea: In this chapter, **char** means or describes ________.",,character-sized,"Char: `char` is the basic character-sized integer type used for character data, while `void` represents the absence of a value in contexts such as function return types.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000092,STG000,CH0019,FIND_ERROR,You just recalled the rule for **char**. Which example breaks that rule?,,"char letter = ""x"";","`""x""` is a string, not a character constant.","Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000093,STG000,CH0019,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **char**. It also reuses the earlier idea of **floating-point type**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ char grade='A'; printf(""%c"",grade); return 0; }",A,"The program produces `A`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000094,STG000,CH0019,TYPE_CODE,"Gist: A one-line C answer can combine the current **char** rule with earlier ideas about floating-point type, integer type. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`char grade = 'A';`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,char grade = 'A';,A suitable answer is `char grade = 'A';`. It follows the current char rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000095,STG000,CH0019,MCQ,Final recap: Which choice best follows the chapter rules for **char** while also respecting the earlier **floating-point type** idea and **integer type**?,,char letter = 'x';,`char letter = 'x';` is the best choice. Valid char variable. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000096,STG000,CH0020,BLANK,"Complete the core idea: In this chapter, **declaration** means or describes ________.",,type and name,Declaration: A variable declaration introduces one or more variable names to the compiler and specifies the data type they will hold before those variables are used.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000097,STG000,CH0020,FIND_ERROR,You just recalled the rule for **declaration**. Which example breaks that rule?,,count int;,Type comes before the variable name in this declaration form.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000098,STG000,CH0020,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **declaration**. It also reuses the earlier idea of **char**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ int a=2,b=3; printf(""%d %d"",a,b); return 0; }",2 3,"The program produces `2 3`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000099,STG000,CH0020,TYPE_CODE,"Gist: A one-line C answer can combine the current **declaration** rule with earlier ideas about char, floating-point type. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`int count;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int count;,A suitable answer is `int count;`. It follows the current declaration rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000100,STG000,CH0020,MCQ,Final recap: Which choice best follows the chapter rules for **declaration** while also respecting the earlier **char** idea and **floating-point type**?,,int count;,`int count;` is the best choice. Declares one int variable. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000101,STG000,CH0021,BLANK,"Complete the core idea: In this chapter, **typedef** means or describes ________.",,another name for a type,Typedef: `typedef` lets a programmer create another name for an existing data type. The new name can then be used in later declarations.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000102,STG000,CH0021,FIND_ERROR,You just recalled the rule for **typedef**. Which example breaks that rule?,,typedef units float;,The existing type is written before the new typedef name in this simple form.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000103,STG000,CH0021,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **typedef**. It also reuses the earlier idea of **declaration**.
+
+What output does the program produce?","#include <stdio.h>
+typedef int count_type;
+int main(void){ count_type n=4; printf(""%d"",n); return 0; }",4,"The program produces `4`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000104,STG000,CH0021,TYPE_CODE,"Gist: A one-line C answer can combine the current **typedef** rule with earlier ideas about declaration, char. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`typedef float units;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,typedef float units;,A suitable answer is `typedef float units;`. It follows the current typedef rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000105,STG000,CH0021,MCQ,Final recap: Which choice best follows the chapter rules for **typedef** while also respecting the earlier **declaration** idea and **char**?,,typedef float units; units weight;,`typedef float units; units weight;` is the best choice. `units` becomes a usable type name. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000106,STG000,CH0022,BLANK,"Complete the core idea: In this chapter, **enum** means or describes ________.",,named integer constants,Enum: An enumeration (`enum`) defines a set of named integer constants. The names make related integer choices easier to read and understand.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000107,STG000,CH0022,FIND_ERROR,You just recalled the rule for **enum**. Which example breaks that rule?,,"enum day (Mon, Tue);","Enumeration lists use braces, not parentheses.","Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000108,STG000,CH0022,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **enum**. It also reuses the earlier idea of **typedef**.
+
+What output does the program produce?","#include <stdio.h>
+enum state {OFF,ON};
+int main(void){ printf(""%d"",ON); return 0; }",1,"The program produces `1`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000109,STG000,CH0022,TYPE_CODE,"Gist: A one-line C answer can combine the current **enum** rule with earlier ideas about typedef, declaration. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`enum state {OFF, ON};`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,"enum state {OFF, ON};","A suitable answer is `enum state {OFF, ON};`. It follows the current enum rule while keeping the earlier syntax/naming rules intact.","Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000110,STG000,CH0022,MCQ,Final recap: Which choice best follows the chapter rules for **enum** while also respecting the earlier **typedef** idea and **declaration**?,,"enum day {Mon, Tue, Wed};","`enum day {Mon, Tue, Wed};` is the best choice. Defines three enumerators. The other choices break a rule from this chapter or one of the earlier ideas.","Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000111,STG000,CH0023,BLANK,"Complete the core idea: In this chapter, **storage class** means or describes ________.",,storage duration or linkage information,"Storage class: A storage class helps describe a variable's storage duration, visibility/linkage, or storage suggestion. The book introduces `auto`, `static`, `extern`, and `register` as important storage classes.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000112,STG000,CH0023,FIND_ERROR,You just recalled the rule for **storage class**. Which example breaks that rule?,,storage int count;,`storage` is not a C storage-class keyword.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000113,STG000,CH0023,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **storage class**. It also reuses the earlier idea of **enum**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ static int n=3; printf(""%d"",n); return 0; }",3,"The program produces `3`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000114,STG000,CH0023,TYPE_CODE,"Gist: A one-line C answer can combine the current **storage class** rule with earlier ideas about enum, typedef. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`static int count = 0;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,static int count = 0;,A suitable answer is `static int count = 0;`. It follows the current storage class rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000115,STG000,CH0023,MCQ,Final recap: Which choice best follows the chapter rules for **storage class** while also respecting the earlier **enum** idea and **typedef**?,,static int count = 0;,`static int count = 0;` is the best choice. Valid static variable declaration. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000116,STG000,CH0024,BLANK,"Complete the core idea: In this chapter, **assignment** means or describes ________.",,stores a value,Assignment: Assignment stores a value in a variable. In C the assignment operator `=` puts the value of the right-hand expression into the variable on the left.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000117,STG000,CH0024,FIND_ERROR,You just recalled the rule for **assignment**. Which example breaks that rule?,,18 = age;,A literal constant cannot receive an assigned value.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000118,STG000,CH0024,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **assignment**. It also reuses the earlier idea of **storage class**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ int year=1; year=year+1; printf(""%d"",year); return 0; }",2,"The program produces `2`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000119,STG000,CH0024,TYPE_CODE,"Gist: A one-line C answer can combine the current **assignment** rule with earlier ideas about storage class, enum. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`age = 18;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,age = 18;,A suitable answer is `age = 18;`. It follows the current assignment rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000120,STG000,CH0024,MCQ,Final recap: Which choice best follows the chapter rules for **assignment** while also respecting the earlier **storage class** idea and **enum**?,,int year = 1; year = year + 1;,`int year = 1; year = year + 1;` is the best choice. The variable is updated to 2. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000121,STG000,CH0025,BLANK,"Complete the core idea: In this chapter, **initialization** means or describes ________.",,first value during declaration,Initialization: Initialization gives a variable its first value as part of its declaration. C also allows several variables to be initialized in one declaration.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000122,STG000,CH0025,FIND_ERROR,You just recalled the rule for **initialization**. Which example breaks that rule?,,"int count; printf(""%d"", count);",Reading an uninitialized automatic local variable is not safe.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000123,STG000,CH0025,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **initialization**. It also reuses the earlier idea of **assignment**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ int p=0,q=3; printf(""%d %d"",p,q); return 0; }",0 3,"The program produces `0 3`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000124,STG000,CH0025,TYPE_CODE,"Gist: A one-line C answer can combine the current **initialization** rule with earlier ideas about assignment, storage class. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`int count = 0;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int count = 0;,A suitable answer is `int count = 0;`. It follows the current initialization rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000125,STG000,CH0025,MCQ,Final recap: Which choice best follows the chapter rules for **initialization** while also respecting the earlier **assignment** idea and **storage class**?,,int count = 0;,`int count = 0;` is the best choice. Safe explicit initialization. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000126,STG000,CH0026,BLANK,"Complete the core idea: In this chapter, **scanf** means or describes ________.",,formatted input,Scanf: `scanf` is a standard input function that can read formatted values from the keyboard/input stream into variables. A control string describes the expected data format.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000127,STG000,CH0026,FIND_ERROR,You just recalled the rule for **scanf**. Which example breaks that rule?,,"int number; scanf(""%d"", number);","For this scalar integer conversion, the address operator is missing.","Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000128,STG000,CH0026,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **scanf**. It also reuses the earlier idea of **initialization**.
+
+Sample input for this question:
+7
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ int n; scanf(""%d"",&n); printf(""%d"",n); return 0; }",7,"The program produces `7`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000129,STG000,CH0026,TYPE_CODE,"Gist: A one-line C answer can combine the current **scanf** rule with earlier ideas about initialization, assignment. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`scanf(""%d"", &number);`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,"scanf(""%d"", &number);","A suitable answer is `scanf(""%d"", &number);`. It follows the current scanf rule while keeping the earlier syntax/naming rules intact.","Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000130,STG000,CH0026,MCQ,Final recap: Which choice best follows the chapter rules for **scanf** while also respecting the earlier **initialization** idea and **assignment**?,,"int number; scanf(""%d"", &number);","`int number; scanf(""%d"", &number);` is the best choice. Reads an integer into number. The other choices break a rule from this chapter or one of the earlier ideas.","Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000131,STG000,CH0027,BLANK,"Complete the core idea: In this chapter, **symbolic constant** means or describes ________.",,meaningful name for a fixed replacement,Symbolic constant: A symbolic constant gives a meaningful name to a fixed replacement value using the preprocessor directive `#define`. The preprocessor substitutes the replacement text before compilation.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000132,STG000,CH0027,FIND_ERROR,You just recalled the rule for **symbolic constant**. Which example breaks that rule?,,#define MAX 100;,The semicolon becomes part of the replacement text and is not written as part of the constant definition.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000133,STG000,CH0027,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **symbolic constant**. It also reuses the earlier idea of **scanf**.
+
+What output does the program produce?","#include <stdio.h>
+#define MAX 100
+int main(void){ printf(""%d"",MAX); return 0; }",100,"The program produces `100`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000134,STG000,CH0027,TYPE_CODE,"Gist: A one-line C answer can combine the current **symbolic constant** rule with earlier ideas about scanf, initialization. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`#define MAX 100`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,#define MAX 100,A suitable answer is `#define MAX 100`. It follows the current symbolic constant rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000135,STG000,CH0027,MCQ,Final recap: Which choice best follows the chapter rules for **symbolic constant** while also respecting the earlier **scanf** idea and **initialization**?,,#define MAX 100 int n = MAX;,`#define MAX 100 int n = MAX;` is the best choice. Correct directive and later use. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000136,STG000,CH0028,BLANK,"Complete the core idea: In this chapter, **const** means or describes ________.",,not modified,Const: The `const` qualifier tells the compiler that a variable is intended not to be modified through that name after initialization.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000137,STG000,CH0028,FIND_ERROR,You just recalled the rule for **const**. Which example breaks that rule?,,const int class_size = 40; class_size = 50;,Attempts to modify the const object.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000138,STG000,CH0028,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **const**. It also reuses the earlier idea of **symbolic constant**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ const int n=40; printf(""%d"",n); return 0; }",40,"The program produces `40`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000139,STG000,CH0028,TYPE_CODE,"Gist: A one-line C answer can combine the current **const** rule with earlier ideas about symbolic constant, scanf. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`const int class_size = 40;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,const int class_size = 40;,A suitable answer is `const int class_size = 40;`. It follows the current const rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000140,STG000,CH0028,MCQ,Final recap: Which choice best follows the chapter rules for **const** while also respecting the earlier **symbolic constant** idea and **scanf**?,,const int class_size = 40;,`const int class_size = 40;` is the best choice. Valid const-qualified object. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000141,STG000,CH0029,BLANK,"Complete the core idea: In this chapter, **volatile** means or describes ________.",,may change externally,"Volatile: The `volatile` qualifier tells the compiler that a variable's value may change for reasons outside the ordinary flow of the current code, so accesses must not be optimized away based on an assumption that the value stays unchanged.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000142,STG000,CH0029,FIND_ERROR,You just recalled the rule for **volatile**. Which example breaks that rule?,,volatile = int status;,"Qualifier belongs in the declaration specifiers, not as an assignment.","Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000143,STG000,CH0029,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **volatile**. It also reuses the earlier idea of **const**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ volatile int status=1; printf(""%d"",status); return 0; }",1,"The program produces `1`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000144,STG000,CH0029,TYPE_CODE,"Gist: A one-line C answer can combine the current **volatile** rule with earlier ideas about const, symbolic constant. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`volatile int status;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,volatile int status;,A suitable answer is `volatile int status;`. It follows the current volatile rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000145,STG000,CH0029,MCQ,Final recap: Which choice best follows the chapter rules for **volatile** while also respecting the earlier **const** idea and **symbolic constant**?,,volatile int status;,`volatile int status;` is the best choice. Valid volatile declaration. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
+Q000146,STG000,CH0030,BLANK,"Complete the core idea: In this chapter, **overflow** means or describes ________.",,outside representable range,"Overflow: Overflow occurs when a value is outside the representable range of its data type. For floating-point data, underflow describes values whose magnitude is too small to represent normally at the required precision.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
+Q000147,STG000,CH0030,FIND_ERROR,You just recalled the rule for **overflow**. Which example breaks that rule?,,/* assume signed overflow always wraps to zero */,Signed overflow is not a portable predictable wraparound technique.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
+Q000148,STG000,CH0030,PREDICT_OUTPUT,"Gist: `printf` displays values using a format such as `%d`, `%f`, or `%c`. Read the code from top to bottom and track the value that reaches `printf`. This question uses the current idea of **overflow**. It also reuses the earlier idea of **volatile**.
+
+What output does the program produce?","#include <stdio.h>
+int main(void){ long long n=5000000000LL; printf(""%lld"",n); return 0; }",5000000000,"The program produces `5000000000`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
+Q000149,STG000,CH0030,TYPE_CODE,"Gist: A one-line C answer can combine the current **overflow** rule with earlier ideas about volatile, const. Write the smallest line that satisfies this instruction:
+
+Use this required form:
+`long long n = 5000000000LL;`
+
+Type that C line exactly in meaning. Normal whitespace differences are ignored.",,long long n = 5000000000LL;,A suitable answer is `long long n = 5000000000LL;`. It follows the current overflow rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000150,STG000,CH0030,MCQ,Final recap: Which choice best follows the chapter rules for **overflow** while also respecting the earlier **volatile** idea and **const**?,,long long population = 5000000000LL;,"`long long population = 5000000000LL;` is the best choice. Uses a wider integer type for a large illustrative count, assuming the implementation supports long long. The other choices break a rule from this chapter or one of the earlier ideas.","Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE

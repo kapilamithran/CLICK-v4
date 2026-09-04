@@ -1,0 +1,3 @@
+announcement_id,title,message,category,active,publish_date,expire_date
+ANN001,Welcome to CLICK,"Use Learn first, then take the stage test. Practice answer code unlocks only after the stage is completed.",info,TRUE,2026-08-31,
+ANN002,How XP works,Questions are worth 1 or 2 XP. XP from a test is added only when the full test is completed.,tip,TRUE,2026-08-31,

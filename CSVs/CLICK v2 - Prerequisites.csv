@@ -1,0 +1,40 @@
+target_id,prerequisite_id,condition,description,active
+CH0002,CH0001,completed,Complete the previous micro-chapter test first.,FALSE
+CH0003,CH0002,completed,Complete the previous micro-chapter test first.,TRUE
+CH0004,CH0003,completed,Complete the previous micro-chapter test first.,TRUE
+CH0005,CH0004,completed,Complete the previous micro-chapter test first.,TRUE
+CH0006,CH0005,completed,Complete the previous micro-chapter test first.,TRUE
+CH0007,CH0006,completed,Complete the previous micro-chapter test first.,TRUE
+CH0008,CH0007,completed,Complete the previous micro-chapter test first.,TRUE
+CH0009,CH0008,completed,Complete the previous micro-chapter test first.,TRUE
+CH0010,CH0009,completed,Complete the previous micro-chapter test first.,TRUE
+CH0011,CH0010,completed,Complete the previous micro-chapter test first.,TRUE
+CH0012,CH0011,completed,Complete the previous micro-chapter test first.,TRUE
+CH0013,CH0012,completed,Complete the previous micro-chapter test first.,TRUE
+CH0014,CH0013,completed,Complete the previous micro-chapter test first.,TRUE
+CH0015,CH0014,completed,Complete the previous micro-chapter test first.,TRUE
+CH0016,CH0015,completed,Complete the previous micro-chapter test first.,TRUE
+CH0017,CH0016,completed,Complete the previous micro-chapter test first.,TRUE
+CH0018,CH0017,completed,Complete the previous micro-chapter test first.,TRUE
+CH0019,CH0018,completed,Complete the previous micro-chapter test first.,TRUE
+CH0020,CH0019,completed,Complete the previous micro-chapter test first.,TRUE
+CH0021,CH0020,completed,Complete the previous micro-chapter test first.,TRUE
+CH0022,CH0021,completed,Complete the previous micro-chapter test first.,TRUE
+CH0023,CH0022,completed,Complete the previous micro-chapter test first.,TRUE
+CH0024,CH0023,completed,Complete the previous micro-chapter test first.,TRUE
+CH0025,CH0024,completed,Complete the previous micro-chapter test first.,TRUE
+CH0026,CH0025,completed,Complete the previous micro-chapter test first.,TRUE
+CH0027,CH0026,completed,Complete the previous micro-chapter test first.,TRUE
+CH0028,CH0027,completed,Complete the previous micro-chapter test first.,TRUE
+CH0029,CH0028,completed,Complete the previous micro-chapter test first.,TRUE
+CH0030,CH0029,completed,Complete the previous micro-chapter test first.,TRUE
+P001,STG000,completed,Complete every Stage 0 chapter test to unlock coding practice.,TRUE
+P002,P001,completed,Complete the previous CLICK practice challenge first.,TRUE
+P003,P002,completed,Complete the previous CLICK practice challenge first.,TRUE
+P004,P003,completed,Complete the previous CLICK practice challenge first.,TRUE
+P005,P004,completed,Complete the previous CLICK practice challenge first.,TRUE
+P006,P005,completed,Complete the previous CLICK practice challenge first.,TRUE
+P007,P006,completed,Complete the previous CLICK practice challenge first.,TRUE
+P008,P007,completed,Complete the previous CLICK practice challenge first.,TRUE
+P009,P008,completed,Complete the previous CLICK practice challenge first.,TRUE
+P010,P009,completed,Complete the previous CLICK practice challenge first.,TRUE

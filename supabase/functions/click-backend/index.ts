@@ -1,0 +1,1000 @@
+// CLICK backend — Supabase Edge Function
+// Faithful port of Code.gs (Apps Script) to Deno + Postgres.
+// Same {action, ...payload} -> {ok, ...} contract as the old /exec endpoint,
+// so the frontend's post() function barely has to change.
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+);
+
+const CORS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+function json(data: unknown) {
+  return new Response(JSON.stringify(data), {
+    headers: { "Content-Type": "application/json", ...CORS },
+  });
+}
+
+// ---------------- generic helpers ----------------
+
+function required(obj: any, keys: string[]) {
+  for (const k of keys) {
+    if (obj[k] === undefined || obj[k] === null || String(obj[k]).trim() === "") {
+      throw new Error("Missing required field: " + k);
+    }
+  }
+}
+
+function truthy(v: any): boolean {
+  return v === true || String(v).toLowerCase() === "true" || v === 1 || String(v) === "1" || String(v).toLowerCase() === "yes";
+}
+
+function normalizeId(v: any): string {
+  return String(v ?? "").trim().toUpperCase();
+}
+
+function normalizeBlank(s: any): string {
+  return String(s).trim().replace(/\s+/g, " ");
+}
+
+function shuffle<T>(arr: T[]): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function newId(prefix: string, len = 12): string {
+  return prefix + crypto.randomUUID().replace(/-/g, "").slice(0, len).toUpperCase();
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  const bytes = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function passwordHash(password: string, salt: string): Promise<string> {
+  return sha256Hex(`${salt}|${password}`);
+}
+
+function practiceTokenHash(token: string): Promise<string> {
+  return sha256Hex(String(token));
+}
+
+// ---------------- C-code answer checking (same rules as Code.gs) ----------------
+
+function canonicalC(source: any): string {
+  const s = String(source).replace(/\r/g, "");
+  let out = "";
+  let inString = false, inChar = false, escape = false;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    const next = i + 1 < s.length ? s[i + 1] : "";
+    if (inString) {
+      out += ch;
+      if (escape) escape = false;
+      else if (ch === "\\") escape = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (inChar) {
+      out += ch;
+      if (escape) escape = false;
+      else if (ch === "\\") escape = true;
+      else if (ch === "'") inChar = false;
+      continue;
+    }
+    if (ch === '"') { inString = true; out += ch; continue; }
+    if (ch === "'") { inChar = true; out += ch; continue; }
+    if (ch === "/" && next === "/") { i += 2; while (i < s.length && s[i] !== "\n") i++; continue; }
+    if (ch === "/" && next === "*") {
+      i += 2;
+      while (i < s.length - 1 && !(s[i] === "*" && s[i + 1] === "/")) i++;
+      if (i < s.length - 1) i++;
+      continue;
+    }
+    if (/\s/.test(ch)) continue;
+    out += ch;
+  }
+  return out;
+}
+
+function isAnswerCorrect(q: any, answer: string): boolean {
+  const type = String(q.type || "MCQ").toUpperCase();
+  const expected = String(q.answer || "").trim();
+  const actual = String(answer || "").trim();
+  if (type === "TRUE_FALSE") return expected.toLowerCase() === actual.toLowerCase();
+  if (type === "TYPE_CODE") return canonicalC(expected) === canonicalC(actual);
+  if (type === "ORDER") return expected.replace(/\s+/g, "") === actual.replace(/\s+/g, "");
+  if (type === "BLANK") return normalizeBlank(expected) === normalizeBlank(actual);
+  return expected === actual;
+}
+
+// ---------------- settings ----------------
+
+async function settingsMap(): Promise<Record<string, string>> {
+  const { data } = await supabase.from("settings").select("key,value");
+  const map: Record<string, string> = {};
+  (data || []).forEach((r: any) => (map[r.key] = r.value));
+  return map;
+}
+
+function defaultHearts(settings: Record<string, string>): number {
+  return Number(settings.DEFAULT_HEARTS || 3);
+}
+
+function publicSettings(s: Record<string, string>) {
+  return {
+    APP_NAME: s.APP_NAME || "CLICK",
+    TAGLINE: s.TAGLINE || "click → learn → practice",
+    DEFAULT_HEARTS: Number(s.DEFAULT_HEARTS || 3),
+    CHARACTER_NAME: s.CHARACTER_NAME || "Kabi",
+  };
+}
+
+// ---------------- sessions ----------------
+
+async function createSession(user: any, device: string) {
+  const row = {
+    session_id: newId("S"),
+    session_token: crypto.randomUUID() + crypto.randomUUID(),
+    user_id: user.user_id,
+    login_time: new Date().toISOString(),
+    last_seen: new Date().toISOString(),
+    device,
+    active: true,
+  };
+  const { error } = await supabase.from("sessions").insert(row);
+  if (error) throw new Error(error.message);
+  return row;
+}
+
+async function requireSession(token: string, settings: Record<string, string>) {
+  const { data: s } = await supabase.from("sessions").select("*").eq("session_token", token).eq("active", true).maybeSingle();
+  if (!s) throw new Error("Session expired. Please log in again.");
+  const hours = Number(settings.SESSION_HOURS || 168);
+  const last = new Date(s.last_seen || s.login_time).getTime();
+  if (isNaN(last) || Date.now() - last > hours * 3600000) {
+    await supabase.from("sessions").update({ active: false }).eq("session_id", s.session_id);
+    throw new Error("Session expired. Please log in again.");
+  }
+  if (Date.now() - last > 15 * 60 * 1000) {
+    await supabase.from("sessions").update({ last_seen: new Date().toISOString() }).eq("session_id", s.session_id);
+  }
+  return s;
+}
+
+function safeUser(u: any) {
+  if (!u) return null;
+  return {
+    user_id: u.user_id, name: u.name, roll_no: u.roll_no, department: u.department,
+    email: u.email, phone: u.phone, total_xp: Number(u.total_xp || 0), streak: Number(u.streak || 0),
+    hearts: Number(u.hearts || 0), tests_completed: Number(u.tests_completed || 0),
+    questions_attempted: Number(u.questions_attempted || 0), correct_answers: Number(u.correct_answers || 0),
+    accuracy_percent: Number(u.accuracy_percent || 0), onboarding_completed: truthy(u.onboarding_completed),
+    stages_completed: Number(u.stages_completed || 0), last_completed_stage: u.last_completed_stage || "",
+    last_learn_stage: u.last_learn_stage || "", last_learn_chapter: u.last_learn_chapter || "",
+    heart_recovery_stage_id: u.heart_recovery_stage_id || "", heart_recovery_chapter_id: u.heart_recovery_chapter_id || "",
+    role: u.role || "student",
+  };
+}
+
+// ---------------- accounts ----------------
+
+async function signup(b: any) {
+  required(b, ["name", "roll_no", "department", "email", "phone", "password"]);
+  const settings = await settingsMap();
+  const minLen = Number(settings.MIN_PASSWORD_LENGTH || 6);
+  if (String(b.password).length < minLen) throw new Error(`Password must be at least ${minLen} characters.`);
+
+  const email = String(b.email).trim().toLowerCase();
+  const roll = String(b.roll_no).trim();
+
+  const { data: existingEmail } = await supabase.from("users").select("user_id").ilike("email", email).maybeSingle();
+  if (existingEmail) throw new Error("An account with this email already exists.");
+  const { data: existingRoll } = await supabase.from("users").select("user_id").ilike("roll_no", roll).maybeSingle();
+  if (existingRoll) throw new Error("An account with this roll number already exists.");
+
+  const salt = crypto.randomUUID().replace(/-/g, "");
+  const id = newId("U");
+  const now = new Date().toISOString();
+  const hash = await passwordHash(String(b.password), salt);
+
+  const row = {
+    user_id: id, name: String(b.name).trim(), roll_no: roll, department: String(b.department).trim(),
+    email, phone: String(b.phone).trim(), password_hash: hash, password_salt: salt,
+    joined_at: now, last_login: now, total_xp: 0, streak: 0, current_stage: "STG000", current_chapter: "",
+    hearts: defaultHearts(settings), tests_completed: 0, questions_attempted: 0, correct_answers: 0,
+    accuracy_percent: 0, onboarding_completed: false, status: "active", stages_completed: 0,
+    last_completed_stage: "", last_learn_stage: "", last_learn_chapter: "",
+    heart_recovery_stage_id: "", heart_recovery_chapter_id: "", role: "student",
+  };
+  const { data: inserted, error } = await supabase.from("users").insert(row).select().single();
+  if (error) {
+    if ((error as any).code === "23505") throw new Error("An account with this email or roll number already exists.");
+    throw new Error(error.message);
+  }
+  const session = await createSession(inserted, "signup");
+  return { ok: true, user: safeUser(inserted), session_token: session.session_token, new_user: true };
+}
+
+async function login(b: any) {
+  required(b, ["email", "password"]);
+  const email = String(b.email).trim().toLowerCase();
+  const { data: user } = await supabase.from("users").select("*").ilike("email", email).maybeSingle();
+  if (!user || String(user.status || "active").toLowerCase() !== "active") throw new Error("Incorrect email or password.");
+  const hash = await passwordHash(String(b.password), String(user.password_salt));
+  if (hash !== String(user.password_hash)) throw new Error("Incorrect email or password.");
+  await supabase.from("users").update({ last_login: new Date().toISOString() }).eq("user_id", user.user_id);
+  const session = await createSession(user, "login");
+  return { ok: true, user: safeUser(user), session_token: session.session_token, new_user: false };
+}
+
+async function sessionInfo(b: any) {
+  required(b, ["session_token"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const { data: user } = await supabase.from("users").select("*").eq("user_id", s.user_id).single();
+  if (!user) throw new Error("User not found.");
+  return { ok: true, user: safeUser(user) };
+}
+
+async function logout(b: any) {
+  required(b, ["session_token"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const now = new Date();
+  const login = new Date(s.login_time);
+  await supabase.from("sessions").update({
+    active: false, last_seen: now.toISOString(), logout_time: now.toISOString(),
+    duration_sec: isNaN(login.getTime()) ? null : Math.max(0, Math.round((now.getTime() - login.getTime()) / 1000)),
+  }).eq("session_id", s.session_id);
+  await supabase.from("users").update({ last_logout: now.toISOString() }).eq("user_id", s.user_id);
+  return { ok: true };
+}
+
+async function completeOnboarding(b: any) {
+  required(b, ["session_token"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  await supabase.from("users").update({ onboarding_completed: true }).eq("user_id", s.user_id);
+  const { data: user } = await supabase.from("users").select("*").eq("user_id", s.user_id).single();
+  return { ok: true, user: safeUser(user) };
+}
+
+// ---------------- content ----------------
+
+async function publicContent() {
+  const [stagesR, chaptersR, learnR, practiceR, practiceTestsR, practiceMistakesR, annR, phrasesR, prereqR] = await Promise.all([
+    supabase.from("stages").select("*").eq("active", true),
+    supabase.from("chapters").select("*").eq("active", true),
+    supabase.from("learn_content").select("*").eq("active", true),
+    supabase.from("practice_bank").select("*").eq("active", true),
+    supabase.from("practice_tests").select("*").eq("active", true),
+    supabase.from("practice_mistakes").select("*").eq("active", true),
+    supabase.from("announcements").select("*").eq("active", true),
+    supabase.from("kabi_phrases").select("*").eq("active", true),
+    supabase.from("prerequisites").select("*").eq("active", true),
+  ]);
+  const stages = (stagesR.data || []).sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0));
+  const stageOrder: Record<string, number> = {};
+  stages.forEach((st: any, i: number) => (stageOrder[normalizeId(st.stage_id)] = Number(st.order ?? i)));
+  const chapters = (chaptersR.data || []).sort((a: any, b: any) =>
+    (Number(stageOrder[normalizeId(a.stage_id)] || 0) - Number(stageOrder[normalizeId(b.stage_id)] || 0)) ||
+    (Number(a.order || 0) - Number(b.order || 0))
+  );
+  const practice = (practiceR.data || []).sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0));
+  return {
+    stages, chapters,
+    learn_content: learnR.data || [],
+    practice,
+    practice_tests: practiceTestsR.data || [],
+    practice_mistakes: practiceMistakesR.data || [],
+    announcements: annR.data || [],
+    phrases: phrasesR.data || [],
+    prerequisites: prereqR.data || [],
+  };
+}
+
+async function testContent() {
+  const [qR, oR, hR, gR, qtR] = await Promise.all([
+    supabase.from("questions").select("*").eq("active", true),
+    supabase.from("options").select("*").eq("active", true),
+    supabase.from("test_hints").select("*").eq("active", true),
+    supabase.from("glossary").select("*").eq("active", true),
+    supabase.from("question_terms").select("*").eq("active", true),
+  ]);
+  return {
+    questions: qR.data || [], options: oR.data || [], hints: hR.data || [],
+    glossary: gR.data || [], question_terms: qtR.data || [],
+  };
+}
+
+async function prerequisiteFacts(uid: string, content: any) {
+  const [lpR, trR, ppR] = await Promise.all([
+    supabase.from("learn_progress").select("*").eq("user_id", uid),
+    supabase.from("test_runs").select("*").eq("user_id", uid),
+    supabase.from("practice_progress").select("practice_id").eq("user_id", uid).eq("status", "completed"),
+  ]);
+  const learnRows = lpR.data || [];
+  const allRuns = trR.data || [];
+  const completedRuns = allRuns.filter((r: any) => r.status === "completed");
+  const failedRuns = allRuns.filter((r: any) => r.status === "failed");
+  const completedChapterIds = new Set(completedRuns.map((r: any) => normalizeId(r.chapter_id)));
+  const learnedChapterIds = new Set(learnRows.filter((r: any) => truthy(r.completed)).map((r: any) => normalizeId(r.chapter_id)));
+  const stageCompleteIds = new Set<string>();
+  content.stages.forEach((st: any) => {
+    const cs = content.chapters.filter((c: any) => String(c.stage_id) === String(st.stage_id));
+    if (cs.length && cs.every((c: any) => completedChapterIds.has(normalizeId(c.chapter_id)))) {
+      stageCompleteIds.add(normalizeId(st.stage_id));
+    }
+  });
+  const practiceCompletedIds = new Set((ppR.data || []).map((r: any) => normalizeId(r.practice_id)));
+  return { learnRows, completedRuns, failedRuns, completedChapterIds, learnedChapterIds, stageCompleteIds, practiceCompletedIds };
+}
+
+function prerequisiteStatus(targetType: string, targetStageId: string, targetChapterId: string, content: any, facts: any) {
+  const targetId = targetType.toUpperCase() === "STAGE" ? normalizeId(targetStageId) : normalizeId(targetChapterId);
+  const rules = (content.prerequisites || []).filter((r: any) =>
+    (r.active === undefined || r.active === null || truthy(r.active)) && normalizeId(r.target_id) === targetId
+  );
+  for (const rule of rules) {
+    const prerequisiteId = normalizeId(rule.prerequisite_id);
+    const condition = String(rule.condition || "completed").trim().toLowerCase();
+    let met = false;
+    if (prerequisiteId.indexOf("STG") === 0) met = facts.stageCompleteIds.has(prerequisiteId);
+    else if (prerequisiteId.indexOf("CH") === 0) {
+      met = condition === "learned" ? facts.learnedChapterIds.has(prerequisiteId) : facts.completedChapterIds.has(prerequisiteId);
+    } else if (/^P\d+/i.test(prerequisiteId) || prerequisiteId.indexOf("PRACTICE") === 0) {
+      met = facts.practiceCompletedIds.has(prerequisiteId);
+    }
+    if (!met) return { unlocked: false, lock_reason: String(rule.description || `Complete ${prerequisiteId} first.`) };
+  }
+  return { unlocked: true, lock_reason: "" };
+}
+
+async function leaderboard() {
+  const { data } = await supabase.from("users").select("name,roll_no,department,total_xp,stages_completed,accuracy_percent").eq("status", "active");
+  return (data || []).map((u: any) => ({
+    name: u.name, roll_no: u.roll_no, department: u.department, total_xp: Number(u.total_xp || 0),
+    stages_completed: Number(u.stages_completed || 0), accuracy_percent: Number(u.accuracy_percent || 0),
+  })).sort((a: any, b: any) => b.total_xp - a.total_xp || b.stages_completed - a.stages_completed).slice(0, 100);
+}
+
+async function recoveryChapterTitle(user: any) {
+  const cid = String(user.heart_recovery_chapter_id || "");
+  if (!cid) return "the chapter where the last heart was lost";
+  const { data: c } = await supabase.from("chapters").select("title").eq("chapter_id", cid).maybeSingle();
+  return c ? String(c.title) : cid;
+}
+
+// ---------------- bootstrap / progress ----------------
+
+async function bootstrap(b: any) {
+  required(b, ["session_token"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const uid = s.user_id;
+  const { data: user } = await supabase.from("users").select("*").eq("user_id", uid).single();
+  if (!user) throw new Error("User not found.");
+
+  const content = await publicContent();
+  const facts = await prerequisiteFacts(uid, content);
+
+  const chapterProgress = content.chapters.map((ch: any) => {
+    const learn = facts.learnRows.find((r: any) => String(r.chapter_id) === String(ch.chapter_id) && truthy(r.completed));
+    const done = facts.completedRuns.filter((r: any) => String(r.chapter_id) === String(ch.chapter_id));
+    const failed = facts.failedRuns.filter((r: any) => String(r.chapter_id) === String(ch.chapter_id));
+    const stageGate = prerequisiteStatus("STAGE", ch.stage_id, "", content, facts);
+    const chapterGate = prerequisiteStatus("CHAPTER", ch.stage_id, ch.chapter_id, content, facts);
+    const unlocked = stageGate.unlocked && chapterGate.unlocked;
+    return {
+      chapter_id: ch.chapter_id, stage_id: ch.stage_id,
+      learn_completed: !!learn, learn_times: Number(learn?.times_completed || 0),
+      test_completed: done.length > 0,
+      best_xp: done.reduce((m: number, x: any) => Math.max(m, Number(x.committed_xp || 0)), 0),
+      failed_attempts: failed.length, unlocked,
+      lock_reason: unlocked ? "" : (stageGate.lock_reason || chapterGate.lock_reason),
+    };
+  });
+
+  const stageProgress = content.stages.map((st: any) => {
+    const cs = content.chapters.filter((c: any) => String(c.stage_id) === String(st.stage_id));
+    const done = cs.filter((c: any) => chapterProgress.find((p: any) => p.chapter_id === c.chapter_id)?.test_completed).length;
+    const learned = cs.filter((c: any) => chapterProgress.find((p: any) => p.chapter_id === c.chapter_id)?.learn_completed).length;
+    const total = cs.length;
+    const gate = prerequisiteStatus("STAGE", st.stage_id, "", content, facts);
+    return {
+      stage_id: st.stage_id, learned_chapters: learned, completed_chapters: done, total_chapters: total,
+      progress_percent: total ? Math.round((done * 100) / total) : 0,
+      test_completed: total > 0 && done === total,
+      best_xp: cs.reduce((sum: number, c: any) => sum + Number(chapterProgress.find((p: any) => p.chapter_id === c.chapter_id)?.best_xp || 0), 0),
+      unlocked: gate.unlocked, lock_reason: gate.lock_reason || "",
+    };
+  });
+
+  const { data: ppRows } = await supabase.from("practice_progress").select("*").eq("user_id", uid);
+  const practiceProgress = (ppRows || []).map((r: any) => ({
+    practice_id: String(r.practice_id || ""), stage_id: String(r.stage_id || ""), status: String(r.status || ""),
+    attempt_count: Number(r.attempt_count || 0), completed_at: r.completed_at || "",
+  }));
+
+  const practiceRows = content.practice.map((r: any, i: number) => {
+    const pid = String(r.practice_id || `PRACTICE-${i + 1}`);
+    const gate = prerequisiteStatus("PRACTICE", r.stage_id, pid, content, facts);
+    return { ...r, unlocked: gate.unlocked, lock_reason: gate.lock_reason || "" };
+  });
+
+  return {
+    ok: true, user: safeUser(user), stages: content.stages, chapters: content.chapters,
+    learn_content: content.learn_content, practice: practiceRows,
+    announcements: content.announcements, phrases: content.phrases, prerequisites: content.prerequisites,
+    stage_progress: stageProgress, chapter_progress: chapterProgress, practice_progress: practiceProgress,
+    leaderboard: await leaderboard(), settings: publicSettings(settings),
+  };
+}
+
+async function preloadTestData(b: any) {
+  required(b, ["session_token"]);
+  const settings = await settingsMap();
+  await requireSession(b.session_token, settings);
+  const bank = await testContent();
+
+  const optionsByQuestion: Record<string, any[]> = {};
+  (bank.options || []).forEach((o: any) => {
+    const qid = normalizeId(o.question_id);
+    (optionsByQuestion[qid] ||= []).push(o);
+  });
+  Object.keys(optionsByQuestion).forEach((qid) => optionsByQuestion[qid].sort((a, b) => Number(a.order || 0) - Number(b.order || 0)));
+
+  const hintByQuestion: Record<string, string> = {};
+  [...(bank.hints || [])].sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0)).forEach((h: any) => {
+    const qid = normalizeId(h.question_id);
+    if (!hintByQuestion[qid]) hintByQuestion[qid] = String(h.hint_text || "");
+  });
+
+  const glossaryById: Record<string, any> = {};
+  (bank.glossary || []).forEach((g: any) => (glossaryById[normalizeId(g.term_id)] = g));
+  const termsByQuestion: Record<string, any[]> = {};
+  [...(bank.question_terms || [])].sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0)).forEach((m: any) => {
+    const qid = normalizeId(m.question_id);
+    const g = glossaryById[normalizeId(m.term_id)];
+    if (!g) return;
+    (termsByQuestion[qid] ||= []).push({
+      term_id: String(g.term_id || m.term_id || ""), display_text: String(m.display_text || g.term || ""),
+      term: String(g.term || m.display_text || ""), definition: String(g.definition || ""), color: String(g.color || "#5867d8"),
+    });
+  });
+
+  const questions = (bank.questions || []).map((q: any) => {
+    const qid = normalizeId(q.question_id);
+    return {
+      question_id: q.question_id, stage_id: q.stage_id, chapter_id: q.chapter_id, type: String(q.type || "MCQ").toUpperCase(),
+      prompt: String(q.prompt || ""), code: String(q.code || ""), answer: String(q.answer || ""), explanation: String(q.explanation || ""),
+      hint: String(hintByQuestion[qid] || ""), terms: termsByQuestion[qid] || [],
+      xp: Math.min(2, Math.max(1, Number(q.xp || 1))), order: Number(q.order || 0),
+      options: (optionsByQuestion[qid] || []).map((o: any) => ({
+        option_id: o.option_id, text: String(o.option_text || ""), value: String(o.option_text || ""), order: Number(o.order || 0),
+      })),
+    };
+  });
+
+  return { ok: true, cached_at: new Date().toISOString(), questions };
+}
+
+// ---------------- learn / heart recovery ----------------
+
+async function completeLearn(b: any) {
+  required(b, ["session_token", "stage_id", "chapter_id"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const uid = s.user_id;
+  const sid = String(b.stage_id), cid = String(b.chapter_id);
+  const now = new Date().toISOString();
+
+  const { data: chapter } = await supabase.from("chapters").select("*").eq("stage_id", sid).eq("chapter_id", cid).eq("active", true).maybeSingle();
+  if (!chapter) throw new Error("Chapter not found.");
+
+  const content = await publicContent();
+  const facts = await prerequisiteFacts(uid, content);
+  const stageGate = prerequisiteStatus("STAGE", sid, "", content, facts);
+  const chapterGate = prerequisiteStatus("CHAPTER", sid, cid, content, facts);
+  if (!stageGate.unlocked) throw new Error(stageGate.lock_reason);
+  if (!chapterGate.unlocked) throw new Error(chapterGate.lock_reason);
+
+  const { data: existing } = await supabase.from("learn_progress").select("*").eq("user_id", uid).eq("chapter_id", cid).maybeSingle();
+  const times = Number(existing?.times_completed || 0) + 1;
+  const patch = { user_id: uid, stage_id: sid, chapter_id: cid, times_completed: times, last_completed_at: now, pages_viewed: Number(b.pages_viewed || 0), completed: true, updated_at: now };
+
+  if (existing) {
+    await supabase.from("learn_progress").update(patch).eq("user_id", uid).eq("chapter_id", cid);
+  } else {
+    await supabase.from("learn_progress").insert({ learn_progress_id: newId("LP"), ...patch });
+  }
+
+  const { data: user } = await supabase.from("users").select("*").eq("user_id", uid).single();
+  const isRecoveryChapter = String(user.heart_recovery_chapter_id || "") === cid && Number(user.hearts || 0) < defaultHearts(settings);
+
+  const userPatch: any = { last_learn_stage: sid, last_learn_chapter: cid, current_stage: sid, current_chapter: cid };
+  if (isRecoveryChapter) {
+    userPatch.hearts = defaultHearts(settings);
+    userPatch.heart_recovery_stage_id = "";
+    userPatch.heart_recovery_chapter_id = "";
+  }
+  await supabase.from("users").update(userPatch).eq("user_id", uid);
+
+  const appState = await bootstrap({ session_token: b.session_token });
+  return {
+    ok: true, chapter_id: cid, times_completed: times, refilled: isRecoveryChapter,
+    hearts: isRecoveryChapter ? defaultHearts(settings) : Number(user.hearts || defaultHearts(settings)),
+    message: isRecoveryChapter ? "Chapter review complete. Your hearts were refilled." : "Chapter Learn complete. Take its test when you are ready.",
+    app_state: appState,
+  };
+}
+
+// ---------------- chapter tests ----------------
+
+async function startTest(b: any) {
+  required(b, ["session_token", "stage_id", "chapter_id"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const uid = s.user_id;
+  const sid = String(b.stage_id), cid = String(b.chapter_id);
+
+  const { data: user } = await supabase.from("users").select("*").eq("user_id", uid).single();
+  if (!user) throw new Error("User not found.");
+  if (Number(user.hearts || 0) <= 0) {
+    throw new Error(`No hearts left. Review the chapter where the hearts were lost: ${await recoveryChapterTitle(user)}.`);
+  }
+
+  const { data: chapter } = await supabase.from("chapters").select("*").eq("stage_id", sid).eq("chapter_id", cid).eq("active", true).maybeSingle();
+  if (!chapter) throw new Error("Chapter not found.");
+
+  const { data: learnedRows } = await supabase.from("learn_progress").select("completed").eq("user_id", uid).eq("chapter_id", cid).eq("completed", true).limit(1);
+  if (!learnedRows || !learnedRows.length) throw new Error("Complete this chapter in Learn before taking its test.");
+
+  const content = await publicContent();
+  const facts = await prerequisiteFacts(uid, content);
+  const stageGate = prerequisiteStatus("STAGE", sid, "", content, facts);
+  const chapterGate = prerequisiteStatus("CHAPTER", sid, cid, content, facts);
+  if (!stageGate.unlocked) throw new Error(stageGate.lock_reason);
+  if (!chapterGate.unlocked) throw new Error(chapterGate.lock_reason);
+
+  const testBank = await testContent();
+  let pool = testBank.questions.filter((q: any) => normalizeId(q.stage_id) === normalizeId(sid) && normalizeId(q.chapter_id) === normalizeId(cid));
+  if (!pool.length) throw new Error("No active questions found for this chapter.");
+
+  const count = Math.max(1, Number(settings.QUESTIONS_PER_CHAPTER || 5));
+  pool = pool.sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0));
+  const selected = pool.slice(0, count);
+
+  const runId = newId("TR", 14);
+  const { count: attemptCount } = await supabase.from("test_runs").select("*", { count: "exact", head: true }).eq("user_id", uid).eq("chapter_id", cid);
+  const attemptNo = (attemptCount || 0) + 1;
+
+  await supabase.from("test_runs").insert({
+    test_run_id: runId, user_id: uid, stage_id: sid, chapter_id: cid,
+    started_at: new Date().toISOString(), status: "active",
+    hearts_start: Number(user.hearts), hearts_end: Number(user.hearts),
+    pending_xp: 0, committed_xp: 0, correct_count: 0, question_count: selected.length, attempt_no: attemptNo,
+  });
+
+  const allOptions = testBank.options;
+  const allHints = testBank.hints || [];
+  const questions = selected.map((q: any) => {
+    let opts = allOptions.filter((o: any) => String(o.question_id) === String(q.question_id))
+      .sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0))
+      .map((o: any) => ({ option_id: o.option_id, text: o.option_text, value: o.option_text }));
+    if (String(q.type || "").toUpperCase() === "ORDER" || opts.length > 1) opts = shuffle(opts.slice());
+    const hintRow = allHints.filter((h: any) => normalizeId(h.question_id) === normalizeId(q.question_id)).sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0))[0];
+    return {
+      question_id: q.question_id, type: String(q.type || "MCQ").toUpperCase(), prompt: q.prompt || "", code: q.code || "",
+      hint: hintRow ? String(hintRow.hint_text || "") : "", answer: String(q.answer || ""), explanation: String(q.explanation || ""),
+      xp: Math.min(2, Math.max(1, Number(q.xp || 1))), options: opts,
+    };
+  });
+
+  return { ok: true, test_run_id: runId, test: { stage_id: sid, chapter_id: cid, title: `${chapter.title || "Chapter"} Test`, chapter_title: chapter.title }, questions, hearts: Number(user.hearts) };
+}
+
+async function saveTestAnswer(b: any) {
+  required(b, ["session_token", "test_run_id", "question_id", "answer"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const uid = s.user_id;
+
+  const { data: run } = await supabase.from("test_runs").select("*").eq("test_run_id", b.test_run_id).eq("user_id", uid).maybeSingle();
+  if (!run || String(run.status) !== "active") throw new Error("This test run is not active.");
+
+  const { data: q } = await supabase.from("questions").select("*").eq("question_id", b.question_id).eq("chapter_id", run.chapter_id).maybeSingle();
+  if (!q) throw new Error("Question not found.");
+
+  const { data: hintRows } = await supabase.from("test_hints").select("*").eq("question_id", b.question_id);
+  const answerHint = (hintRows || []).sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0))[0];
+
+  const { data: priorRowsRaw } = await supabase.from("attempts").select("*").eq("test_run_id", run.test_run_id).eq("question_id", q.question_id);
+  const priorRows = priorRowsRaw || [];
+  if (priorRows.some((a: any) => truthy(a.correct))) throw new Error("This question is already complete.");
+  if (priorRows.length >= 3) throw new Error("All three attempts for this question have been used.");
+
+  const questionAttemptNo = priorRows.length + 1;
+  const correct = isAnswerCorrect(q, String(b.answer));
+  const questionDone = correct || questionAttemptNo >= 3;
+  const qxp = Math.min(2, Math.max(1, Number(q.xp || 1)));
+
+  const heartsBefore = Number(run.hearts_end ?? run.hearts_start ?? defaultHearts(settings));
+  const heartLost = !correct && questionAttemptNo >= 3;
+  const heartsAfter = heartLost ? Math.max(0, heartsBefore - 1) : heartsBefore;
+  const pending = Number(run.pending_xp || 0) + (correct ? qxp : 0);
+  const correctCount = Number(run.correct_count || 0) + (correct ? 1 : 0);
+
+  await supabase.from("attempts").insert({
+    attempt_id: newId("A", 14), user_id: uid, stage_id: run.stage_id, chapter_id: run.chapter_id,
+    question_id: q.question_id, question_attempt_no: questionAttemptNo, answer: String(b.answer), correct,
+    hearts_before: heartsBefore, hearts_after: heartsAfter, xp_earned: 0, response_ms: Number(b.response_ms || 0),
+    device: String(b.device || ""), attempted_at: new Date().toISOString(), test_run_id: run.test_run_id,
+    question_xp: correct ? qxp : 0, xp_committed: false,
+  });
+
+  await supabase.from("test_runs").update({ hearts_end: heartsAfter, pending_xp: pending, correct_count: correctCount }).eq("test_run_id", run.test_run_id);
+
+  const { data: user } = await supabase.from("users").select("*").eq("user_id", uid).single();
+  const attempted = Number(user.questions_attempted || 0) + 1;
+  const corr = Number(user.correct_answers || 0) + (correct ? 1 : 0);
+  const userPatch: any = {
+    hearts: heartsAfter, questions_attempted: attempted, correct_answers: corr,
+    accuracy_percent: attempted ? Math.round((corr * 10000) / attempted) / 100 : 0,
+    current_stage: run.stage_id, current_chapter: run.chapter_id,
+  };
+  if (heartLost) { userPatch.heart_recovery_stage_id = run.stage_id; userPatch.heart_recovery_chapter_id = run.chapter_id; }
+  await supabase.from("users").update(userPatch).eq("user_id", uid);
+
+  const failed = heartsAfter <= 0 && heartLost;
+  if (failed) {
+    await supabase.from("test_runs").update({ status: "failed", finished_at: new Date().toISOString(), committed_xp: 0 }).eq("test_run_id", run.test_run_id);
+  }
+
+  return {
+    ok: true, correct, correct_answer: questionDone && !correct ? String(q.answer || "") : "",
+    explanation: String(q.explanation || ""), hint: answerHint ? String(answerHint.hint_text || "") : "",
+    hearts: heartsAfter, pending_xp: pending, failed, heart_lost: heartLost,
+    recovery_chapter_id: heartLost ? run.chapter_id : "", question_done: questionDone,
+    retry_allowed: !correct && questionAttemptNo < 3 && !failed, attempt_number: questionAttemptNo,
+    attempts_remaining: Math.max(0, 3 - questionAttemptNo),
+  };
+}
+
+async function finishTest(b: any) {
+  required(b, ["session_token", "test_run_id"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const uid = s.user_id;
+
+  const { data: run } = await supabase.from("test_runs").select("*").eq("test_run_id", b.test_run_id).eq("user_id", uid).maybeSingle();
+  if (!run) throw new Error("Test run not found.");
+
+  if (String(run.status) === "failed") {
+    return { ok: true, completed: false, failed: true, committed_xp: 0, chapter_id: run.chapter_id, message: "Test not completed. Pending XP was discarded. Review the chapter where your hearts were lost." };
+  }
+  if (String(run.status) === "completed") {
+    return { ok: true, completed: true, committed_xp: Number(run.committed_xp || 0), chapter_id: run.chapter_id };
+  }
+
+  const { data: attempts } = await supabase.from("attempts").select("*").eq("test_run_id", run.test_run_id);
+  const grouped: Record<string, any[]> = {};
+  (attempts || []).forEach((a: any) => { (grouped[String(a.question_id)] ||= []).push(a); });
+  const finishedQuestionCount = Object.values(grouped).filter((list: any[]) => list.some((a) => truthy(a.correct)) || list.length >= 3).length;
+  if (finishedQuestionCount < Number(run.question_count || 0)) throw new Error("Finish every question before completing the test.");
+  if (Number(run.hearts_end || 0) <= 0) throw new Error("The test cannot be completed with zero hearts.");
+
+  const content = await publicContent();
+  const factsBefore = await prerequisiteFacts(uid, content);
+  const stagePracticeBefore = (content.practice || []).filter((r: any) => normalizeId(r.stage_id) === normalizeId(run.stage_id)).sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0));
+  const firstPracticeBefore = stagePracticeBefore[0];
+  const practiceWasUnlockedBefore = firstPracticeBefore
+    ? prerequisiteStatus("PRACTICE", firstPracticeBefore.stage_id, firstPracticeBefore.practice_id, content, factsBefore).unlocked
+    : false;
+
+  const xp = Number(run.pending_xp || 0);
+  await supabase.from("test_runs").update({ status: "completed", finished_at: new Date().toISOString(), committed_xp: xp }).eq("test_run_id", run.test_run_id);
+
+  const { data: runAttempts } = await supabase.from("attempts").select("attempt_id,question_xp").eq("test_run_id", run.test_run_id);
+  for (const a of runAttempts || []) {
+    await supabase.from("attempts").update({ xp_earned: a.question_xp, xp_committed: true }).eq("attempt_id", a.attempt_id);
+  }
+
+  const { data: allChapters } = await supabase.from("chapters").select("chapter_id,stage_id").eq("active", true);
+  const { data: allRunsFresh } = await supabase.from("test_runs").select("chapter_id,status,test_run_id").eq("user_id", uid);
+  const completedIds = new Set((allRunsFresh || []).filter((r: any) => r.status === "completed" || r.test_run_id === run.test_run_id).map((r: any) => String(r.chapter_id || "")));
+  const { data: stages } = await supabase.from("stages").select("stage_id").eq("active", true);
+
+  const completedStageIds = (stages || []).filter((st: any) => {
+    const cs = (allChapters || []).filter((c: any) => String(c.stage_id) === String(st.stage_id));
+    return cs.length > 0 && cs.every((c: any) => completedIds.has(String(c.chapter_id)));
+  }).map((st: any) => String(st.stage_id));
+
+  const { data: user } = await supabase.from("users").select("*").eq("user_id", uid).single();
+  await supabase.from("users").update({
+    total_xp: Number(user.total_xp || 0) + xp,
+    tests_completed: Number(user.tests_completed || 0) + 1,
+    stages_completed: completedStageIds.length,
+    last_completed_stage: completedStageIds.includes(String(run.stage_id)) ? run.stage_id : (user.last_completed_stage || ""),
+    current_stage: run.stage_id, current_chapter: run.chapter_id,
+  }).eq("user_id", uid);
+
+  const appState = await bootstrap({ session_token: b.session_token });
+
+  return {
+    ok: true, completed: true, committed_xp: xp, stage_id: run.stage_id, chapter_id: run.chapter_id,
+    stage_completed: completedStageIds.includes(String(run.stage_id)),
+    practice_just_unlocked: !practiceWasUnlockedBefore && (appState.practice || []).some((r: any) => normalizeId(r.stage_id) === normalizeId(run.stage_id) && r.unlocked !== false),
+    message: `Chapter test complete. ${xp} XP added. Hearts are unchanged.`,
+    app_state: appState,
+  };
+}
+
+// ---------------- practice (VS Code pairing) ----------------
+
+async function practiceProgressForUser(uid: string) {
+  const { data } = await supabase.from("practice_progress").select("*").eq("user_id", uid);
+  return (data || []).map((r: any) => ({
+    practice_id: String(r.practice_id || ""), stage_id: String(r.stage_id || ""), status: String(r.status || ""),
+    attempt_count: Number(r.attempt_count || 0), completed_at: r.completed_at || "",
+  }));
+}
+
+async function practiceActivePairingsForUser(uid: string) {
+  const now = Date.now();
+  const { data } = await supabase.from("practice_pairings").select("*").eq("user_id", uid);
+  return (data || []).filter((r: any) => {
+    const status = String(r.status || "");
+    if (status === "connected") return true;
+    if (status === "pending") return new Date(String(r.expires_at || "")).getTime() > now;
+    return false;
+  }).sort((a: any, b: any) => String(b.connected_at || b.created_at || "").localeCompare(String(a.connected_at || a.created_at || "")));
+}
+
+async function supersedeOtherPracticePairings(uid: string, keepPairingId: string) {
+  const active = await practiceActivePairingsForUser(uid);
+  for (const r of active) {
+    if (String(r.pairing_id) !== String(keepPairingId)) {
+      await supabase.from("practice_pairings").update({ status: "superseded", device_token_hash: "", last_seen: new Date().toISOString() }).eq("pairing_id", r.pairing_id);
+    }
+  }
+}
+
+async function deletePracticeProgressForUser(uid: string) {
+  await supabase.from("practice_progress").delete().eq("user_id", uid);
+}
+
+async function practiceConnectionState(b: any) {
+  required(b, ["session_token"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const active = await practiceActivePairingsForUser(s.user_id);
+  const current = active[0] || null;
+  const progress = await practiceProgressForUser(s.user_id);
+  return {
+    ok: true, connected: !!current && current.status === "connected", pending: !!current && current.status === "pending",
+    pairing_id: current ? String(current.pairing_id || "") : "",
+    pair_code: current && current.status === "pending" ? String(current.pair_code || "") : "",
+    device_name: current ? String(current.device_name || "") : "", connected_at: current ? String(current.connected_at || "") : "",
+    has_progress: progress.some((p: any) => String(p.status).toLowerCase() === "completed"),
+    completed_count: progress.filter((p: any) => String(p.status).toLowerCase() === "completed").length,
+  };
+}
+
+async function createPracticePairing(b: any) {
+  required(b, ["session_token"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const mode = String(b.mode || "").toLowerCase();
+  const active = await practiceActivePairingsForUser(s.user_id);
+  const current = active[0] || null;
+  const progress = await practiceProgressForUser(s.user_id);
+  if (current && !mode) {
+    return {
+      ok: true, requires_choice: true, existing_status: String(current.status || ""), device_name: String(current.device_name || "VS Code"),
+      connected_at: String(current.connected_at || ""), has_progress: progress.some((p: any) => String(p.status).toLowerCase() === "completed"),
+      completed_count: progress.filter((p: any) => String(p.status).toLowerCase() === "completed").length,
+    };
+  }
+  const now = new Date();
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const expires = new Date(now.getTime() + 10 * 60 * 1000).toISOString();
+  if (mode === "restart") {
+    await deletePracticeProgressForUser(s.user_id);
+    for (const r of await practiceActivePairingsForUser(s.user_id)) {
+      await supabase.from("practice_pairings").update({ status: "superseded", device_token_hash: "", last_seen: now.toISOString() }).eq("pairing_id", r.pairing_id);
+    }
+  }
+  if (mode === "continue" && current) {
+    await supersedeOtherPracticePairings(s.user_id, current.pairing_id);
+    await supabase.from("practice_pairings").update({ pair_code: code, status: "pending", created_at: now.toISOString(), expires_at: expires, device_name: "", device_token_hash: "", connected_at: null, last_seen: null }).eq("pairing_id", current.pairing_id);
+    return { ok: true, pairing_id: String(current.pairing_id), pair_code: code, expires_in_seconds: 600, reused: true, progress_kept: true };
+  }
+  const pairingId = newId("PAIR-", 12);
+  await supabase.from("practice_pairings").insert({ pairing_id: pairingId, pair_code: code, user_id: s.user_id, status: "pending", created_at: now.toISOString(), expires_at: expires, device_name: "", device_token_hash: "", connected_at: null, last_seen: null });
+  return { ok: true, pairing_id: pairingId, pair_code: code, expires_in_seconds: 600, restarted: mode === "restart" };
+}
+
+async function practicePairingStatus(b: any) {
+  required(b, ["session_token", "pairing_id"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const { data: row } = await supabase.from("practice_pairings").select("*").eq("pairing_id", b.pairing_id).eq("user_id", s.user_id).maybeSingle();
+  if (!row) throw new Error("Pairing request not found.");
+  const expired = new Date(String(row.expires_at)).getTime() < Date.now();
+  const status = expired && row.status === "pending" ? "expired" : String(row.status || "pending");
+  if (status === "expired") await supabase.from("practice_pairings").update({ status: "expired" }).eq("pairing_id", row.pairing_id);
+  return { ok: true, status, device_name: String(row.device_name || "") };
+}
+
+async function claimPracticePairing(b: any) {
+  required(b, ["pair_code"]);
+  const code = String(b.pair_code).trim();
+  const { data: rows } = await supabase.from("practice_pairings").select("*").eq("pair_code", code).eq("status", "pending");
+  const row = (rows || []).sort((a: any, b: any) => String(b.created_at).localeCompare(String(a.created_at)))[0];
+  if (!row) throw new Error("Pairing code is invalid or has already been used.");
+  if (new Date(String(row.expires_at)).getTime() < Date.now()) throw new Error("Pairing code expired. Generate a new code on CLICK.");
+  await supersedeOtherPracticePairings(row.user_id, row.pairing_id);
+  const token = "CLICKDEV-" + crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+  const now = new Date().toISOString();
+  const hash = await practiceTokenHash(token);
+  await supabase.from("practice_pairings").update({ status: "connected", device_name: String(b.device_name || "VS Code").slice(0, 80), device_token_hash: hash, connected_at: now, last_seen: now }).eq("pairing_id", row.pairing_id);
+  return { ok: true, device_token: token, user_id: row.user_id };
+}
+
+async function requirePracticeDevice(token: string) {
+  if (!token) throw new Error("CLICK VS Code is not connected.");
+  const hash = await practiceTokenHash(String(token));
+  const { data: row } = await supabase.from("practice_pairings").select("*").eq("status", "connected").eq("device_token_hash", hash).maybeSingle();
+  if (!row) throw new Error("This CLICK VS Code connection is no longer valid. Pair it again.");
+  await supabase.from("practice_pairings").update({ last_seen: new Date().toISOString() }).eq("pairing_id", row.pairing_id);
+  return row;
+}
+
+function parsePracticeJson(v: any) {
+  if (Array.isArray(v)) return v;
+  const s = String(v || "").trim();
+  if (!s) return [];
+  try { const x = JSON.parse(s); return Array.isArray(x) ? x : []; } catch { return []; }
+}
+
+function normalizePracticeQuestion(r: any, index: number, practiceTests: any[], practiceMistakes: any[]) {
+  const pid = String(r.practice_id || r.id || `PRACTICE-${index + 1}`);
+  const ownTests = (practiceTests || []).filter((t: any) => normalizeId(t.practice_id) === normalizeId(pid)).sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0));
+  const visible = ownTests.filter((t: any) => !truthy(t.hidden)).map((t: any) => ({ name: String(t.name || ""), input: String(t.input || ""), expected_output: String(t.expected_output || ""), timeout_ms: Number(t.timeout_ms || 5000) }));
+  const hidden = ownTests.filter((t: any) => truthy(t.hidden)).map((t: any) => ({ name: String(t.name || ""), input: String(t.input || ""), expected_output: String(t.expected_output || ""), timeout_ms: Number(t.timeout_ms || 5000) }));
+  const ownMistakes = (practiceMistakes || []).filter((x: any) => normalizeId(x.practice_id) === normalizeId(pid)).sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0))
+    .map((x: any) => ({ rule_type: String(x.rule_type || "source_regex"), pattern: String(x.pattern || ""), message: String(x.message || "") }));
+  return {
+    practice_id: pid, stage_id: String(r.stage_id || ""), title: String(r.title || r.question || `Practice ${index + 1}`),
+    objective: String(r.objective || ""), problem_statement: String(r.problem_statement || r.scenario || r.instructions || r.question || ""),
+    constraints: String(r.constraints || ""), sample_input: String(r.sample_input || ""), sample_output: String(r.sample_output || ""),
+    scenario: String(r.problem_statement || r.scenario || ""), instructions: String(r.problem_statement || r.instructions || r.question || ""),
+    starter_code: String(r.starter_code || ""),
+    visible_tests: visible.length ? visible : parsePracticeJson(r.visible_tests_json || r.visible_tests || "[]"),
+    hidden_tests: hidden.length ? hidden : parsePracticeJson(r.hidden_tests_json || r.hidden_tests || "[]"),
+    mistake_rules: ownMistakes.length ? ownMistakes : parsePracticeJson(r.mistake_rules_json || r.mistake_rules || "[]"),
+    hints: [r.hint_1, r.hint_2, r.hint_3].filter(Boolean).map(String),
+    success_message: String(r.success_message || "All tests passed. Nice work!"),
+    technique_after_success: String(r.technique_after_success || ""),
+    order: Number(r.order || index + 1),
+  };
+}
+
+async function practiceExtensionSync(b: any) {
+  required(b, ["device_token"]);
+  const device = await requirePracticeDevice(b.device_token);
+  const uid = device.user_id;
+  const progress = await practiceProgressForUser(uid);
+  const done = new Set(progress.filter((p: any) => String(p.status).toLowerCase() === "completed").map((p: any) => normalizeId(p.practice_id)));
+  const content = await publicContent();
+  const facts = await prerequisiteFacts(uid, content);
+
+  const { data: practiceRowsRaw } = await supabase.from("practice_bank").select("*").eq("active", true);
+  const all = (practiceRowsRaw || []).map((r: any, i: number) => normalizePracticeQuestion(r, i, content.practice_tests, content.practice_mistakes))
+    .map((q: any) => {
+      const gate = prerequisiteStatus("PRACTICE", q.stage_id, q.practice_id, content, facts);
+      return { ...q, completed: done.has(normalizeId(q.practice_id)), available: gate.unlocked, lock_reason: gate.lock_reason || "" };
+    }).sort((a: any, b: any) => normalizeId(a.stage_id).localeCompare(normalizeId(b.stage_id)) || a.order - b.order);
+
+  const visibleStages = new Set(all.filter((q: any) => q.available || q.completed).map((q: any) => normalizeId(q.stage_id)));
+  const questions = all.filter((q: any) => visibleStages.has(normalizeId(q.stage_id)));
+
+  const { data: user } = await supabase.from("users").select("name").eq("user_id", uid).maybeSingle();
+  return { ok: true, user: { name: user ? String(user.name || "Student") : "Student" }, questions, progress };
+}
+
+async function practiceWebSync(b: any) {
+  required(b, ["session_token"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const uid = s.user_id;
+  const content = await publicContent();
+  const facts = await prerequisiteFacts(uid, content);
+  const practiceProgress = await practiceProgressForUser(uid);
+  const practiceRows = content.practice.map((r: any, i: number) => {
+    const pid = String(r.practice_id || `PRACTICE-${i + 1}`);
+    const gate = prerequisiteStatus("PRACTICE", r.stage_id, pid, content, facts);
+    return { ...r, unlocked: gate.unlocked, lock_reason: gate.lock_reason || "" };
+  });
+  return { ok: true, practice: practiceRows, practice_progress: practiceProgress, connection: await practiceConnectionState({ session_token: b.session_token }) };
+}
+
+async function completePractice(b: any) {
+  required(b, ["device_token", "practice_id"]);
+  const device = await requirePracticeDevice(b.device_token);
+  const uid = device.user_id;
+  const pid = normalizeId(b.practice_id);
+  const content = await publicContent();
+  const facts = await prerequisiteFacts(uid, content);
+  const { data: practiceRowsRaw } = await supabase.from("practice_bank").select("*").eq("active", true);
+  const all = (practiceRowsRaw || []).map((r: any, i: number) => normalizePracticeQuestion(r, i, content.practice_tests, content.practice_mistakes));
+  const q = all.find((x: any) => normalizeId(x.practice_id) === pid);
+  if (!q) throw new Error("Practice question not found.");
+  const gate = prerequisiteStatus("PRACTICE", q.stage_id, q.practice_id, content, facts);
+  if (!gate.unlocked) throw new Error(gate.lock_reason || "This practice challenge is still locked.");
+
+  const stageQs = all.filter((x: any) => normalizeId(x.stage_id) === normalizeId(q.stage_id)).sort((a: any, b: any) => a.order - b.order);
+  const now = new Date().toISOString();
+  const { data: existing } = await supabase.from("practice_progress").select("*").eq("user_id", uid).eq("practice_id", pid).maybeSingle();
+  const summary = String(b.result_summary || "All configured tests passed.").slice(0, 1000);
+  if (existing) {
+    await supabase.from("practice_progress").update({ stage_id: q.stage_id, status: "completed", attempt_count: Number(existing.attempt_count || 0) + 1, last_result: summary, completed_at: existing.completed_at || now, updated_at: now }).eq("user_id", uid).eq("practice_id", pid);
+  } else {
+    await supabase.from("practice_progress").insert({ progress_id: newId("PP-", 12), user_id: uid, practice_id: q.practice_id, stage_id: q.stage_id, status: "completed", attempt_count: 1, last_result: summary, completed_at: now, updated_at: now });
+  }
+  const { data: persisted } = await supabase.from("practice_progress").select("*").eq("user_id", uid).eq("practice_id", pid).eq("status", "completed").maybeSingle();
+  if (!persisted) throw new Error("CLICK could not save PracticeProgress. Please retry Check Code.");
+  const { data: afterRows } = await supabase.from("practice_progress").select("practice_id").eq("user_id", uid).eq("status", "completed");
+  const after = new Set((afterRows || []).map((r: any) => normalizeId(r.practice_id)));
+  const stageComplete = stageQs.length > 0 && stageQs.every((x: any) => after.has(normalizeId(x.practice_id)));
+  return {
+    ok: true, completed: true, practice_id: q.practice_id, stage_id: q.stage_id, progress_saved: true,
+    progress_id: String(persisted.progress_id || ""), completed_at: String(persisted.completed_at || now),
+    stage_practice_completed: stageComplete, success_message: q.success_message, technique_after_success: q.technique_after_success,
+  };
+}
+
+// ---------------- dispatch ----------------
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
+  try {
+    const b = await req.json().catch(() => ({}));
+    switch (String(b.action || "")) {
+      case "signup": return json(await signup(b));
+      case "login": return json(await login(b));
+      case "session": return json(await sessionInfo(b));
+      case "logout": return json(await logout(b));
+      case "completeOnboarding": return json(await completeOnboarding(b));
+      case "bootstrap": return json(await bootstrap(b));
+      case "preloadTestData": return json(await preloadTestData(b));
+      case "completeLearn": return json(await completeLearn(b));
+      case "startTest": return json(await startTest(b));
+      case "saveTestAnswer": return json(await saveTestAnswer(b));
+      case "finishTest": return json(await finishTest(b));
+      case "createPracticePairing": return json(await createPracticePairing(b));
+      case "practicePairingStatus": return json(await practicePairingStatus(b));
+      case "practiceConnectionState": return json(await practiceConnectionState(b));
+      case "practiceWebSync": return json(await practiceWebSync(b));
+      case "claimPracticePairing": return json(await claimPracticePairing(b));
+      case "practiceExtensionSync": return json(await practiceExtensionSync(b));
+      case "completePractice": return json(await completePractice(b));
+      default: throw new Error("Unknown action: " + b.action);
+    }
+  } catch (err) {
+    return json({ ok: false, error: String((err as Error)?.message || err) });
+  }
+});

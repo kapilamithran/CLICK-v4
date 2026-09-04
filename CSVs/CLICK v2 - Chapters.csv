@@ -1,0 +1,31 @@
+chapter_id,stage_id,chapter_no,title,order,active
+CH0001,STG000,1,C Character Set,1,FALSE
+CH0002,STG000,2,C Tokens,2,TRUE
+CH0003,STG000,3,Keywords and Identifiers,3,TRUE
+CH0004,STG000,4,Rules for Identifiers,4,TRUE
+CH0005,STG000,5,Constants: Fixed Values,5,TRUE
+CH0006,STG000,6,Decimal Integer Constants,6,TRUE
+CH0007,STG000,7,Octal and Hexadecimal Integer Constants,7,TRUE
+CH0008,STG000,8,Integer Suffixes: unsigned and long,8,TRUE
+CH0009,STG000,9,Real Constants in Decimal Notation,9,TRUE
+CH0010,STG000,10,Scientific Notation,10,TRUE
+CH0011,STG000,11,Single-Character Constants,11,TRUE
+CH0012,STG000,12,String Constants,12,TRUE
+CH0013,STG000,13,Backslash Character Constants,13,TRUE
+CH0014,STG000,14,Variables: Named Storage,14,TRUE
+CH0015,STG000,15,Variable Names and Case Sensitivity,15,TRUE
+CH0016,STG000,16,Families of C Data Types,16,TRUE
+CH0017,STG000,17,"Integer Types: short, int, long, signed, unsigned",17,TRUE
+CH0018,STG000,18,Floating-Point Types,18,TRUE
+CH0019,STG000,19,Character Type and void,19,TRUE
+CH0020,STG000,20,Declaring Variables,20,TRUE
+CH0021,STG000,21,typedef: Giving a Type Another Name,21,TRUE
+CH0022,STG000,22,enum: Named Integer Constants,22,TRUE
+CH0023,STG000,23,"Storage Classes: auto, static, extern, register",23,TRUE
+CH0024,STG000,24,Assigning Values to Variables,24,TRUE
+CH0025,STG000,25,Initialization,25,TRUE
+CH0026,STG000,26,Reading Data with scanf,26,TRUE
+CH0027,STG000,27,Symbolic Constants with #define,27,TRUE
+CH0028,STG000,28,const Variables,28,TRUE
+CH0029,STG000,29,volatile Variables,29,TRUE
+CH0030,STG000,30,Overflow and Underflow,30,TRUE

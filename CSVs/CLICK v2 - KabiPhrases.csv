@@ -1,0 +1,22 @@
+phrase_id,category,phrase,active
+KP001,home,Small steps compound. One chapter at a time.,TRUE
+KP002,home,You do not need to know all of C today—just the next tiny idea.,TRUE
+KP003,motivation,"Read the code like a detective: one symbol, one clue.",TRUE
+KP004,motivation,Predict first. Run second. That habit builds programmers.,TRUE
+KP005,motivation,Mistakes are useful when you can explain what changed.,TRUE
+KP006,loading,Kabi is checking your progress…,TRUE
+KP007,loading,Compiling a tiny bit of courage…,TRUE
+KP008,loading,One moment—Kabi is fetching your next challenge.,TRUE
+KP009,loading,Great code starts with patient thinking.,TRUE
+KP010,loading,Tiny wait. Tiny lesson. Big progress.,TRUE
+KP011,learn,Do not memorize the page. Try to predict the example.,TRUE
+KP012,learn,"If you can explain it simply, you are ready to test it.",TRUE
+KP013,test,Read every symbol before choosing.,TRUE
+KP014,test,Predict what C does—not what you wish it did.,TRUE
+KP015,correct,Exactly. You followed C's rule.,TRUE
+KP016,correct,"Nice! That answer came from understanding, not guessing.",TRUE
+KP017,wrong,Good clue. Re-read the smallest part that changed the result.,TRUE
+KP018,wrong,"Not yet. Use the hint, then try the same question again.",TRUE
+KP019,heart_recovery,These hearts were lost here. Complete this chapter's Learn pages to refill them.,TRUE
+KP020,heart_recovery,Kabi remembers where the hearts were lost—review this chapter to restore them.,TRUE
+KP021,announcement,Check the latest update before your next chapter.,TRUE

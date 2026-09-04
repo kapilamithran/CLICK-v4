@@ -1,0 +1,24 @@
+sheet,purpose,what_you_edit,important_rules
+Stages,One row per book-based stage,"stage_id, title, order, active","Stage 0 starts from the attached book's Chapter 2: Constants, Variables and Data Types."
+Chapters,One beginner micro-topic per row,"stage_id, chapter_id, title, order, active",Each micro-topic has one five-page Learn lesson and one five-question chapter test.
+LearnContent,Five richer teaching pages per micro-chapter,pages_text,Separate pages with //.//. Required flow: Definition + analogy → varied examples/comparisons → right/wrong code → visual understanding → quick recap.
+Questions,Five cumulative questions per micro-chapter,"type, prompt, code, answer, explanation, hint, xp","Q1 current topic; Q2 current+Q1; Q3 current+previous; Q4 current+previous two; Q5 recap. If an extension was not taught directly, the prompt must provide a short gist/sample first."
+Options,Choice options and ORDER fragments,"question_id, option_text, order",Used for MCQ/FIND_ERROR/PREDICT_OUTPUT/ORDER. Keep options unambiguous.
+Glossary,Reusable beginner definitions for clickable test vocabulary,"term, definition, color, aliases, active","Definitions must be short, beginner-friendly, and consistent with Learn."
+QuestionTerms,Maps specific words in a test question to Glossary entries,"question_id, term_id, display_text, order, active",Only mapped words become dotted interactive terms. Multiple terms per question are allowed.
+TestHints,Question-specific Kabi hints,"question_id, hint_text, active, order",Hints should guide without giving away the answer.
+PracticeBank,VS Code understanding-focused coding challenges,"title, objective, problem_statement, constraints, sample_input, sample_output, starter_code, hints, success_message, technique_after_success",Every challenge is displayed in the fixed terminal format: title → problem statement → constraints → sample input → sample output → hint → check-code instructions.
+PracticeTests,Visible and hidden local tests for PracticeBank,"practice_id, input, expected_output, hidden, timeout_ms, active, order",Hidden tests are sent to the extension but their expected values are not shown to the learner.
+PracticeMistakes,Pattern-based coaching for common coding mistakes,"practice_id, rule_type, pattern, message, order, active",Coaching only; passing is decided by configured local tests.
+Prerequisites,Unified unlock rules,"target_id, prerequisite_id, condition, description, active","Multiple active rows for the same target are AND conditions. STG, CH, and P targets are supported."
+KabiPhrases,Editable Kabi UI phrases,"category, phrase, active",Learn pages do not display motivational quote cards in v17.
+Announcements,Student announcements,"title, message, category, dates, active",Set active FALSE to hide.
+Users,Student profile and summary,Normally backend-managed,Do not manually edit password hashes/salts.
+Sessions,Login sessions,Backend-managed,Do not edit manually.
+LearnProgress,Learn completion,Backend-managed,One user/chapter progress record.
+TestRuns,Chapter-test runs and pending XP,Backend-managed,XP commits only after successful test completion.
+Attempts,Every answer attempt,Backend-managed,Up to three attempts per question under the existing heart rules.
+PracticeProgress,Permanent VS Code practice completion,Backend-managed,Do not erase unless intentionally starting over.
+PracticePairings,Website-to-VS-Code pairing records,Backend-managed,Only one live connection is kept per student by the v16.3+ backend.
+Settings,Application settings,Safe configurable values,QUESTIONS_PER_CHAPTER should remain 5 for this curriculum design.
+QuestionTypes,Authoring reference,Nothing required,Existing checking/normalization behavior remains in force.

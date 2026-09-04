@@ -1,0 +1,117 @@
+practice_id,stage_id,title,objective,problem_statement,constraints,sample_input,sample_output,starter_code,hint_1,hint_2,hint_3,success_message,technique_after_success,order,active
+P001,STG000,A Name C Will Accept,Distinguish a C keyword from a valid identifier.,The program tries to use a C keyword as a variable name. Repair only the variable name so the program compiles and prints the student's age.,"• Keep the data type as int.
+• Do not use a C keyword as the variable name.
+• Keep the stored value 18.
+• Print only the number.",No input,18,"#include <stdio.h>
+
+int main(void) {
+    int while = 18;
+    printf(""%d\n"", while);
+    return 0;
+}
+",`while` already has a fixed meaning in C.,Choose a normal identifier such as `age`.,Rename both occurrences consistently.,You repaired a keyword/identifier mistake and kept the program's meaning unchanged.,"When renaming a variable, change every use of that identifier consistently.",1,TRUE
+P002,STG000,"One Character, Not a String",Use single quotes for a character constant and double quotes for strings.,"The variable is a char, but the starter code gives it a string constant. Fix the value so the program stores one character and prints it.","• Keep the variable type char.
+• Store the capital letter A.
+• Use the correct quote style for a character constant.
+• Print only A.",No input,A,"#include <stdio.h>
+
+int main(void) {
+    char grade = ""A"";
+    printf(""%c\n"", grade);
+    return 0;
+}
+",A `char` needs a single-character value.,"Compare `'A'` with `""A""`.",Use single quotes around A.,You separated a character constant from a string constant.,"When debugging quotes, first ask whether the code needs one character or a sequence of characters.",2,TRUE
+P003,STG000,Keep the Fraction,Choose a floating-point type when a fractional value must be preserved.,A price contains a fractional part. Repair the declaration and output so the program prints 75.84 exactly to two decimal places.,"• Store 75.84 as a floating-point value.
+• Use double for the variable.
+• Print exactly two digits after the decimal point.
+• Output only the number.",No input,75.84,"#include <stdio.h>
+
+int main(void) {
+    int price = 75.84;
+    printf(""%d\n"", price);
+    return 0;
+}
+",An int is for whole-number values.,Use `double price = 75.84;`.,A double printed to two decimal places can use `%.2f`.,You chose a data type that preserves the fractional part of the value.,"Choose the type from the data you need to preserve, not from the shortest code you can write.",3,TRUE
+P004,STG000,Give It a First Value,Initialize an automatic local variable before reading it.,The program prints a local variable before giving it a known value. Initialize the variable so the program always prints 5.,"• Keep the variable name count.
+• Keep the type int.
+• Give count its value in the declaration.
+• Print only 5.",No input,5,"#include <stdio.h>
+
+int main(void) {
+    int count;
+    printf(""%d\n"", count);
+    return 0;
+}
+","The variable exists, but what value does it have yet?",Initialization happens in the declaration.,Change the declaration to `int count = 5;`.,You prevented an uninitialized-variable bug by giving the local variable a known first value.,Initialize local variables close to where they are declared when you already know the starting value.,4,TRUE
+P005,STG000,Read Into the Right Place,Use scanf with a matching integer format and the variable's address.,Read one integer from input and print the same integer back. Repair the scanf call so the input is stored in number.,"• Keep number as int.
+• Use scanf with %d.
+• Pass the address of number.
+• Print only the integer that was entered.",18,18,"#include <stdio.h>
+
+int main(void) {
+    int number;
+    scanf(""%d"", number);
+    printf(""%d\n"", number);
+    return 0;
+}
+",scanf needs to know where to store the input.,"For this int variable, use the address operator.","Write `scanf(""%d"", &number);`.",You connected formatted input to the memory location of an integer variable.,"When scanf behaves strangely, check the format specifier and the address argument as a pair.",5,TRUE
+P006,STG000,Replace the Magic Number,Use a symbolic constant for a repeated fixed value.,The program uses the fixed value 100 directly. Introduce the symbolic constant MAX with #define and print MAX.,"• Add `#define MAX 100` before main.
+• Do not put a semicolon at the end of the #define line.
+• Print the value through MAX.
+• Output only 100.",No input,100,"#include <stdio.h>
+
+int main(void) {
+    printf(""%d\n"", 100);
+    return 0;
+}
+",A symbolic constant is created before compilation.,The directive begins with `#define`.,"Use `#define MAX 100`, then print MAX.",You replaced an unexplained literal with a meaningful symbolic constant.,Use symbolic names when the same fixed value has a clear meaning or may need to change in one place later.,6,TRUE
+P007,STG000,Do Not Change const,Respect a const-qualified variable after initialization.,The program declares class_size as const and then tries to change it. Repair the code so it compiles and prints the original class size.,"• Keep `const int class_size = 40;`.
+• Do not cast away const.
+• Remove the invalid modification.
+• Print only 40.",No input,40,"#include <stdio.h>
+
+int main(void) {
+    const int class_size = 40;
+    class_size = 50;
+    printf(""%d\n"", class_size);
+    return 0;
+}
+",The declaration says this object should not be modified.,The error is on the assignment after initialization.,Remove the assignment to 50.,You treated const as a real type qualifier rather than as a comment.,"If a value is conceptually fixed, make that rule visible in the type so accidental assignments are caught early.",7,TRUE
+P008,STG000,Names That Describe States,Use an enum to represent related named integer states.,Create an enum named state with OFF and ON. Print the value of ON using %d.,"• Declare `enum state {OFF, ON};`.
+• Use the enumerator ON in the output.
+• Do not replace ON with the raw number 1 in printf.
+• Print only 1.",No input,1,"#include <stdio.h>
+
+/* Define enum state here */
+
+int main(void) {
+    printf(""%d\n"", 1);
+    return 0;
+}
+",By default the first enumerator is 0 and the next is 1.,Define OFF first and ON second.,"Print `ON`, not the unexplained literal 1.",You replaced a raw state number with a readable named integer constant.,Enums are useful when a variable represents one choice from a small named set of states.,8,TRUE
+P009,STG000,Two Kinds of Input,Combine integer and floating-point declarations with matching scanf formats.,"Read a whole-number quantity and a real price, then print them as `quantity price` with the price shown to two decimal places.","• quantity must be int.
+• price must be double.
+• Read both values with matching scanf formats.
+• Print exactly: quantity, one space, price with two decimals.",3 12.50,3 12.50,"#include <stdio.h>
+
+int main(void) {
+    int quantity;
+    double price;
+
+    /* read quantity and price */
+
+    printf(""%d %.2f\n"", quantity, price);
+    return 0;
+}
+",scanf can read more than one value in one call.,For int use %d; for double input use %lf.,Pass both variable addresses in the same order as the format specifiers.,You matched two different input formats with two different data types.,"For formatted input, read the format string left to right and match each conversion with the corresponding variable type and address.",9,TRUE
+P010,STG000,Choose Enough Range,Select a sufficiently wide integer type for a large fixed value.,Store the value 5000000000 in a variable named population and print it exactly. Use a long long integer and an LL literal suffix.,"• Declare population as long long.
+• Use the literal 5000000000LL.
+• Print with %lld.
+• Output only the number.",No input,5000000000,"#include <stdio.h>
+
+int main(void) {
+    int population = 5000000000;
+    printf(""%d\n"", population);
+    return 0;
+}
+",The chosen type should have enough range for the intended value.,Use `long long` and the matching literal suffix.,Print a long long with `%lld`.,You matched a large integer value with a wider integer type and matching format.,"When data can exceed an ordinary int range, design the type from the expected range instead of waiting for overflow bugs.",10,TRUE

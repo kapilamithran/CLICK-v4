@@ -1,0 +1,8 @@
+type,recommended use,answer checking,Options rows?,priority
+ORDER,"Rebuild syntax, code, conditions, or a workflow from fragments",Code/token whitespace is ignored; semantic token order must match,Yes,HIGH
+TYPE_CODE,Produce a tiny piece of C from memory,Whitespace/newlines outside string and char literals are ignored,No,HIGH
+PREDICT_OUTPUT,Mentally execute a tiny program or expression,Exact answer or selected output,Usually,HIGH
+FIND_ERROR,Debug one small broken snippet,Exact selected/text answer,Usually,HIGH
+BLANK,Recall one token/operator/short term,Leading/trailing whitespace ignored,No,HIGH
+MCQ,Use only when a conceptual micro-topic cannot be tested naturally by production,Exact selected option,Yes,LOW
+TRUE_FALSE,Reserve for occasional review only,TRUE/FALSE,Yes,VERY LOW

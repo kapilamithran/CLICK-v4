@@ -1,0 +1,5 @@
+test_run_id,user_id,stage_id,chapter_id,started_at,finished_at,status,hearts_start,hearts_end,pending_xp,committed_xp,correct_count,question_count,attempt_no
+TRFADF1DE008ED41,U485B9DDDA04E,STG000,CH0001,2026-09-03T07:28:51.629Z,,active,3,3,0,0,0,5,1
+TRCFDF582B01D04E,U485B9DDDA04E,STG000,CH0001,2026-09-03T07:40:32.712Z,,active,3,3,0,0,0,5,2
+TRCD8E74C53E9049,U485B9DDDA04E,STG000,CH0002,2026-09-03T08:18:17.471Z,,active,3,1,2,0,1,5,1
+TR36A4EFA6263741,U485B9DDDA04E,STG000,CH0002,2026-09-03T08:34:47.382Z,,active,1,1,0,0,0,5,2

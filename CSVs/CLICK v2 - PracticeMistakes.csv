@@ -1,0 +1,13 @@
+mistake_id,practice_id,rule_type,pattern,message,order,active
+P001-M01,P001,compiler_regex,expected|while,`while` is still being treated as C syntax. Use a non-keyword identifier for the variable.,1,TRUE
+P002-M01,P002,compiler_regex,pointer|integer|conversion,The compiler is warning because a string value is being used where one character value is expected.,1,TRUE
+P003-M01,P003,source_regex,int\s+price,"`price` is still declared as int, so the design does not match the fractional data.",1,TRUE
+P003-M02,P003,actual_regex,^75$,The fractional part has been lost. Use a floating-point variable and matching printf format.,2,TRUE
+P004-M01,P004,source_regex,int\s+count\s*;,`count` is still declared without an initializer. Give it a known first value before printing it.,1,TRUE
+P005-M01,P005,source_regex,"scanf\s*\(\s*""%d""\s*,\s*number\s*\)",The scanf call still passes the value of number instead of its address. Add `&number`.,1,TRUE
+P006-M01,P006,source_regex,#\s*define\s+MAX\s+100\s*;,The #define still has a semicolon. The directive should be `#define MAX 100`.,1,TRUE
+P007-M01,P007,source_regex,class_size\s*=\s*50,The invalid reassignment to the const variable is still present.,1,TRUE
+P008-M01,P008,source_regex,"printf\s*\(\s*""%d\\n""\s*,\s*1\s*\)",The output still uses the raw number 1. Use the enum name ON so the code carries the state meaning.,1,TRUE
+P009-M01,P009,source_regex,scanf\s*\([^\n]*%f[^\n]*&price,"`price` is a double. For scanf, the matching conversion is `%lf`, not `%f`.",1,TRUE
+P010-M01,P010,source_regex,int\s+population,`population` is still declared as int. The challenge requires a wider long long type.,1,TRUE
+P010-M02,P010,source_regex,"printf\s*\(\s*""%d",The output format is still `%d`; use `%lld` for the required long long variable.,2,TRUE

@@ -1,0 +1,1584 @@
+/**
+ * CLICK v16.4 — single-file Google Apps Script backend
+ * click → learn → practice
+ *
+ * Production architecture:
+ * Browser -> Cloudflare Pages /api proxy -> Apps Script -> Google Sheet
+ *
+ * Put PROXY_SECRET in Apps Script > Project Settings > Script properties.
+ * Put the same value in the Cloudflare Pages secret PROXY_SECRET.
+ * Put the deployed Apps Script /exec URL only in Cloudflare as APPS_SCRIPT_URL.
+ */
+
+const TABS = {
+  STAGES:'Stages',
+  CHAPTERS:'Chapters',
+  LEARN:'LearnContent',
+  QUESTIONS:'Questions',
+  OPTIONS:'Options',
+  PRACTICE:'PracticeBank',
+  PRACTICE_TESTS:'PracticeTests',
+  PRACTICE_MISTAKES:'PracticeMistakes',
+  ANNOUNCEMENTS:'Announcements',
+  PHRASES:'KabiPhrases',
+  USERS:'Users',
+  SESSIONS:'Sessions',
+  LEARN_PROGRESS:'LearnProgress',
+  TEST_RUNS:'TestRuns',
+  ATTEMPTS:'Attempts',
+  SETTINGS:'Settings',
+  PREREQUISITES:'Prerequisites',
+  TEST_HINTS:'TestHints',
+  PRACTICE_PROGRESS:'PracticeProgress',
+  PRACTICE_PAIRINGS:'PracticePairings',
+  GLOSSARY:'Glossary',
+  QUESTION_TERMS:'QuestionTerms'
+};
+
+let ROW_CACHE = {};
+let SETTINGS_CACHE = null;
+
+function doGet(e) {
+  return json_({
+    ok:true,
+    app:'CLICK',
+    tagline:'click → learn → practice',
+    version:'17.0',
+    time:new Date().toISOString()
+  });
+}
+
+function doPost(e) {
+  ROW_CACHE = {};
+  SETTINGS_CACHE = null;
+  try {
+    const b = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    switch (String(b.action || '')) {
+      case 'signup': return json_(signup_(b));
+      case 'login': return json_(login_(b));
+      case 'session': return json_(session_(b));
+      case 'logout': return json_(logout_(b));
+      case 'completeOnboarding': return json_(completeOnboarding_(b));
+      case 'bootstrap': return json_(bootstrap_(b));
+      case 'preloadTestData': return json_(preloadTestData_(b));
+      case 'completeLearn': return json_(completeLearn_(b));
+      case 'startTest': return json_(startTest_(b));
+      case 'saveTestAnswer': return json_(saveTestAnswer_(b));
+      case 'finishTest': return json_(finishTest_(b));
+      case 'createPracticePairing': return json_(createPracticePairing_(b));
+      case 'practicePairingStatus': return json_(practicePairingStatus_(b));
+      case 'practiceConnectionState': return json_(practiceConnectionState_(b));
+      case 'practiceWebSync': return json_(practiceWebSync_(b));
+      case 'claimPracticePairing': return json_(claimPracticePairing_(b));
+      case 'practiceExtensionSync': return json_(practiceExtensionSync_(b));
+      case 'completePractice': return json_(completePractice_(b));
+      default: throw new Error('Unknown action: ' + b.action);
+    }
+  } catch (err) {
+    return json_({ok:false,error:String(err && err.message ? err.message : err)});
+  }
+}
+
+
+/* ---------------- Accounts ---------------- */
+
+function signup_(b) {
+  required_(b,['name','roll_no','department','email','phone','password']);
+  const minLen = Number(settingsMap_().MIN_PASSWORD_LENGTH || 6);
+  if (String(b.password).length < minLen) throw new Error('Password must be at least ' + minLen + ' characters.');
+
+  const email = String(b.email).trim().toLowerCase();
+  const roll = String(b.roll_no).trim();
+  const users = rows_(TABS.USERS);
+  if (users.some(u => String(u.email).trim().toLowerCase() === email)) throw new Error('An account with this email already exists.');
+  if (users.some(u => String(u.roll_no).trim().toLowerCase() === roll.toLowerCase())) throw new Error('An account with this roll number already exists.');
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const salt = Utilities.getUuid().replace(/-/g,'');
+    const id = 'U' + Utilities.getUuid().replace(/-/g,'').slice(0,12).toUpperCase();
+    const now = new Date().toISOString();
+
+    appendObject_(TABS.USERS,{
+      user_id:id,
+      name:String(b.name).trim(),
+      roll_no:roll,
+      department:String(b.department).trim(),
+      email,
+      phone:String(b.phone).trim(),
+      password_hash:passwordHash_(String(b.password),salt),
+      password_salt:salt,
+      joined_at:now,
+      last_login:now,
+      last_logout:'',
+      total_xp:0,
+      streak:0,
+      current_stage:'STG000',
+      current_chapter:'',
+      hearts:defaultHearts_(),
+      tests_completed:0,
+      questions_attempted:0,
+      correct_answers:0,
+      accuracy_percent:0,
+      onboarding_completed:false,
+      status:'active',
+      stages_completed:0,
+      last_completed_stage:'',
+      last_learn_stage:'',
+      last_learn_chapter:'',
+      heart_recovery_stage_id:'',
+      heart_recovery_chapter_id:'',
+      role:'student'
+    });
+
+    const user = rowsFresh_(TABS.USERS).find(u => String(u.user_id) === id);
+    const session = createSession_(user,'signup');
+    return {ok:true,user:safeUser_(user),session_token:session.session_token,new_user:true};
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function login_(b) {
+  required_(b,['email','password']);
+  const email = String(b.email).trim().toLowerCase();
+  const user = rows_(TABS.USERS).find(u => String(u.email).trim().toLowerCase() === email);
+  if (!user || String(user.status || 'active').toLowerCase() !== 'active') throw new Error('Incorrect email or password.');
+  if (passwordHash_(String(b.password),String(user.password_salt)) !== String(user.password_hash)) throw new Error('Incorrect email or password.');
+
+  updateRowByKey_(TABS.USERS,'user_id',user.user_id,{last_login:new Date().toISOString()});
+  const fresh = rowsFresh_(TABS.USERS).find(u => String(u.user_id) === String(user.user_id));
+  const session = createSession_(fresh,'login');
+  return {ok:true,user:safeUser_(fresh),session_token:session.session_token,new_user:false};
+}
+
+function session_(b) {
+  required_(b,['session_token']);
+  const s = requireSession_(b.session_token);
+  const user = rows_(TABS.USERS).find(u => String(u.user_id) === String(s.user_id));
+  if (!user) throw new Error('User not found.');
+  return {ok:true,user:safeUser_(user)};
+}
+
+function logout_(b) {
+  required_(b,['session_token']);
+  const s = requireSession_(b.session_token);
+  const now = new Date();
+  const login = new Date(s.login_time);
+  updateRowByKey_(TABS.SESSIONS,'session_id',s.session_id,{
+    active:false,
+    last_seen:now.toISOString(),
+    logout_time:now.toISOString(),
+    duration_sec:isNaN(login.getTime()) ? '' : Math.max(0,Math.round((now-login)/1000))
+  });
+  updateRowByKey_(TABS.USERS,'user_id',s.user_id,{last_logout:now.toISOString()});
+  return {ok:true};
+}
+
+
+function completeOnboarding_(b) {
+  required_(b,['session_token']);
+  const s = requireSession_(b.session_token);
+  updateRowByKey_(TABS.USERS,'user_id',s.user_id,{onboarding_completed:true});
+  const user = rowsFresh_(TABS.USERS).find(u => String(u.user_id) === String(s.user_id));
+  return {ok:true,user:safeUser_(user)};
+}
+
+/* ---------------- Bootstrap / progress ---------------- */
+
+function bootstrap_(b) {
+  required_(b,['session_token']);
+  const s = requireSession_(b.session_token);
+  const uid = s.user_id;
+  const user = rows_(TABS.USERS).find(u => String(u.user_id) === String(uid));
+  if (!user) throw new Error('User not found.');
+
+  const content = publicContent_(truthy_(b.force_refresh));
+  const facts = prerequisiteFacts_(uid,content);
+
+  const chapterProgress = content.chapters.map(ch => {
+    const learn = facts.learnRows.find(r => String(r.chapter_id) === String(ch.chapter_id) && truthy_(r.completed));
+    const done = facts.completedRuns.filter(r => String(r.chapter_id) === String(ch.chapter_id));
+    const failed = facts.failedRuns.filter(r => String(r.chapter_id) === String(ch.chapter_id));
+    const stageGate = prerequisiteStatus_('STAGE',ch.stage_id,'',content,facts);
+    const chapterGate = prerequisiteStatus_('CHAPTER',ch.stage_id,ch.chapter_id,content,facts);
+    const unlocked = stageGate.unlocked && chapterGate.unlocked;
+    return {
+      chapter_id:ch.chapter_id, stage_id:ch.stage_id,
+      learn_completed:!!learn, learn_times:Number(learn && learn.times_completed || 0),
+      test_completed:done.length > 0,
+      best_xp:done.reduce((m,x) => Math.max(m,Number(x.committed_xp || 0)),0),
+      failed_attempts:failed.length,
+      unlocked,
+      lock_reason:unlocked ? '' : (stageGate.lock_reason || chapterGate.lock_reason)
+    };
+  });
+
+  const stageProgress = content.stages.map(st => {
+    const cs = content.chapters.filter(c => String(c.stage_id) === String(st.stage_id));
+    const done = cs.filter(c => chapterProgress.find(p => String(p.chapter_id) === String(c.chapter_id))?.test_completed).length;
+    const learned = cs.filter(c => chapterProgress.find(p => String(p.chapter_id) === String(c.chapter_id))?.learn_completed).length;
+    const total = cs.length;
+    const gate = prerequisiteStatus_('STAGE',st.stage_id,'',content,facts);
+    return {
+      stage_id:st.stage_id, learned_chapters:learned, completed_chapters:done, total_chapters:total,
+      progress_percent:total ? Math.round(done * 100 / total) : 0,
+      test_completed:total > 0 && done === total,
+      best_xp:cs.reduce((sum,c) => sum + Number(chapterProgress.find(p => String(p.chapter_id) === String(c.chapter_id))?.best_xp || 0),0),
+      unlocked:gate.unlocked, lock_reason:gate.lock_reason || ''
+    };
+  });
+
+  const practiceProgress = practiceProgressForUser_(uid);
+  const practiceRows = content.practice.map((r,i) => {
+    const pid = String(r.practice_id || r.id || ('PRACTICE-' + (i+1)));
+    const gate = prerequisiteStatus_('PRACTICE',r.stage_id,pid,content,facts);
+    return Object.assign({},r,{unlocked:gate.unlocked,lock_reason:gate.lock_reason || ''});
+  });
+
+  return {
+    ok:true,user:safeUser_(user),stages:content.stages,chapters:content.chapters,
+    learn_content:content.learn_content,practice:practiceRows,
+    announcements:content.announcements,phrases:content.phrases,prerequisites:content.prerequisites,
+    stage_progress:stageProgress,chapter_progress:chapterProgress,
+    practice_progress:practiceProgress,
+    leaderboard:leaderboard_(),settings:publicSettings_()
+  };
+}
+
+function prerequisiteFacts_(uid,content) {
+  const learnRows = rows_(TABS.LEARN_PROGRESS).filter(r => String(r.user_id) === String(uid));
+  const allRuns = rows_(TABS.TEST_RUNS).filter(r => String(r.user_id) === String(uid));
+  const completedRuns = allRuns.filter(r => String(r.status) === 'completed');
+  const failedRuns = allRuns.filter(r => String(r.status) === 'failed');
+  const completedChapterIds = new Set(completedRuns.map(r => normalizeId_(r.chapter_id)));
+  const learnedChapterIds = new Set(learnRows.filter(r => truthy_(r.completed)).map(r => normalizeId_(r.chapter_id)));
+  const stageCompleteIds = new Set();
+  content.stages.forEach(st => {
+    const cs = content.chapters.filter(c => String(c.stage_id) === String(st.stage_id));
+    if (cs.length && cs.every(c => completedChapterIds.has(normalizeId_(c.chapter_id)))) stageCompleteIds.add(normalizeId_(st.stage_id));
+  });
+  const practiceCompletedIds = new Set(
+    optionalRows_(TABS.PRACTICE_PROGRESS)
+      .filter(r => String(r.user_id) === String(uid) && String(r.status).toLowerCase() === 'completed')
+      .map(r => normalizeId_(r.practice_id))
+  );
+  return {learnRows,completedRuns,failedRuns,completedChapterIds,learnedChapterIds,stageCompleteIds,practiceCompletedIds};
+}
+
+function normalizeId_(v) {
+  return String(v || '').trim().toUpperCase();
+}
+
+function prerequisiteStatus_(targetType,targetStageId,targetChapterId,content,facts) {
+  const targetId = String(targetType).toUpperCase() === 'STAGE'
+    ? normalizeId_(targetStageId)
+    : normalizeId_(targetChapterId);
+
+  const rules = (content.prerequisites || [])
+    .filter(r => r.active === undefined || r.active === '' || truthy_(r.active))
+    .filter(r => normalizeId_(r.target_id) === targetId);
+
+  for (const rule of rules) {
+    const prerequisiteId = normalizeId_(rule.prerequisite_id);
+    const condition = String(rule.condition || 'completed').trim().toLowerCase();
+    let met = false;
+
+    if (prerequisiteId.indexOf('STG') === 0) {
+      met = facts.stageCompleteIds.has(prerequisiteId);
+    } else if (prerequisiteId.indexOf('CH') === 0) {
+      met = condition === 'learned'
+        ? facts.learnedChapterIds.has(prerequisiteId)
+        : facts.completedChapterIds.has(prerequisiteId);
+    } else if (/^P\d+/i.test(prerequisiteId) || prerequisiteId.indexOf('PRACTICE') === 0) {
+      met = facts.practiceCompletedIds && facts.practiceCompletedIds.has(prerequisiteId);
+    }
+
+    if (!met) {
+      return {
+        unlocked:false,
+        lock_reason:String(rule.description || ('Complete ' + prerequisiteId + ' first.'))
+      };
+    }
+  }
+
+  return {unlocked:true,lock_reason:''};
+}
+
+function cacheSeconds_(key,fallback) {
+  const configured = Number(settingsMap_()[key]);
+  return configured > 0 ? Math.max(30,Math.min(21600,configured)) : fallback;
+}
+
+function clearContentCaches_() {
+  const cache = CacheService.getScriptCache();
+  try { cache.remove('CLICK_PUBLIC_V17'); } catch (e) {}
+  try { cache.remove('CLICK_TESTBANK_V17'); } catch (e) {}
+}
+
+function publicContent_(forceRefresh) {
+  const ttl = cacheSeconds_('CONTENT_CACHE_SECONDS',300);
+  const cache = CacheService.getScriptCache();
+  const key = 'CLICK_PUBLIC_V17';
+
+  if (forceRefresh) {
+    clearContentCaches_();
+  } else {
+    const hit = cache.get(key);
+    if (hit) {
+      try { return JSON.parse(hit); } catch (e) {}
+    }
+  }
+
+  [
+    TABS.STAGES,TABS.CHAPTERS,TABS.LEARN,TABS.PRACTICE,TABS.PRACTICE_TESTS,TABS.PRACTICE_MISTAKES,
+    TABS.ANNOUNCEMENTS,TABS.PHRASES,TABS.PREREQUISITES
+  ].forEach(name => delete ROW_CACHE[name]);
+
+  const stages = activeRows_(TABS.STAGES).sort((a,b) => Number(a.order||0)-Number(b.order||0));
+  const stageOrder = {};
+  stages.forEach((st,i) => stageOrder[normalizeId_(st.stage_id)] = Number(st.order || i));
+
+  const chapters = activeRows_(TABS.CHAPTERS).sort((a,b) =>
+    Number(stageOrder[normalizeId_(a.stage_id)] || 0) - Number(stageOrder[normalizeId_(b.stage_id)] || 0) ||
+    Number(a.order||0) - Number(b.order||0)
+  );
+
+  const data = {
+    stages,
+    chapters,
+    learn_content:activeRows_(TABS.LEARN),
+    practice:activeRows_(TABS.PRACTICE),
+    practice_tests:optionalRows_(TABS.PRACTICE_TESTS).filter(r => r.active === undefined || r.active === '' || truthy_(r.active)),
+    practice_mistakes:optionalRows_(TABS.PRACTICE_MISTAKES).filter(r => r.active === undefined || r.active === '' || truthy_(r.active)),
+    announcements:activeRows_(TABS.ANNOUNCEMENTS),
+    phrases:activeRows_(TABS.PHRASES),
+    prerequisites:activeRows_(TABS.PREREQUISITES)
+  };
+
+  try { cache.put(key,JSON.stringify(data),ttl); } catch (e) {}
+  return data;
+}
+
+function testContent_(forceRefresh) {
+  const ttl = cacheSeconds_('TEST_CONTENT_CACHE_SECONDS',300);
+  const cache = CacheService.getScriptCache();
+  const key = 'CLICK_TESTBANK_V17';
+
+  if (forceRefresh) {
+    try { cache.remove(key); } catch (e) {}
+  } else {
+    const hit = cache.get(key);
+    if (hit) {
+      try { return JSON.parse(hit); } catch (e) {}
+    }
+  }
+
+  delete ROW_CACHE[TABS.QUESTIONS];
+  delete ROW_CACHE[TABS.OPTIONS];
+  delete ROW_CACHE[TABS.TEST_HINTS];
+  delete ROW_CACHE[TABS.GLOSSARY];
+  delete ROW_CACHE[TABS.QUESTION_TERMS];
+
+  const data = {
+    questions:activeRows_(TABS.QUESTIONS),
+    options:activeRows_(TABS.OPTIONS),
+    hints:activeRows_(TABS.TEST_HINTS),
+    glossary:activeRows_(TABS.GLOSSARY),
+    question_terms:activeRows_(TABS.QUESTION_TERMS)
+  };
+  try { cache.put(key,JSON.stringify(data),ttl); } catch (e) {}
+  return data;
+}
+
+
+/* ---------------- Client test preload ---------------- */
+
+/**
+ * Loads the active test bank once when a profile opens.
+ * The browser uses this snapshot for instant CHECK feedback.
+ * Attempts are still persisted through saveTestAnswer_ and Finish remains
+ * server-authoritative.
+ */
+function preloadTestData_(b) {
+  required_(b,['session_token']);
+  requireSession_(b.session_token);
+
+  const bank = testContent_(truthy_(b.force_refresh));
+  const optionsByQuestion = {};
+  (bank.options || []).forEach(o => {
+    const qid = normalizeId_(o.question_id);
+    (optionsByQuestion[qid] = optionsByQuestion[qid] || []).push(o);
+  });
+  Object.keys(optionsByQuestion).forEach(qid => {
+    optionsByQuestion[qid].sort((a,b) => Number(a.order||0)-Number(b.order||0));
+  });
+
+  const hintByQuestion = {};
+  (bank.hints || [])
+    .slice()
+    .sort((a,b) => Number(a.order||0)-Number(b.order||0))
+    .forEach(h => {
+      const qid = normalizeId_(h.question_id);
+      if (!hintByQuestion[qid]) hintByQuestion[qid] = String(h.hint_text || '');
+    });
+
+  const glossaryById = {};
+  (bank.glossary || []).forEach(g => { glossaryById[normalizeId_(g.term_id)] = g; });
+  const termsByQuestion = {};
+  (bank.question_terms || [])
+    .slice()
+    .sort((a,b) => Number(a.order||0)-Number(b.order||0))
+    .forEach(m => {
+      const qid = normalizeId_(m.question_id);
+      const g = glossaryById[normalizeId_(m.term_id)];
+      if (!g) return;
+      (termsByQuestion[qid] = termsByQuestion[qid] || []).push({
+        term_id:String(g.term_id || m.term_id || ''),
+        display_text:String(m.display_text || g.term || ''),
+        term:String(g.term || m.display_text || ''),
+        definition:String(g.definition || ''),
+        color:String(g.color || '#5867d8')
+      });
+    });
+
+  const questions = (bank.questions || []).map(q => {
+    const qid = normalizeId_(q.question_id);
+    return {
+      question_id:q.question_id,
+      stage_id:q.stage_id,
+      chapter_id:q.chapter_id,
+      type:String(q.type || 'MCQ').toUpperCase(),
+      prompt:String(q.prompt || ''),
+      code:String(q.code || ''),
+      answer:String(q.answer || ''),
+      explanation:String(q.explanation || ''),
+      hint:String(hintByQuestion[qid] || ''),
+      terms:termsByQuestion[qid] || [],
+      xp:Math.min(2,Math.max(1,Number(q.xp || 1))),
+      order:Number(q.order || 0),
+      options:(optionsByQuestion[qid] || []).map(o => ({
+        option_id:o.option_id,
+        text:String(o.option_text || ''),
+        value:String(o.option_text || ''),
+        order:Number(o.order || 0)
+      }))
+    };
+  });
+
+  return {
+    ok:true,
+    cached_at:new Date().toISOString(),
+    questions:questions
+  };
+}
+
+/* ---------------- Learn / heart recovery ---------------- */
+
+function completeLearn_(b) {
+  required_(b,['session_token','stage_id','chapter_id']);
+  const s = requireSession_(b.session_token);
+  const uid = s.user_id;
+  const sid = String(b.stage_id);
+  const cid = String(b.chapter_id);
+  const now = new Date().toISOString();
+
+  const chapter = activeRows_(TABS.CHAPTERS).find(c => String(c.stage_id) === sid && String(c.chapter_id) === cid);
+  if (!chapter) throw new Error('Chapter not found.');
+
+  const content = publicContent_();
+  const facts = prerequisiteFacts_(uid,content);
+  const stageGate = prerequisiteStatus_('STAGE',sid,'',content,facts);
+  const chapterGate = prerequisiteStatus_('CHAPTER',sid,cid,content,facts);
+  if (!stageGate.unlocked) throw new Error(stageGate.lock_reason);
+  if (!chapterGate.unlocked) throw new Error(chapterGate.lock_reason);
+
+  const existing = rows_(TABS.LEARN_PROGRESS).find(r =>
+    String(r.user_id) === String(uid) && String(r.chapter_id) === cid
+  );
+  const times = Number(existing && existing.times_completed || 0) + 1;
+  const patch = {
+    user_id:uid,
+    stage_id:sid,
+    chapter_id:cid,
+    times_completed:times,
+    last_completed_at:now,
+    pages_viewed:Number(b.pages_viewed || 0),
+    completed:true,
+    updated_at:now
+  };
+
+  if (existing) {
+    updateComposite_(TABS.LEARN_PROGRESS,['user_id','chapter_id'],[uid,cid],patch);
+  } else {
+    appendObject_(TABS.LEARN_PROGRESS,{
+      learn_progress_id:'LP' + Utilities.getUuid().replace(/-/g,'').slice(0,12).toUpperCase(),
+      ...patch
+    });
+  }
+
+  const user = rowsFresh_(TABS.USERS).find(u => String(u.user_id) === String(uid));
+  const isRecoveryChapter =
+    String(user.heart_recovery_chapter_id || '') === cid &&
+    Number(user.hearts || 0) < defaultHearts_();
+
+  const userPatch = {
+    last_learn_stage:sid,
+    last_learn_chapter:cid,
+    current_stage:sid,
+    current_chapter:cid
+  };
+
+  if (isRecoveryChapter) {
+    userPatch.hearts = defaultHearts_();
+    userPatch.heart_recovery_stage_id = '';
+    userPatch.heart_recovery_chapter_id = '';
+  }
+
+  updateRowByKey_(TABS.USERS,'user_id',uid,userPatch);
+
+  const appState = bootstrap_({session_token:b.session_token,force_refresh:false});
+  return {
+    ok:true,
+    chapter_id:cid,
+    times_completed:times,
+    refilled:isRecoveryChapter,
+    hearts:isRecoveryChapter ? defaultHearts_() : Number(user.hearts || defaultHearts_()),
+    message:isRecoveryChapter
+      ? 'Chapter review complete. Your hearts were refilled.'
+      : 'Chapter Learn complete. Take its test when you are ready.',
+    app_state:appState
+  };
+}
+
+/* ---------------- Chapter tests ---------------- */
+
+function startTest_(b) {
+  required_(b,['session_token','stage_id','chapter_id']);
+  const s = requireSession_(b.session_token);
+  const uid = s.user_id;
+  const sid = String(b.stage_id);
+  const cid = String(b.chapter_id);
+
+  const user = rows_(TABS.USERS).find(u => String(u.user_id) === String(uid));
+  if (!user) throw new Error('User not found.');
+  if (Number(user.hearts || 0) <= 0) {
+    throw new Error('No hearts left. Review the chapter where the hearts were lost: ' + recoveryChapterTitle_(user) + '.');
+  }
+
+  const chapter = activeRows_(TABS.CHAPTERS).find(c => String(c.stage_id) === sid && String(c.chapter_id) === cid);
+  if (!chapter) throw new Error('Chapter not found.');
+
+  const learned = rows_(TABS.LEARN_PROGRESS).some(r =>
+    String(r.user_id) === String(uid) &&
+    String(r.chapter_id) === cid &&
+    truthy_(r.completed)
+  );
+  if (!learned) throw new Error('Complete this chapter in Learn before taking its test.');
+
+  const content = publicContent_();
+  const facts = prerequisiteFacts_(uid,content);
+  const stageGate = prerequisiteStatus_('STAGE',sid,'',content,facts);
+  const chapterGate = prerequisiteStatus_('CHAPTER',sid,cid,content,facts);
+  if (!stageGate.unlocked) throw new Error(stageGate.lock_reason);
+  if (!chapterGate.unlocked) throw new Error(chapterGate.lock_reason);
+
+  const testBank = testContent_(truthy_(b.force_refresh));
+  let pool = testBank.questions.filter(q =>
+    normalizeId_(q.stage_id) === normalizeId_(sid) &&
+    normalizeId_(q.chapter_id) === normalizeId_(cid)
+  );
+  if (!pool.length) throw new Error('No active questions found for this chapter.');
+
+  const count = Math.max(1,Number(settingsMap_().QUESTIONS_PER_CHAPTER || 5));
+  pool = pool.sort((a,b) => Number(a.order||0)-Number(b.order||0));
+  const selected = pool.slice(0,count);
+
+  const runId = 'TR' + Utilities.getUuid().replace(/-/g,'').slice(0,14).toUpperCase();
+  const attemptNo = rows_(TABS.TEST_RUNS).filter(r =>
+    String(r.user_id) === String(uid) && String(r.chapter_id) === cid
+  ).length + 1;
+
+  appendObject_(TABS.TEST_RUNS,{
+    test_run_id:runId,
+    user_id:uid,
+    stage_id:sid,
+    chapter_id:cid,
+    started_at:new Date().toISOString(),
+    finished_at:'',
+    status:'active',
+    hearts_start:Number(user.hearts),
+    hearts_end:Number(user.hearts),
+    pending_xp:0,
+    committed_xp:0,
+    correct_count:0,
+    question_count:selected.length,
+    attempt_no:attemptNo
+  });
+
+  const allOptions = testBank.options;
+  const allHints = testBank.hints || [];
+  const questions = selected.map(q => {
+    let opts = allOptions
+      .filter(o => String(o.question_id) === String(q.question_id))
+      .sort((a,b) => Number(a.order||0)-Number(b.order||0))
+      .map(o => ({option_id:o.option_id,text:o.option_text,value:o.option_text}));
+
+    if (String(q.type||'').toUpperCase() === 'ORDER' || opts.length > 1) opts = shuffle_(opts.slice());
+
+    const hintRow = allHints
+      .filter(h => normalizeId_(h.question_id) === normalizeId_(q.question_id))
+      .sort((a,b) => Number(a.order||0)-Number(b.order||0))[0];
+
+    return {
+      question_id:q.question_id,
+      type:String(q.type || 'MCQ').toUpperCase(),
+      prompt:q.prompt || '',
+      code:q.code || '',
+      hint:hintRow ? String(hintRow.hint_text || '') : '',
+      answer:String(q.answer || ''),
+      explanation:String(q.explanation || ''),
+      xp:Math.min(2,Math.max(1,Number(q.xp || 1))),
+      options:opts
+    };
+  });
+
+  return {
+    ok:true,
+    test_run_id:runId,
+    test:{
+      stage_id:sid,
+      chapter_id:cid,
+      title:String(chapter.title || 'Chapter') + ' Test',
+      chapter_title:chapter.title
+    },
+    questions,
+    hearts:Number(user.hearts)
+  };
+}
+
+function saveTestAnswer_(b) {
+  required_(b,['session_token','test_run_id','question_id','answer']);
+  const s = requireSession_(b.session_token);
+  const uid = s.user_id;
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const run = rows_(TABS.TEST_RUNS).find(r =>
+      String(r.test_run_id) === String(b.test_run_id) &&
+      String(r.user_id) === String(uid)
+    );
+    if (!run || String(run.status) !== 'active') throw new Error('This test run is not active.');
+
+    const q = rows_(TABS.QUESTIONS).find(x =>
+      String(x.question_id) === String(b.question_id) &&
+      String(x.chapter_id) === String(run.chapter_id)
+    );
+    if (!q) throw new Error('Question not found.');
+
+    const answerHint = (testContent_(false).hints || [])
+      .filter(h => normalizeId_(h.question_id) === normalizeId_(b.question_id))
+      .sort((a,b) => Number(a.order||0)-Number(b.order||0))[0];
+
+    const prior = rows_(TABS.ATTEMPTS).filter(a =>
+      String(a.test_run_id) === String(run.test_run_id) &&
+      String(a.question_id) === String(q.question_id)
+    );
+    if (prior.some(a => truthy_(a.correct))) throw new Error('This question is already complete.');
+    if (prior.length >= 3) throw new Error('All three attempts for this question have been used.');
+
+    const questionAttemptNo = prior.length + 1;
+    const correct = isAnswerCorrect_(q,String(b.answer));
+    const questionDone = correct || questionAttemptNo >= 3;
+    const qxp = Math.min(2,Math.max(1,Number(q.xp || 1)));
+
+    const heartsBefore = Number(run.hearts_end || run.hearts_start || defaultHearts_());
+    const heartLost = !correct && questionAttemptNo >= 3;
+    const heartsAfter = heartLost ? Math.max(0,heartsBefore - 1) : heartsBefore;
+    const pending = Number(run.pending_xp || 0) + (correct ? qxp : 0);
+    const correctCount = Number(run.correct_count || 0) + (correct ? 1 : 0);
+
+    appendObject_(TABS.ATTEMPTS,{
+      attempt_id:'A' + Utilities.getUuid().replace(/-/g,'').slice(0,14).toUpperCase(),
+      user_id:uid,
+      stage_id:run.stage_id,
+      chapter_id:run.chapter_id,
+      question_id:q.question_id,
+      question_attempt_no:questionAttemptNo,
+      answer:String(b.answer),
+      correct,
+      hearts_before:heartsBefore,
+      hearts_after:heartsAfter,
+      xp_earned:0,
+      response_ms:Number(b.response_ms || 0),
+      device:String(b.device || ''),
+      attempted_at:new Date().toISOString(),
+      test_run_id:run.test_run_id,
+      question_xp:correct ? qxp : 0,
+      xp_committed:false
+    });
+
+    updateRowByKey_(TABS.TEST_RUNS,'test_run_id',run.test_run_id,{
+      hearts_end:heartsAfter,
+      pending_xp:pending,
+      correct_count:correctCount
+    });
+
+    const user = rowsFresh_(TABS.USERS).find(u => String(u.user_id) === String(uid));
+    const attempted = Number(user.questions_attempted || 0) + 1;
+    const corr = Number(user.correct_answers || 0) + (correct ? 1 : 0);
+    const userPatch = {
+      hearts:heartsAfter,
+      questions_attempted:attempted,
+      correct_answers:corr,
+      accuracy_percent:attempted ? Math.round(corr * 10000 / attempted) / 100 : 0,
+      current_stage:run.stage_id,
+      current_chapter:run.chapter_id
+    };
+
+    if (heartLost) {
+      userPatch.heart_recovery_stage_id = run.stage_id;
+      userPatch.heart_recovery_chapter_id = run.chapter_id;
+    }
+    updateRowByKey_(TABS.USERS,'user_id',uid,userPatch);
+
+    const failed = heartsAfter <= 0 && heartLost;
+    if (failed) {
+      updateRowByKey_(TABS.TEST_RUNS,'test_run_id',run.test_run_id,{
+        status:'failed',
+        finished_at:new Date().toISOString(),
+        committed_xp:0
+      });
+    }
+
+    return {
+      ok:true,
+      correct,
+      correct_answer:questionDone && !correct ? String(q.answer || '') : '',
+      explanation:String(q.explanation || ''),
+      hint:answerHint ? String(answerHint.hint_text || '') : '',
+      hearts:heartsAfter,
+      pending_xp:pending,
+      failed,
+      heart_lost:heartLost,
+      recovery_chapter_id:heartLost ? run.chapter_id : '',
+      question_done:questionDone,
+      retry_allowed:!correct && questionAttemptNo < 3 && !failed,
+      attempt_number:questionAttemptNo,
+      attempts_remaining:Math.max(0,3-questionAttemptNo)
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function finishTest_(b) {
+  required_(b,['session_token','test_run_id']);
+  const s = requireSession_(b.session_token);
+  const uid = s.user_id;
+
+  const run = rows_(TABS.TEST_RUNS).find(r =>
+    String(r.test_run_id) === String(b.test_run_id) &&
+    String(r.user_id) === String(uid)
+  );
+  if (!run) throw new Error('Test run not found.');
+
+  if (String(run.status) === 'failed') {
+    return {
+      ok:true,
+      completed:false,
+      failed:true,
+      committed_xp:0,
+      chapter_id:run.chapter_id,
+      message:'Test not completed. Pending XP was discarded. Review the chapter where your hearts were lost.'
+    };
+  }
+
+  if (String(run.status) === 'completed') {
+    return {ok:true,completed:true,committed_xp:Number(run.committed_xp||0),chapter_id:run.chapter_id};
+  }
+
+  const attempts = rows_(TABS.ATTEMPTS).filter(a => String(a.test_run_id) === String(run.test_run_id));
+  const grouped = {};
+  attempts.forEach(a => {
+    const qid = String(a.question_id);
+    (grouped[qid] = grouped[qid] || []).push(a);
+  });
+
+  const finishedQuestionCount = Object.values(grouped).filter(list =>
+    list.some(a => truthy_(a.correct)) || list.length >= 3
+  ).length;
+  if (finishedQuestionCount < Number(run.question_count || 0)) throw new Error('Finish every question before completing the test.');
+  if (Number(run.hearts_end || 0) <= 0) throw new Error('The test cannot be completed with zero hearts.');
+
+  const stageChapterIdsBefore = activeRows_(TABS.CHAPTERS)
+    .filter(c => String(c.stage_id) === String(run.stage_id))
+    .map(c => String(c.chapter_id));
+  const completedBeforeIds = new Set(rowsFresh_(TABS.TEST_RUNS)
+    .filter(r => String(r.user_id) === String(uid) && String(r.status) === 'completed' && String(r.test_run_id) !== String(run.test_run_id))
+    .map(r => String(r.chapter_id || '')));
+  const stageWasCompletedBefore = stageChapterIdsBefore.length > 0 && stageChapterIdsBefore.every(cid => completedBeforeIds.has(cid));
+
+  const contentBeforePracticeUnlock = publicContent_(false);
+  const factsBeforePracticeUnlock = prerequisiteFacts_(uid,contentBeforePracticeUnlock);
+  const stagePracticeBefore = (contentBeforePracticeUnlock.practice || [])
+    .filter(r => normalizeId_(r.stage_id) === normalizeId_(run.stage_id))
+    .sort((a,b)=>Number(a.order||0)-Number(b.order||0));
+  const firstPracticeBefore = stagePracticeBefore[0];
+  const practiceWasUnlockedBefore = firstPracticeBefore
+    ? prerequisiteStatus_('PRACTICE',firstPracticeBefore.stage_id,firstPracticeBefore.practice_id,contentBeforePracticeUnlock,factsBeforePracticeUnlock).unlocked
+    : false;
+
+  const xp = Number(run.pending_xp || 0);
+  updateRowByKey_(TABS.TEST_RUNS,'test_run_id',run.test_run_id,{
+    status:'completed',
+    finished_at:new Date().toISOString(),
+    committed_xp:xp
+  });
+
+  // Commit the question XP only now.
+  const sh = sheet_(TABS.ATTEMPTS);
+  const data = sh.getDataRange().getValues();
+  const h = data[0].map(String);
+  const runCol = h.indexOf('test_run_id');
+  const xpCol = h.indexOf('xp_earned');
+  const qxpCol = h.indexOf('question_xp');
+  const committedCol = h.indexOf('xp_committed');
+  for (let i=1;i<data.length;i++) {
+    if (String(data[i][runCol]) === String(run.test_run_id)) {
+      if (xpCol >= 0 && qxpCol >= 0) data[i][xpCol] = Number(data[i][qxpCol] || 0);
+      if (committedCol >= 0) data[i][committedCol] = true;
+    }
+  }
+  if (data.length > 1) sh.getRange(2,1,data.length-1,data[0].length).setValues(data.slice(1));
+  delete ROW_CACHE[TABS.ATTEMPTS];
+
+  const allChapters = activeRows_(TABS.CHAPTERS);
+  const completedRuns = rowsFresh_(TABS.TEST_RUNS).filter(r =>
+    String(r.user_id) === String(uid) &&
+    (String(r.status) === 'completed' || String(r.test_run_id) === String(run.test_run_id))
+  );
+  const completedIds = new Set(completedRuns.map(r => String(r.chapter_id || '')));
+  const stages = activeRows_(TABS.STAGES);
+
+  const completedStageIds = stages.filter(st => {
+    const cs = allChapters.filter(c => String(c.stage_id) === String(st.stage_id));
+    return cs.length > 0 && cs.every(c => completedIds.has(String(c.chapter_id)));
+  }).map(st => String(st.stage_id));
+
+  const user = rows_(TABS.USERS).find(u => String(u.user_id) === String(uid));
+  updateRowByKey_(TABS.USERS,'user_id',uid,{
+    total_xp:Number(user.total_xp || 0) + xp,
+    tests_completed:Number(user.tests_completed || 0) + 1,
+    stages_completed:completedStageIds.length,
+    last_completed_stage:completedStageIds.includes(String(run.stage_id)) ? run.stage_id : (user.last_completed_stage || ''),
+    current_stage:run.stage_id,
+    current_chapter:run.chapter_id
+    // Intentionally NO heart refill here.
+  });
+
+  clearContentCaches_();
+  const appState = bootstrap_({session_token:b.session_token,force_refresh:true});
+
+  return {
+    ok:true,
+    completed:true,
+    committed_xp:xp,
+    stage_id:run.stage_id,
+    chapter_id:run.chapter_id,
+    stage_completed:completedStageIds.includes(String(run.stage_id)),
+    practice_just_unlocked:!practiceWasUnlockedBefore && (appState.practice || []).some(r =>
+      normalizeId_(r.stage_id) === normalizeId_(run.stage_id) && r.unlocked !== false
+    ),
+    message:'Chapter test complete. ' + xp + ' XP added. Hearts are unchanged.',
+    app_state:appState
+  };
+}
+
+
+
+/* ---------------- CLICK Practice v16 ---------------- */
+
+function setupCLICKv17ContentSheets() {
+  const ss = SpreadsheetApp.getActive();
+  const specs = {};
+  specs[TABS.GLOSSARY] = [
+    'term_id','term','definition','color','aliases','active'
+  ];
+  specs[TABS.QUESTION_TERMS] = [
+    'question_id','term_id','display_text','order','active'
+  ];
+  specs[TABS.TEST_HINTS] = [
+    'hint_id','question_id','hint_text','active','order'
+  ];
+  specs[TABS.PRACTICE] = [
+    'practice_id','stage_id','title','objective','problem_statement','constraints',
+    'sample_input','sample_output','starter_code','hint_1','hint_2','hint_3',
+    'success_message','technique_after_success','order','active'
+  ];
+  specs[TABS.PRACTICE_TESTS] = [
+    'test_id','practice_id','name','input','expected_output','hidden','timeout_ms','active','order'
+  ];
+  specs[TABS.PRACTICE_MISTAKES] = [
+    'mistake_id','practice_id','rule_type','pattern','message','order','active'
+  ];
+  specs[TABS.PRACTICE_PROGRESS] = [
+    'progress_id','user_id','practice_id','stage_id','status','attempt_count',
+    'last_result','completed_at','updated_at'
+  ];
+  specs[TABS.PRACTICE_PAIRINGS] = [
+    'pairing_id','pair_code','user_id','status','created_at','expires_at',
+    'device_name','device_token_hash','connected_at','last_seen'
+  ];
+  Object.keys(specs).forEach(name => {
+    let sh = ss.getSheetByName(name);
+    if (!sh) sh = ss.insertSheet(name);
+    if (sh.getLastRow() === 0) sh.getRange(1,1,1,specs[name].length).setValues([specs[name]]);
+    else {
+      const existing = sh.getRange(1,1,1,Math.max(1,sh.getLastColumn())).getValues()[0].map(String);
+      const missing = specs[name].filter(x => existing.indexOf(x) < 0);
+      if (missing.length) sh.getRange(1,existing.length+1,1,missing.length).setValues([missing]);
+    }
+    sh.setFrozenRows(1);
+  });
+  return 'CLICK v17 content/practice sheets are ready.';
+}
+
+// Backward-compatible helper name used by earlier setup notes.
+function setupCLICKv16PracticeSheets() {
+  return setupCLICKv17ContentSheets();
+}
+
+function optionalRows_(name) {
+  const sh = SpreadsheetApp.getActive().getSheetByName(name);
+  if (!sh || sh.getLastRow() < 2) return [];
+  return rows_(name);
+}
+
+function practiceProgressForUser_(uid) {
+  return optionalRows_(TABS.PRACTICE_PROGRESS)
+    .filter(r => String(r.user_id) === String(uid))
+    .map(r => ({
+      practice_id:String(r.practice_id || ''),
+      stage_id:String(r.stage_id || ''),
+      status:String(r.status || ''),
+      attempt_count:Number(r.attempt_count || 0),
+      completed_at:r.completed_at || ''
+    }));
+}
+
+function practiceActivePairingsForUser_(uid) {
+  const now = Date.now();
+  return optionalRows_(TABS.PRACTICE_PAIRINGS)
+    .filter(r => String(r.user_id) === String(uid))
+    .filter(r => {
+      const status = String(r.status || '');
+      if (status === 'connected') return true;
+      if (status === 'pending') return new Date(String(r.expires_at || '')).getTime() > now;
+      return false;
+    })
+    .sort((a,b) => String(b.connected_at || b.created_at || '').localeCompare(String(a.connected_at || a.created_at || '')));
+}
+
+function supersedeOtherPracticePairings_(uid, keepPairingId) {
+  practiceActivePairingsForUser_(uid).forEach(r => {
+    if (String(r.pairing_id) !== String(keepPairingId)) {
+      updateRowByKey_(TABS.PRACTICE_PAIRINGS,'pairing_id',r.pairing_id,{
+        status:'superseded',device_token_hash:'',last_seen:new Date().toISOString()
+      });
+    }
+  });
+}
+
+function deletePracticeProgressForUser_(uid) {
+  const sh = sheet_(TABS.PRACTICE_PROGRESS);
+  if (sh.getLastRow() < 2) return 0;
+  const v = sh.getDataRange().getValues();
+  const h = v[0].map(String);
+  const ui = h.indexOf('user_id');
+  if (ui < 0) throw new Error('PracticeProgress is missing user_id.');
+  let count = 0;
+  for (let i=v.length-1;i>=1;i--) {
+    if (String(v[i][ui]) === String(uid)) {
+      sh.deleteRow(i+1);
+      count++;
+    }
+  }
+  delete ROW_CACHE[TABS.PRACTICE_PROGRESS];
+  return count;
+}
+
+function practiceConnectionState_(b) {
+  required_(b,['session_token']);
+  const s = requireSession_(b.session_token);
+  const active = practiceActivePairingsForUser_(s.user_id);
+  const current = active[0] || null;
+  const progress = practiceProgressForUser_(s.user_id);
+  return {
+    ok:true,
+    connected:!!current && String(current.status)==='connected',
+    pending:!!current && String(current.status)==='pending',
+    pairing_id:current ? String(current.pairing_id||'') : '',
+    pair_code:current && String(current.status)==='pending' ? String(current.pair_code||'') : '',
+    device_name:current ? String(current.device_name||'') : '',
+    connected_at:current ? String(current.connected_at||'') : '',
+    has_progress:progress.some(p => String(p.status).toLowerCase()==='completed'),
+    completed_count:progress.filter(p => String(p.status).toLowerCase()==='completed').length
+  };
+}
+
+function createPracticePairing_(b) {
+  required_(b,['session_token']);
+  const s = requireSession_(b.session_token);
+  if (!SpreadsheetApp.getActive().getSheetByName(TABS.PRACTICE_PAIRINGS) || !SpreadsheetApp.getActive().getSheetByName(TABS.PRACTICE_PROGRESS)) {
+    throw new Error('CLICK content/practice sheets are not set up yet. Run setupCLICKv17ContentSheets once in Apps Script.');
+  }
+  const mode = String(b.mode || '').toLowerCase();
+  const active = practiceActivePairingsForUser_(s.user_id);
+  const current = active[0] || null;
+  const progress = practiceProgressForUser_(s.user_id);
+  if (current && !mode) {
+    return {ok:true,requires_choice:true,existing_status:String(current.status||''),device_name:String(current.device_name||'VS Code'),connected_at:String(current.connected_at||''),has_progress:progress.some(p=>String(p.status).toLowerCase()==='completed'),completed_count:progress.filter(p=>String(p.status).toLowerCase()==='completed').length};
+  }
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const now = new Date();
+    const code = String(Math.floor(100000 + Math.random()*900000));
+    const expires = new Date(now.getTime()+10*60*1000).toISOString();
+    if (mode === 'restart') {
+      deletePracticeProgressForUser_(s.user_id);
+      practiceActivePairingsForUser_(s.user_id).forEach(r => updateRowByKey_(TABS.PRACTICE_PAIRINGS,'pairing_id',r.pairing_id,{status:'superseded',device_token_hash:'',last_seen:now.toISOString()}));
+    }
+    if (mode === 'continue' && current) {
+      supersedeOtherPracticePairings_(s.user_id,current.pairing_id);
+      updateRowByKey_(TABS.PRACTICE_PAIRINGS,'pairing_id',current.pairing_id,{pair_code:code,status:'pending',created_at:now.toISOString(),expires_at:expires,device_name:'',device_token_hash:'',connected_at:'',last_seen:''});
+      SpreadsheetApp.flush();
+      return {ok:true,pairing_id:String(current.pairing_id),pair_code:code,expires_in_seconds:600,reused:true,progress_kept:true};
+    }
+    const pairingId = 'PAIR-' + Utilities.getUuid().replace(/-/g,'').slice(0,12).toUpperCase();
+    appendObject_(TABS.PRACTICE_PAIRINGS,{pairing_id:pairingId,pair_code:code,user_id:s.user_id,status:'pending',created_at:now.toISOString(),expires_at:expires,device_name:'',device_token_hash:'',connected_at:'',last_seen:''});
+    SpreadsheetApp.flush();
+    return {ok:true,pairing_id:pairingId,pair_code:code,expires_in_seconds:600,restarted:mode==='restart'};
+  } finally { lock.releaseLock(); }
+}
+
+function practicePairingStatus_(b) {
+  required_(b,['session_token','pairing_id']);
+  const s = requireSession_(b.session_token);
+  const row = optionalRows_(TABS.PRACTICE_PAIRINGS).find(r => String(r.pairing_id) === String(b.pairing_id) && String(r.user_id) === String(s.user_id));
+  if (!row) throw new Error('Pairing request not found.');
+  const expired = new Date(String(row.expires_at)).getTime() < Date.now();
+  const status = expired && String(row.status)==='pending' ? 'expired' : String(row.status||'pending');
+  if (status === 'expired') updateRowByKey_(TABS.PRACTICE_PAIRINGS,'pairing_id',row.pairing_id,{status:'expired'});
+  return {ok:true,status,device_name:String(row.device_name||'')};
+}
+
+function claimPracticePairing_(b) {
+  required_(b,['pair_code']);
+  const code = String(b.pair_code).trim();
+  const row = optionalRows_(TABS.PRACTICE_PAIRINGS).filter(r => String(r.pair_code) === code && String(r.status) === 'pending').sort((a,b) => String(b.created_at).localeCompare(String(a.created_at)))[0];
+  if (!row) throw new Error('Pairing code is invalid or has already been used.');
+  if (new Date(String(row.expires_at)).getTime() < Date.now()) throw new Error('Pairing code expired. Generate a new code on CLICK.');
+  const lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    supersedeOtherPracticePairings_(row.user_id,row.pairing_id);
+    const token = 'CLICKDEV-' + Utilities.getUuid().replace(/-/g,'') + Utilities.getUuid().replace(/-/g,'');
+    const now = new Date().toISOString();
+    updateRowByKey_(TABS.PRACTICE_PAIRINGS,'pairing_id',row.pairing_id,{status:'connected',device_name:String(b.device_name||'VS Code').slice(0,80),device_token_hash:practiceTokenHash_(token),connected_at:now,last_seen:now});
+    SpreadsheetApp.flush();
+    return {ok:true,device_token:token,user_id:row.user_id};
+  } finally { lock.releaseLock(); }
+}
+
+function requirePracticeDevice_(token) {
+  if (!token) throw new Error('CLICK VS Code is not connected.');
+  const hash = practiceTokenHash_(String(token));
+  const row = optionalRows_(TABS.PRACTICE_PAIRINGS).find(r => String(r.status) === 'connected' && String(r.device_token_hash) === hash);
+  if (!row) throw new Error('This CLICK VS Code connection is no longer valid. Pair it again.');
+  updateRowByKey_(TABS.PRACTICE_PAIRINGS,'pairing_id',row.pairing_id,{last_seen:new Date().toISOString()});
+  return row;
+}
+
+function practiceTokenHash_(token) {
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,String(token),Utilities.Charset.UTF_8);
+  return bytes.map(b => ('0'+((b<0?b+256:b).toString(16))).slice(-2)).join('');
+}
+
+function userCompletedStageIds_(uid) {
+  const chapters = activeRows_(TABS.CHAPTERS);
+  const completed = new Set(rows_(TABS.TEST_RUNS)
+    .filter(r => String(r.user_id) === String(uid) && String(r.status) === 'completed')
+    .map(r => normalizeId_(r.chapter_id)));
+  return activeRows_(TABS.STAGES).filter(st => {
+    const cs = chapters.filter(c => normalizeId_(c.stage_id) === normalizeId_(st.stage_id));
+    return cs.length && cs.every(c => completed.has(normalizeId_(c.chapter_id)));
+  }).map(st => normalizeId_(st.stage_id));
+}
+
+function normalizePracticeQuestion_(r,index,practiceTests,practiceMistakes) {
+  const pid = String(r.practice_id || r.id || ('PRACTICE-' + (index+1)));
+  const ownTests = (practiceTests || [])
+    .filter(t => normalizeId_(t.practice_id) === normalizeId_(pid))
+    .sort((a,b) => Number(a.order || 0) - Number(b.order || 0));
+  const visible = ownTests.filter(t => !truthy_(t.hidden)).map(t => ({
+    name:String(t.name || ''),
+    input:String(t.input || ''),
+    expected_output:String(t.expected_output || ''),
+    timeout_ms:Number(t.timeout_ms || 5000)
+  }));
+  const hidden = ownTests.filter(t => truthy_(t.hidden)).map(t => ({
+    name:String(t.name || ''),
+    input:String(t.input || ''),
+    expected_output:String(t.expected_output || ''),
+    timeout_ms:Number(t.timeout_ms || 5000)
+  }));
+  const ownMistakes = (practiceMistakes || [])
+    .filter(x => normalizeId_(x.practice_id) === normalizeId_(pid))
+    .sort((a,b) => Number(a.order || 0) - Number(b.order || 0))
+    .map(x => ({
+      rule_type:String(x.rule_type || 'source_regex'),
+      pattern:String(x.pattern || ''),
+      message:String(x.message || '')
+    }));
+  return {
+    practice_id:pid,
+    stage_id:String(r.stage_id || ''),
+    title:String(r.title || r.question || ('Practice ' + (index+1))),
+    objective:String(r.objective || ''),
+    problem_statement:String(r.problem_statement || r.scenario || r.instructions || r.question || ''),
+    constraints:String(r.constraints || ''),
+    sample_input:String(r.sample_input || ''),
+    sample_output:String(r.sample_output || ''),
+    // Backward-compatible aliases for older webpage/extension builds.
+    scenario:String(r.problem_statement || r.scenario || ''),
+    instructions:String(r.problem_statement || r.instructions || r.question || ''),
+    starter_code:String(r.starter_code || ''),
+    visible_tests:visible.length ? visible : parsePracticeJson_(r.visible_tests_json || r.visible_tests || '[]'),
+    hidden_tests:hidden.length ? hidden : parsePracticeJson_(r.hidden_tests_json || r.hidden_tests || '[]'),
+    mistake_rules:ownMistakes.length ? ownMistakes : parsePracticeJson_(r.mistake_rules_json || r.mistake_rules || '[]'),
+    hints:[r.hint_1,r.hint_2,r.hint_3].filter(Boolean).map(String),
+    success_message:String(r.success_message || 'All tests passed. Nice work!'),
+    technique_after_success:String(r.technique_after_success || ''),
+    order:Number(r.order || index+1)
+  };
+}
+
+function parsePracticeJson_(v) {
+  if (Array.isArray(v)) return v;
+  const s = String(v || '').trim();
+  if (!s) return [];
+  try { const x = JSON.parse(s); return Array.isArray(x) ? x : []; } catch(e) { return []; }
+}
+
+function practiceExtensionSync_(b) {
+  required_(b,['device_token']);
+  const device = requirePracticeDevice_(b.device_token);
+  const uid = device.user_id;
+  const progress = practiceProgressForUser_(uid);
+  const done = new Set(progress.filter(p => String(p.status).toLowerCase() === 'completed').map(p => normalizeId_(p.practice_id)));
+  const content = publicContent_(false);
+  const facts = prerequisiteFacts_(uid,content);
+
+  const all = activeRows_(TABS.PRACTICE)
+    .map((r,i)=>normalizePracticeQuestion_(r,i,content.practice_tests,content.practice_mistakes))
+    .map(q => {
+      const gate = prerequisiteStatus_('PRACTICE',q.stage_id,q.practice_id,content,facts);
+      return Object.assign({},q,{
+        completed:done.has(normalizeId_(q.practice_id)),
+        available:gate.unlocked,
+        lock_reason:gate.lock_reason || ''
+      });
+    })
+    .sort((a,b) => normalizeId_(a.stage_id).localeCompare(normalizeId_(b.stage_id)) || a.order-b.order);
+
+  // Show the complete question sequence for a stage once any challenge in that
+  // stage is available/completed. This lets VS Code display the next locked
+  // challenge instead of making it look as if no next challenge exists.
+  const visibleStages = new Set(
+    all.filter(q => q.available || q.completed).map(q => normalizeId_(q.stage_id))
+  );
+  const questions = all.filter(q => visibleStages.has(normalizeId_(q.stage_id)));
+
+  const user = rows_(TABS.USERS).find(u => String(u.user_id) === String(uid));
+  return {ok:true,user:{name:user?String(user.name||'Student'):'Student'},questions,progress};
+}
+
+function practiceWebSync_(b) {
+  required_(b,['session_token']);
+  const s = requireSession_(b.session_token);
+  const uid = s.user_id;
+  const content = publicContent_(false);
+  const facts = prerequisiteFacts_(uid,content);
+  const practiceProgress = practiceProgressForUser_(uid);
+  const practiceRows = content.practice.map((r,i) => {
+    const pid = String(r.practice_id || r.id || ('PRACTICE-' + (i+1)));
+    const gate = prerequisiteStatus_('PRACTICE',r.stage_id,pid,content,facts);
+    return Object.assign({},r,{unlocked:gate.unlocked,lock_reason:gate.lock_reason || ''});
+  });
+  return {ok:true,practice:practiceRows,practice_progress:practiceProgress,connection:practiceConnectionState_({session_token:b.session_token})};
+}
+
+function completePractice_(b) {
+  required_(b,['device_token','practice_id']);
+  const device = requirePracticeDevice_(b.device_token);
+  const uid = device.user_id;
+  const pid = normalizeId_(b.practice_id);
+  const content = publicContent_(false);
+  const facts = prerequisiteFacts_(uid,content);
+  const all = activeRows_(TABS.PRACTICE).map((r,i)=>normalizePracticeQuestion_(r,i,content.practice_tests,content.practice_mistakes));
+  const q = all.find(x => normalizeId_(x.practice_id) === pid);
+  if (!q) throw new Error('Practice question not found.');
+  const gate = prerequisiteStatus_('PRACTICE',q.stage_id,q.practice_id,content,facts);
+  if (!gate.unlocked) throw new Error(gate.lock_reason || 'This practice challenge is still locked.');
+  const lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    const stageQs = all.filter(x => normalizeId_(x.stage_id) === normalizeId_(q.stage_id)).sort((a,b)=>a.order-b.order);
+    const now = new Date().toISOString();
+    const existing = rowsFresh_(TABS.PRACTICE_PROGRESS).find(r => String(r.user_id)===String(uid) && normalizeId_(r.practice_id)===pid);
+    const summary = String(b.result_summary || 'All configured tests passed.').slice(0,1000);
+    if (existing) {
+      updateComposite_(TABS.PRACTICE_PROGRESS,['user_id','practice_id'],[uid,q.practice_id],{stage_id:q.stage_id,status:'completed',attempt_count:Number(existing.attempt_count||0)+1,last_result:summary,completed_at:existing.completed_at||now,updated_at:now});
+    } else {
+      appendObject_(TABS.PRACTICE_PROGRESS,{progress_id:'PP-' + Utilities.getUuid().replace(/-/g,'').slice(0,12).toUpperCase(),user_id:uid,practice_id:q.practice_id,stage_id:q.stage_id,status:'completed',attempt_count:1,last_result:summary,completed_at:now,updated_at:now});
+    }
+    SpreadsheetApp.flush();
+    const persisted = rowsFresh_(TABS.PRACTICE_PROGRESS).find(r => String(r.user_id)===String(uid) && normalizeId_(r.practice_id)===pid && String(r.status).toLowerCase()==='completed');
+    if (!persisted) throw new Error('CLICK could not save PracticeProgress. Please retry Check Code.');
+    const after = new Set(rowsFresh_(TABS.PRACTICE_PROGRESS).filter(r=>String(r.user_id)===String(uid)&&String(r.status).toLowerCase()==='completed').map(r=>normalizeId_(r.practice_id)));
+    const stageComplete = stageQs.length>0 && stageQs.every(x=>after.has(normalizeId_(x.practice_id)));
+    return {ok:true,completed:true,practice_id:q.practice_id,stage_id:q.stage_id,progress_saved:true,progress_id:String(persisted.progress_id||''),completed_at:String(persisted.completed_at||now),stage_practice_completed:stageComplete,success_message:q.success_message,technique_after_success:q.technique_after_success};
+  } finally { lock.releaseLock(); }
+}
+
+/* ---------------- Helpers ---------------- */
+
+function recoveryChapterTitle_(user) {
+  const cid = String(user.heart_recovery_chapter_id || '');
+  if (!cid) return 'the chapter where the last heart was lost';
+  const c = activeRows_(TABS.CHAPTERS).find(x => String(x.chapter_id) === cid);
+  return c ? String(c.title) : cid;
+}
+
+function leaderboard_() {
+  return rows_(TABS.USERS)
+    .filter(u => String(u.status || 'active').toLowerCase() === 'active')
+    .map(u => ({
+      name:u.name,
+      roll_no:u.roll_no,
+      department:u.department,
+      total_xp:Number(u.total_xp || 0),
+      stages_completed:Number(u.stages_completed || 0),
+      accuracy_percent:Number(u.accuracy_percent || 0)
+    }))
+    .sort((a,b) => b.total_xp-a.total_xp || b.stages_completed-a.stages_completed)
+    .slice(0,100);
+}
+
+function createSession_(user,device) {
+  const now = new Date();
+  const row = {
+    session_id:'S' + Utilities.getUuid().replace(/-/g,'').slice(0,12).toUpperCase(),
+    session_token:Utilities.getUuid() + Utilities.getUuid(),
+    user_id:user.user_id,
+    login_time:now.toISOString(),
+    last_seen:now.toISOString(),
+    logout_time:'',
+    device:String(device || ''),
+    active:true,
+    duration_sec:''
+  };
+  appendObject_(TABS.SESSIONS,row);
+  return row;
+}
+
+function requireSession_(token) {
+  const s = rows_(TABS.SESSIONS).find(x =>
+    String(x.session_token) === String(token) && truthy_(x.active)
+  );
+  if (!s) throw new Error('Session expired. Please log in again.');
+
+  const hours = Number(settingsMap_().SESSION_HOURS || 168);
+  const last = new Date(s.last_seen || s.login_time);
+  if (isNaN(last.getTime()) || Date.now()-last.getTime() > hours*3600000) {
+    updateRowByKey_(TABS.SESSIONS,'session_id',s.session_id,{active:false});
+    throw new Error('Session expired. Please log in again.');
+  }
+
+  // Avoid a Google Sheets write on every request. Refresh last_seen at most every 15 minutes.
+  if (Date.now()-last.getTime() > 15*60*1000) {
+    updateRowByKey_(TABS.SESSIONS,'session_id',s.session_id,{last_seen:new Date().toISOString()});
+  }
+  return s;
+}
+
+function safeUser_(u) {
+  if (!u) return null;
+  return {
+    user_id:u.user_id,
+    name:u.name,
+    roll_no:u.roll_no,
+    department:u.department,
+    email:u.email,
+    phone:u.phone,
+    total_xp:Number(u.total_xp || 0),
+    streak:Number(u.streak || 0),
+    hearts:Number(u.hearts || 0),
+    tests_completed:Number(u.tests_completed || 0),
+    questions_attempted:Number(u.questions_attempted || 0),
+    correct_answers:Number(u.correct_answers || 0),
+    accuracy_percent:Number(u.accuracy_percent || 0),
+    onboarding_completed:truthy_(u.onboarding_completed),
+    stages_completed:Number(u.stages_completed || 0),
+    last_completed_stage:u.last_completed_stage || '',
+    last_learn_stage:u.last_learn_stage || '',
+    last_learn_chapter:u.last_learn_chapter || '',
+    heart_recovery_stage_id:u.heart_recovery_stage_id || '',
+    heart_recovery_chapter_id:u.heart_recovery_chapter_id || '',
+    role:u.role || 'student'
+  };
+}
+
+function isAnswerCorrect_(q,answer) {
+  const type = String(q.type || 'MCQ').toUpperCase();
+  const expected = String(q.answer || '').trim();
+  const actual = String(answer || '').trim();
+
+  if (type === 'TRUE_FALSE') return expected.toLowerCase() === actual.toLowerCase();
+
+  // Typed C is checked by tokens, not visual formatting:
+  // spaces/newlines/comments outside string/char literals are ignored.
+  if (type === 'TYPE_CODE') return canonicalC_(expected) === canonicalC_(actual);
+
+  // ORDER is built from fixed sheet fragments. Ignore whitespace only;
+  // keep the || separators/operator characters intact.
+  if (type === 'ORDER') {
+    return expected.replace(/\s+/g,'') === actual.replace(/\s+/g,'');
+  }
+
+  // A blank is a short token/phrase. Leading/trailing/newline spacing should
+  // never make an otherwise correct answer fail.
+  if (type === 'BLANK') return normalizeBlank_(expected) === normalizeBlank_(actual);
+
+  // Output/debug/choice answers remain exact because spaces/newlines may be
+  // meaningful output.
+  return expected === actual;
+}
+
+function normalizeBlank_(s) {
+  return String(s).trim().replace(/\s+/g,' ');
+}
+
+/**
+ * Canonicalizes beginner C code without changing string/char literal contents.
+ * - removes whitespace outside literals
+ * - removes line comments and block comments outside literals
+ * - preserves punctuation/operators exactly
+ * Thus:
+ *   int x = 5;
+ *   int   x=5;
+ * are equal, while "A B" and "AB" are not.
+ */
+function canonicalC_(source) {
+  const s = String(source).replace(/\r/g,'');
+  let out = '';
+  let inString = false;
+  let inChar = false;
+  let escape = false;
+
+  for (let i=0;i<s.length;i++) {
+    const ch = s[i];
+    const next = i+1 < s.length ? s[i+1] : '';
+
+    if (inString) {
+      out += ch;
+      if (escape) escape = false;
+      else if (ch === '\\') escape = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+
+    if (inChar) {
+      out += ch;
+      if (escape) escape = false;
+      else if (ch === '\\') escape = true;
+      else if (ch === "'") inChar = false;
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      out += ch;
+      continue;
+    }
+    if (ch === "'") {
+      inChar = true;
+      out += ch;
+      continue;
+    }
+
+    // line comment
+    if (ch === '/' && next === '/') {
+      i += 2;
+      while (i < s.length && s[i] !== '\n') i++;
+      continue;
+    }
+
+    // block comment
+    if (ch === '/' && next === '*') {
+      i += 2;
+      while (i < s.length-1 && !(s[i] === '*' && s[i+1] === '/')) i++;
+      if (i < s.length-1) i++;
+      continue;
+    }
+
+    if (/\s/.test(ch)) continue;
+    out += ch;
+  }
+  return out;
+}
+
+function defaultHearts_() {
+  return Number(settingsMap_().DEFAULT_HEARTS || 3);
+}
+
+function publicSettings_() {
+  const s = settingsMap_();
+  return {
+    APP_NAME:s.APP_NAME || 'CLICK',
+    TAGLINE:s.TAGLINE || 'click → learn → practice',
+    DEFAULT_HEARTS:Number(s.DEFAULT_HEARTS || 3),
+    CHARACTER_NAME:s.CHARACTER_NAME || 'Kabi'
+  };
+}
+
+function settingsMap_() {
+  if (SETTINGS_CACHE) return SETTINGS_CACHE;
+  const o = {};
+  rows_(TABS.SETTINGS).forEach(r => { if (r.key) o[String(r.key)] = r.value; });
+  SETTINGS_CACHE = o;
+  return o;
+}
+
+function activeRows_(name) {
+  return rows_(name).filter(r => r.active === undefined || r.active === '' || truthy_(r.active));
+}
+
+function rows_(name) {
+  if (ROW_CACHE[name]) return ROW_CACHE[name];
+  const sh = sheet_(name);
+  const v = sh.getDataRange().getValues();
+  if (v.length < 2) return ROW_CACHE[name] = [];
+  const h = v[0].map(x => String(x).trim());
+  ROW_CACHE[name] = v.slice(1)
+    .filter(r => r.some(x => x !== '' && x !== null))
+    .map(r => {
+      const o = {};
+      h.forEach((k,i) => { if (k) o[k] = r[i]; });
+      return o;
+    });
+  return ROW_CACHE[name];
+}
+
+function rowsFresh_(name) {
+  delete ROW_CACHE[name];
+  return rows_(name);
+}
+
+function sheet_(name) {
+  const sh = SpreadsheetApp.getActive().getSheetByName(name);
+  if (!sh) throw new Error('Missing sheet: ' + name);
+  return sh;
+}
+
+function appendObject_(name,obj) {
+  const sh = sheet_(name);
+  const h = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0].map(String);
+  sh.appendRow(h.map(k => obj[k] !== undefined ? obj[k] : ''));
+  delete ROW_CACHE[name];
+}
+
+function updateRowByKey_(name,key,value,patch) {
+  const sh = sheet_(name);
+  const v = sh.getDataRange().getValues();
+  const h = v[0].map(String);
+  const ki = h.indexOf(key);
+  if (ki < 0) throw new Error('Missing key column: ' + key);
+
+  for (let i=1;i<v.length;i++) {
+    if (String(v[i][ki]) === String(value)) {
+      Object.keys(patch).forEach(k => {
+        const c = h.indexOf(k);
+        if (c >= 0) v[i][c] = patch[k];
+      });
+      sh.getRange(i+1,1,1,h.length).setValues([v[i]]);
+      delete ROW_CACHE[name];
+      return true;
+    }
+  }
+  return false;
+}
+
+function updateComposite_(name,keys,vals,patch) {
+  const sh = sheet_(name);
+  const v = sh.getDataRange().getValues();
+  const h = v[0].map(String);
+
+  for (let i=1;i<v.length;i++) {
+    let ok = true;
+    keys.forEach((k,j) => {
+      const c = h.indexOf(k);
+      if (c < 0 || String(v[i][c]) !== String(vals[j])) ok = false;
+    });
+    if (ok) {
+      Object.keys(patch).forEach(k => {
+        const c = h.indexOf(k);
+        if (c >= 0) v[i][c] = patch[k];
+      });
+      sh.getRange(i+1,1,1,h.length).setValues([v[i]]);
+      delete ROW_CACHE[name];
+      return true;
+    }
+  }
+  return false;
+}
+
+function passwordHash_(password,salt) {
+  const bytes = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    salt + '|' + password,
+    Utilities.Charset.UTF_8
+  );
+  return bytes.map(b => ('0' + ((b < 0 ? b+256 : b).toString(16))).slice(-2)).join('');
+}
+
+function required_(obj,keys) {
+  keys.forEach(k => {
+    if (obj[k] === undefined || obj[k] === null || String(obj[k]).trim() === '') {
+      throw new Error('Missing required field: ' + k);
+    }
+  });
+}
+
+function truthy_(v) {
+  return v === true ||
+    String(v).toLowerCase() === 'true' ||
+    String(v) === '1' ||
+    String(v).toLowerCase() === 'yes';
+}
+
+function shuffle_(a) {
+  for (let i=a.length-1;i>0;i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    const t = a[i]; a[i]=a[j]; a[j]=t;
+  }
+  return a;
+}
+
+function json_(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}

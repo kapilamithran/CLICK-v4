@@ -1,0 +1,31 @@
+term_id,term,definition,color,aliases,active
+TERM001,character set,"The C character set is the collection of characters that can be used to write C source code. It includes letters, digits, special characters, and white-space characters.",#2563EB,character sets,TRUE
+TERM002,token,A token is one of the smallest meaningful units in a C program. C programs are built by arranging tokens according to C syntax.,#7C3AED,tokens,TRUE
+TERM003,keyword,"A keyword is a word with a predefined meaning in C. An identifier is a programmer-chosen name for a variable, function, array, or another program element.",#D97706,keywords,TRUE
+TERM004,identifier,"An identifier is a name used for a program element. In beginner ANSI C, it should begin with a letter, continue with letters, digits, or underscores, contain no spaces, and must not be a keyword.",#059669,identifiers,TRUE
+TERM005,constant,"A constant is a fixed value that does not change while the program is executing. C uses several kinds of constants, including numeric constants and character-related constants.",#DC2626,constants,TRUE
+TERM006,integer constant,A decimal integer constant is a whole-number literal written with decimal digits. It has no decimal point and may have an optional leading sign in an expression.,#0891B2,integer constants,TRUE
+TERM007,octal,"C can write integer constants in number bases other than decimal. A leading `0` indicates octal notation, while a leading `0x` or `0X` indicates hexadecimal notation.",#9333EA,octals,TRUE
+TERM008,suffix,An integer constant can use suffix letters such as `U`/`u` for unsigned and `L`/`l` for long so the literal is treated with the intended integer category.,#EA580C,suffixs,TRUE
+TERM009,real constant,A real constant represents a number with a fractional value. In decimal notation it is written with a decimal point and digits before or after the point.,#2563EB,real constants,TRUE
+TERM010,scientific notation,Scientific notation writes a real constant using a mantissa and an exponent separated by `e` or `E`. The exponent tells how many powers of ten scale the mantissa.,#7C3AED,scientific notations,TRUE
+TERM011,character constant,"A single-character constant represents one character enclosed in single quotation marks, such as `'A'`, `'5'`, or `'x'`.",#D97706,character constants,TRUE
+TERM012,string constant,"A string constant is a sequence of characters enclosed in double quotation marks. It can contain letters, numbers, symbols, spaces, and escape sequences.",#059669,string constants,TRUE
+TERM013,escape sequence,An escape sequence is a backslash-based character notation used to represent special characters that are difficult to type or would otherwise have a special meaning.,#DC2626,escape sequences,TRUE
+TERM014,variable,"A variable is a data name used to store a value. Unlike a literal constant, the value held by a variable may change while the program runs.",#0891B2,variables,TRUE
+TERM015,case sensitivity,"C is case-sensitive, so uppercase and lowercase letters are treated as different. `Total`, `TOTAL`, and `total` can refer to different identifiers.",#9333EA,case sensitivitys,TRUE
+TERM016,data type,A data type tells C what kind of data a value represents and guides how the compiler stores and operates on that data.,#EA580C,data types,TRUE
+TERM017,integer type,"Integer types store whole numbers. C provides forms such as `short int`, `int`, `long int`, and signed or unsigned versions so programs can choose different integer ranges and representations.",#2563EB,integer types,TRUE
+TERM018,floating-point type,"Floating-point types store real-number approximations, including values with fractional parts. C commonly provides `float`, `double`, and `long double`.",#7C3AED,floating-point types,TRUE
+TERM019,char,"`char` is the basic character-sized integer type used for character data, while `void` represents the absence of a value in contexts such as function return types.",#D97706,chars,TRUE
+TERM020,declaration,A variable declaration introduces one or more variable names to the compiler and specifies the data type they will hold before those variables are used.,#059669,declarations,TRUE
+TERM021,typedef,`typedef` lets a programmer create another name for an existing data type. The new name can then be used in later declarations.,#DC2626,typedefs,TRUE
+TERM022,enum,An enumeration (`enum`) defines a set of named integer constants. The names make related integer choices easier to read and understand.,#0891B2,enums,TRUE
+TERM023,storage class,"A storage class helps describe a variable's storage duration, visibility/linkage, or storage suggestion. The book introduces `auto`, `static`, `extern`, and `register` as important storage classes.",#9333EA,storage classs,TRUE
+TERM024,assignment,Assignment stores a value in a variable. In C the assignment operator `=` puts the value of the right-hand expression into the variable on the left.,#EA580C,assignments,TRUE
+TERM025,initialization,Initialization gives a variable its first value as part of its declaration. C also allows several variables to be initialized in one declaration.,#2563EB,initializations,TRUE
+TERM026,scanf,`scanf` is a standard input function that can read formatted values from the keyboard/input stream into variables. A control string describes the expected data format.,#7C3AED,scanfs,TRUE
+TERM027,symbolic constant,A symbolic constant gives a meaningful name to a fixed replacement value using the preprocessor directive `#define`. The preprocessor substitutes the replacement text before compilation.,#D97706,symbolic constants,TRUE
+TERM028,const,The `const` qualifier tells the compiler that a variable is intended not to be modified through that name after initialization.,#059669,consts,TRUE
+TERM029,volatile,"The `volatile` qualifier tells the compiler that a variable's value may change for reasons outside the ordinary flow of the current code, so accesses must not be optimized away based on an assumption that the value stays unchanged.",#DC2626,volatiles,TRUE
+TERM030,overflow,"Overflow occurs when a value is outside the representable range of its data type. For floating-point data, underflow describes values whose magnitude is too small to represent normally at the required precision.",#0891B2,overflows,TRUE

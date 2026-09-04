@@ -1,0 +1,15 @@
+key,value,description
+APP_NAME,CLICK,Displayed application name
+TAGLINE,click → learn → practice,Displayed tagline
+DEVELOPER,Mr. Kapilamithran S,Home-page credit
+DEFAULT_HEARTS,3,Maximum hearts
+SESSION_HOURS,168,Login session lifetime in hours
+MIN_PASSWORD_LENGTH,6,Minimum local-account password length
+QUESTIONS_PER_CHAPTER,5,Questions selected for each chapter test
+CONTENT_CACHE_SECONDS,0,Apps Script public-content cache duration
+TEST_CONTENT_CACHE_SECONDS,0,Apps Script test-bank cache duration
+CHARACTER_NAME,Kabi,CLICK learning guide
+SCHEMA_VERSION,17.0,Book-grounded dataset + Glossary/QuestionTerms + formatted PracticeBank
+SOURCE_NOTE,Attached Programming in ANSI C preview; v17.0 content is source-grounded for Chapter 2 only,Curriculum source coverage
+PRACTICE_PAIR_MINUTES,10,VS Code pairing code lifetime in minutes
+PRACTICE_TIMEOUT_MS,5000,Default local practice test timeout

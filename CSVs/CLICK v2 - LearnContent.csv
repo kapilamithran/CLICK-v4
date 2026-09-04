@@ -1,0 +1,2162 @@
+learn_id,stage_id,chapter_id,title,pages_text,active,updated_at
+L_CH0001,STG000,CH0001,C Character Set,"1. DEFINITION + ANALOGY
+The C character set is the collection of characters that can be used to write C source code. It includes letters, digits, special characters, and white-space characters.
+
+**Analogy**
+Think of it as C's keyboard toolbox. A word processor can accept many symbols, but a C program is built from a defined set of letters, digits, punctuation, and spacing characters.
+
+What to understand
+• C uses uppercase letters A-Z and lowercase letters a-z.
+• Digits 0-9 can appear in numbers and identifiers, subject to identifier rules.
+• Special characters such as +, -, *, /, =, ;, {, }, (, ) and # have programming roles.
+• Blank space, horizontal tab, carriage return, newline and form feed are white-space characters.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of character set so you can see the idea from different angles.
+
+• Letters: `A, b, Z, m` — Letters are part of the character set.
+• Digits: `0, 4, 9` — Digits are available to form numbers and identifiers.
+• Special characters: `;  {  }  (  )  #` — These symbols help form C syntax.
+• White space: `space, tab, newline` — White space separates parts of a program.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int age = 18;
+```
+Why it works: Uses letters, digits, spaces, = and ; from the C character set.
+✓ RIGHT
+```c
+printf(""A\n"");
+```
+Why it works: Uses letters, quotes, parentheses, backslash and semicolon.
+
+✗ WRONG
+```c
+int age = 18；
+```
+Why it fails or is a bad choice: The final mark shown here is a full-width semicolon, not the normal C semicolon ;.
+✗ WRONG
+```c
+int total₹ = 10;
+```
+Why it fails or is a bad choice: Do not assume an arbitrary symbol is valid in a basic C identifier.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+C CHARACTER SET
+├─ Letters: A-Z, a-z
+├─ Digits: 0-9
+├─ Special characters: + - * / = ; { } ( ) # ...
+└─ White space: blank, tab, newline ...
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `character set` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• C source is written using a defined character set.
+• Letters, digits, special characters and white space are important groups.
+• A symbol that looks similar to a C symbol may still be a different character.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0002,STG000,CH0002,C Tokens,"1. DEFINITION + ANALOGY
+A token is one of the smallest meaningful units in a C program. C programs are built by arranging tokens according to C syntax.
+
+**Analogy**
+A sentence is built from meaningful pieces such as words and punctuation. A C statement is also built from meaningful pieces; those pieces are tokens.
+
+What to understand
+• Common token groups include keywords, identifiers, constants, strings, operators and special symbols.
+• In `float amount = 15.5;`, `float`, `amount`, `=`, `15.5` and `;` are separate meaningful pieces.
+• Tokens are combined according to C grammar; simply having valid tokens does not guarantee a valid statement.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of token so you can see the idea from different angles.
+
+• Keyword: `float` — A reserved C word.
+• Identifier: `amount` — A programmer-chosen name.
+• Constant: `15.5` — A fixed literal value.
+• Operator: `=` — Assignment operator.
+• Special symbol: `;` — Ends the declaration statement.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int count = 10;
+```
+Why it works: Can be separated into meaningful tokens: int | count | = | 10 | ;
+✓ RIGHT
+```c
+char grade = 'A';
+```
+Why it works: Contains a keyword, identifier, operator, character constant and semicolon.
+
+✗ WRONG
+```c
+intcount = 10;
+```
+Why it fails or is a bad choice: `intcount` is one identifier, not the two tokens `int` and `count`.
+✗ WRONG
+```c
+int count 10;
+```
+Why it fails or is a bad choice: The assignment operator token `=` is missing.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+int count = 10;
+│   │     │ │ │
+│   │     │ │ └─ special symbol
+│   │     │ └─── constant
+│   │     └───── operator
+│   └─────────── identifier
+└─────────────── keyword
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `token` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Tokens are the smallest meaningful building blocks of C source.
+• Keywords, identifiers, constants, strings, operators and special symbols are token groups.
+• Spacing can change where one token ends and another begins.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0003,STG000,CH0003,Keywords and Identifiers,"1. DEFINITION + ANALOGY
+A keyword is a word with a predefined meaning in C. An identifier is a programmer-chosen name for a variable, function, array, or another program element.
+
+Analogy
+A keyword is like a reserved road sign: its meaning is already fixed. An identifier is like a label you choose for your own box or folder.
+
+What to understand
+• Examples of C keywords include `int`, `float`, `char`, `if`, `else`, `while`, `return` and `void`.
+• Keywords cannot be used as programmer-defined names.
+• Identifiers name things created by the programmer, such as `age`, `amount`, or `main`.
+• C keywords are written in lowercase in ANSI C.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of keyword so you can see the idea from different angles.
+
+• Keyword: `int` — C already defines its role.
+• Identifier: `age` — Programmer chooses this name.
+• Keyword: `while` — Reserved for looping syntax.
+• Identifier: `student_age` — A valid descriptive name.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int age = 18;
+```
+Why it works: `int` is a keyword and `age` is an identifier.
+✓ RIGHT
+```c
+float amount;
+```
+Why it works: `float` is a keyword and `amount` is an identifier.
+
+✗ WRONG
+```c
+int int = 18;
+```
+Why it fails or is a bad choice: `int` cannot be reused as an identifier.
+✗ WRONG
+```c
+float while = 2.5;
+```
+Why it fails or is a bad choice: `while` is a keyword, so it cannot name a variable.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+C WORDS
+├─ KEYWORDS → fixed meaning → int, float, if, while
+└─ IDENTIFIERS → chosen names → age, total, amount
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `keyword` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Keywords already have meanings in C.
+• Identifiers are names chosen by the programmer.
+• A keyword cannot be reused as an identifier.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0004,STG000,CH0004,Rules for Identifiers,"1. DEFINITION + ANALOGY
+An identifier is a name used for a program element. In beginner ANSI C, it should begin with a letter, continue with letters, digits, or underscores, contain no spaces, and must not be a keyword.
+
+Analogy
+An identifier is like a username with rules. You can choose a meaningful name, but the system rejects names that break its format or use reserved words.
+
+What to understand
+• A name should begin with a letter; underscore may be accepted by compilers, but system/library names often use leading underscores, so beginner code should avoid them.
+• After the first character, letters, digits and underscores may be used.
+• Spaces are not allowed inside one identifier.
+• Uppercase and lowercase are significant: `Total` and `total` are different identifiers.
+• Names should be meaningful enough to describe their purpose.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of identifier so you can see the idea from different angles.
+
+• Valid: `average_number` — Starts with a letter and uses an underscore.
+• Valid: `score2` — A digit appears after the first character.
+• Invalid: `2score` — Starts with a digit.
+• Invalid: `student score` — Contains a space.
+• Invalid: `char` — `char` is a keyword.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int score2 = 90;
+```
+Why it works: Digit comes after the name starts.
+✓ RIGHT
+```c
+int average_number = 10;
+```
+Why it works: Letters and underscore form a clear identifier.
+
+✗ WRONG
+```c
+int 2score = 90;
+```
+Why it fails or is a bad choice: An identifier cannot begin with a digit.
+✗ WRONG
+```c
+int student score = 90;
+```
+Why it fails or is a bad choice: A space splits the text into separate tokens.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+IDENTIFIER CHECK
+Start with letter? → yes
+Only letters/digits/_ after that? → yes
+Contains space? → no
+Is it a keyword? → no
+= valid identifier
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `identifier` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Begin with a letter for beginner-safe identifiers.
+• Use letters, digits and underscores after the first character.
+• No spaces; no keywords.
+• C is case-sensitive.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0005,STG000,CH0005,Constants: Fixed Values,"1. DEFINITION + ANALOGY
+A constant is a fixed value that does not change while the program is executing. C uses several kinds of constants, including numeric constants and character-related constants.
+
+Analogy
+A constant is like a printed value on a ticket. You can read and use it, but that printed value itself does not change.
+
+What to understand
+• Numeric constants include integer constants and real (floating-point) constants.
+• Character-related constants include single-character constants and string constants.
+• Examples are `25`, `3.14`, `'A'`, and `""Hello""`.
+• A literal constant is different from a variable: the variable can later hold a different value.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of constant so you can see the idea from different angles.
+
+• Integer constant: `25` — Whole-number literal.
+• Real constant: `3.14` — Number with a fractional part.
+• Character constant: `'A'` — One character in single quotes.
+• String constant: `""Hello""` — Sequence of characters in double quotes.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int age = 18;
+```
+Why it works: `18` is an integer constant used to initialize a variable.
+✓ RIGHT
+```c
+char grade = 'A';
+```
+Why it works: `'A'` is a single-character constant.
+
+✗ WRONG
+```c
+int age = eighteen;
+```
+Why it fails or is a bad choice: `eighteen` is treated as an identifier, not the numeric constant 18.
+✗ WRONG
+```c
+char grade = ""A"";
+```
+Why it fails or is a bad choice: `""A""` is a string constant, not a single-character constant.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+CONSTANTS
+├─ Numeric
+│  ├─ Integer → 25
+│  └─ Real → 3.14
+└─ Character-related
+   ├─ Single character → 'A'
+   └─ String → ""Hello""
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `constant` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Constants are fixed literal values.
+• Integer and real constants are numeric.
+• Single-character constants use single quotes; string constants use double quotes.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0006,STG000,CH0006,Decimal Integer Constants,"1. DEFINITION + ANALOGY
+A decimal integer constant is a whole-number literal written with decimal digits. It has no decimal point and may have an optional leading sign in an expression.
+
+Analogy
+It is the same everyday whole-number writing you use for counts: 0, 12, 250, 54321.
+
+What to understand
+• Decimal integer constants use digits 0 through 9.
+• They do not contain a decimal point.
+• Embedded spaces, commas, and non-digit grouping marks are not part of an ordinary integer constant.
+• Examples include `123`, `-321`, `0`, and `654321`.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of integer constant so you can see the idea from different angles.
+
+• Valid: `123` — Only decimal digits.
+• Valid: `0` — Zero is a decimal integer constant.
+• Valid: `654321` — Whole number with no separator.
+• Invalid: `15 750` — Embedded space splits the tokens.
+• Invalid: `20,000` — Comma is not a thousands separator inside a C integer literal.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int people = 20000;
+```
+Why it works: A plain decimal integer literal.
+✓ RIGHT
+```c
+int change = -321;
+```
+Why it works: The value is represented using a minus sign and integer digits.
+
+✗ WRONG
+```c
+int people = 20,000;
+```
+Why it fails or is a bad choice: The comma is not a thousands separator in a C integer literal.
+✗ WRONG
+```c
+int total = 15 750;
+```
+Why it fails or is a bad choice: A space cannot appear inside one integer constant.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+DECIMAL INTEGER
+Digits: 0 1 2 3 4 5 6 7 8 9
+Examples: 0   25   54321
+No decimal point
+No comma / embedded space
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `integer constant` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Decimal integer constants represent whole numbers.
+• Use digits without commas or embedded spaces.
+• A decimal point changes the literal into a real constant.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0007,STG000,CH0007,Octal and Hexadecimal Integer Constants,"1. DEFINITION + ANALOGY
+C can write integer constants in number bases other than decimal. A leading `0` indicates octal notation, while a leading `0x` or `0X` indicates hexadecimal notation.
+
+Analogy
+The value is the same kind of whole number, but it is written using a different counting alphabet, like writing the same quantity in a different numeral system.
+
+What to understand
+• Octal uses digits 0 through 7.
+• Hexadecimal uses digits 0 through 9 and letters A through F (or lowercase a through f).
+• `037` is octal; `0X2` and `0x9F` are hexadecimal forms.
+• Digits 8 and 9 are not valid octal digits.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of octal so you can see the idea from different angles.
+
+• Octal: `037` — Leading 0 and digits 0-7.
+• Hexadecimal: `0X2` — Leading 0X.
+• Hexadecimal: `0x9F` — Hex digits may include A-F.
+• Invalid octal: `089` — 8 and 9 do not belong to octal notation.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int a = 037;
+```
+Why it works: Valid octal integer constant.
+✓ RIGHT
+```c
+int b = 0x9F;
+```
+Why it works: Valid hexadecimal integer constant.
+
+✗ WRONG
+```c
+int a = 089;
+```
+Why it fails or is a bad choice: An octal constant cannot contain 8 or 9.
+✗ WRONG
+```c
+int b = 0xG1;
+```
+Why it fails or is a bad choice: G is not a hexadecimal digit.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+INTEGER BASES
+Decimal: 25
+Octal:   031   (leading 0)
+Hex:     0x19  (leading 0x)
+Octal digits: 0-7
+Hex digits: 0-9, A-F
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `octal` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Leading 0 indicates octal notation.
+• Leading 0x/0X indicates hexadecimal notation.
+• Octal cannot use 8 or 9; hexadecimal extends digits with A-F.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0008,STG000,CH0008,Integer Suffixes: unsigned and long,"1. DEFINITION + ANALOGY
+An integer constant can use suffix letters such as `U`/`u` for unsigned and `L`/`l` for long so the literal is treated with the intended integer category.
+
+Analogy
+A suffix is like a small label attached to the number telling C how you want that number classified.
+
+What to understand
+• `U` or `u` marks an unsigned integer constant.
+• `L` or `l` marks a long integer constant.
+• They may be combined, for example `1234UL`.
+• The suffix belongs directly to the numeric literal; it is not a separate variable name.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of suffix so you can see the idea from different angles.
+
+• Unsigned: `56789U` — U requests an unsigned integer form.
+• Long: `9876543L` — L requests a long integer form.
+• Unsigned long: `1234UL` — Both qualifiers are attached.
+• Plain: `100` — Uses the normal default integer-literal rules.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+unsigned long n = 1234UL;
+```
+Why it works: The literal explicitly matches an unsigned long form.
+✓ RIGHT
+```c
+long distance = 90000L;
+```
+Why it works: L marks the literal as long.
+
+✗ WRONG
+```c
+long distance = 90000 L;
+```
+Why it fails or is a bad choice: Do not separate the suffix from the literal with a space.
+✗ WRONG
+```c
+unsigned n = U56789;
+```
+Why it fails or is a bad choice: The suffix follows the digits; it does not come first.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+INTEGER LITERAL + SUFFIX
+56789 + U  → unsigned form
+9876543 + L → long form
+1234 + UL   → unsigned long form
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `suffix` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• U/u indicates unsigned.
+• L/l indicates long.
+• Suffix letters are attached to the number.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0009,STG000,CH0009,Real Constants in Decimal Notation,"1. DEFINITION + ANALOGY
+A real constant represents a number with a fractional value. In decimal notation it is written with a decimal point and digits before or after the point.
+
+Analogy
+Use an integer for whole apples and a real constant for measurements such as 2.5 kilograms or 17.548 degrees.
+
+What to understand
+• Examples include `0.0083`, `-0.75`, `435.36`, `+247.0`, `.95` and `-.71`.
+• At least the notation must form a valid numeric token; embedded spaces are not allowed.
+• Real constants are also called floating-point constants.
+• Decimal notation is useful when the value is easy to read directly.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of real constant so you can see the idea from different angles.
+
+• Valid: `17.548` — Whole and fractional parts.
+• Valid: `.95` — Digits may appear only after the point.
+• Valid: `247.0` — Explicit fractional notation.
+• Invalid: `7. 5` — A space breaks the numeric token.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+double price = 75.84;
+```
+Why it works: Valid real constant.
+✓ RIGHT
+```c
+float ratio = 0.5f;
+```
+Why it works: Real literal with float suffix.
+
+✗ WRONG
+```c
+double price = 75 .84;
+```
+Why it fails or is a bad choice: The space separates the tokens.
+✗ WRONG
+```c
+double x = 1.5.2;
+```
+Why it fails or is a bad choice: A real constant cannot contain two decimal points.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+REAL CONSTANT
+whole part . fractional part
+   17     .     548
+Examples: 0.5   .95   247.0
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `real constant` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Real constants represent fractional/continuous values.
+• Decimal notation uses a decimal point.
+• Do not place spaces inside the number.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0010,STG000,CH0010,Scientific Notation,"1. DEFINITION + ANALOGY
+Scientific notation writes a real constant using a mantissa and an exponent separated by `e` or `E`. The exponent tells how many powers of ten scale the mantissa.
+
+Analogy
+It is a compact way to write very large or very small measurements without typing many zeros.
+
+What to understand
+• `1.2E6` means 1.2 multiplied by 10 to the power 6.
+• The mantissa may be an integer or decimal real value.
+• The exponent must be an integer and may have an optional plus or minus sign.
+• No spaces are allowed inside the literal.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of scientific notation so you can see the idea from different angles.
+
+• Valid: `1.2E6` — 1.2 × 10^6.
+• Valid: `1.5e-3` — A small number using a negative exponent.
+• Valid: `3E+5` — Integer mantissa with signed exponent.
+• Invalid: `1.5E2.5` — Exponent must be an integer.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+double distance = 1.2E6;
+```
+Why it works: Valid exponential notation.
+✓ RIGHT
+```c
+double tiny = 7.5E-3;
+```
+Why it works: Valid negative exponent.
+
+✗ WRONG
+```c
+double x = 1.5E2.5;
+```
+Why it fails or is a bad choice: Exponent cannot contain a decimal point.
+✗ WRONG
+```c
+double x = 1.5 E3;
+```
+Why it fails or is a bad choice: A space splits the literal.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+SCIENTIFIC NOTATION
+mantissa  E  exponent
+  1.5     E    -3
+= 1.5 × 10^-3
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `scientific notation` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Use e/E between mantissa and exponent.
+• Exponent is an integer.
+• Scientific notation is useful for very large or very small values.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0011,STG000,CH0011,Single-Character Constants,"1. DEFINITION + ANALOGY
+A single-character constant represents one character enclosed in single quotation marks, such as `'A'`, `'5'`, or `'x'`.
+
+Analogy
+Think of single quotes as a tiny box that holds exactly one character.
+
+What to understand
+• A character constant uses single quotes.
+• `'5'` is the character 5, not the numeric integer value 5.
+• Characters have numeric codes internally, so C can treat a character value numerically in some contexts.
+• Escape sequences can represent special characters such as newline inside a character constant.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of character constant so you can see the idea from different angles.
+
+• Letter: `'A'` — One letter in single quotes.
+• Digit character: `'5'` — Character five, not number five.
+• Symbol: `';'` — A punctuation character.
+• Wrong kind: `""A""` — Double quotes create a string constant.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+char grade = 'A';
+```
+Why it works: One character stored in char.
+✓ RIGHT
+```c
+char digit = '5';
+```
+Why it works: Stores the character 5.
+
+✗ WRONG
+```c
+char grade = ""A"";
+```
+Why it fails or is a bad choice: Double quotes make a string, not a single-character constant.
+✗ WRONG
+```c
+char grade = 'AB';
+```
+Why it fails or is a bad choice: A beginner single-character constant should contain one character.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+5  → integer constant
+'5' → character constant
+""5"" → string constant
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `character constant` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Single-character constants use single quotes.
+• `'5'` and `5` are different kinds of values.
+• Double quotes are for strings.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0012,STG000,CH0012,String Constants,"1. DEFINITION + ANALOGY
+A string constant is a sequence of characters enclosed in double quotation marks. It can contain letters, numbers, symbols, spaces, and escape sequences.
+
+Analogy
+A character constant is one tile; a string constant is a whole row of tiles forming text.
+
+What to understand
+• Examples include `""Hello""`, `""1987""`, `""WELL DONE""`, and `""...?...""`.
+• A string constant is not the same as a single-character constant.
+• Even `""A""` is a string because it uses double quotes.
+• Strings are commonly printed using `printf`.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of string constant so you can see the idea from different angles.
+
+• String: `""Hello""` — Sequence of characters in double quotes.
+• String: `""1987""` — Digits are text here.
+• String: `""WELL DONE""` — Spaces may appear inside a string.
+• Character: `'A'` — Single quotes mean one character, not a string.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+printf(""Hello"");
+```
+Why it works: Prints a string constant.
+✓ RIGHT
+```c
+printf(""Age: 18"");
+```
+Why it works: A string may contain letters, spaces and digits.
+
+✗ WRONG
+```c
+printf('Hello');
+```
+Why it fails or is a bad choice: Single quotes are not used for a string constant.
+✗ WRONG
+```c
+char c = ""A"";
+```
+Why it fails or is a bad choice: A string is not the same as a single char value.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+SINGLE CHARACTER      STRING
+'A'                   ""A""
+1 character           sequence/string
+single quotes          double quotes
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `string constant` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• String constants use double quotes.
+• A one-letter string is still a string.
+• Strings may contain spaces and escape sequences.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0013,STG000,CH0013,Backslash Character Constants,"1. DEFINITION + ANALOGY
+An escape sequence is a backslash-based character notation used to represent special characters that are difficult to type or would otherwise have a special meaning.
+
+Analogy
+The backslash acts like an instruction tag saying, 'interpret the next character in a special way.'
+
+What to understand
+• `\n` represents newline.
+• `\t` represents horizontal tab.
+• `\\` represents a backslash character.
+• `\""` lets a double quote appear inside a string.
+• `\'` can represent a single quote character.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of escape sequence so you can see the idea from different angles.
+
+• Newline: `\n` — Moves following output to a new line.
+• Tab: `\t` — Horizontal tab.
+• Backslash: `\\` — Represents one backslash.
+• Double quote: `\""` — Represents a quote inside a string.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+printf(""A\nB"");
+```
+Why it works: Uses newline escape sequence.
+✓ RIGHT
+```c
+printf(""C:\\temp"");
+```
+Why it works: Uses `\\` to place a backslash in text.
+
+✗ WRONG
+```c
+printf(""A
+B"");
+```
+Why it fails or is a bad choice: A literal source line break inside this string is not the intended way to write newline here.
+✗ WRONG
+```c
+printf(""C:\temp"");
+```
+Why it fails or is a bad choice: `\t` may be interpreted as a tab; use `\\` for a backslash.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+BACKSLASH + CODE
+\n → newline
+\t → tab
+\\ → backslash
+\"" → double quote
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `escape sequence` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Escape sequences begin with backslash.
+• They represent special characters inside character/string constants.
+• Use `\\` when you need an actual backslash.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0014,STG000,CH0014,Variables: Named Storage,"1. DEFINITION + ANALOGY
+A variable is a data name used to store a value. Unlike a literal constant, the value held by a variable may change while the program runs.
+
+Analogy
+A variable is a labelled box. The label stays the same, but the value placed inside the box can be replaced.
+
+What to understand
+• Programmers choose meaningful variable names such as `average`, `height`, `total`, and `counter_1`.
+• A variable must be declared with a data type before normal use.
+• Assignment can replace the value stored in a variable.
+• The variable name is different from the value stored inside it.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of variable so you can see the idea from different angles.
+
+• Variable: `age` — Name of the box.
+• Initial value: `18` — Value first stored.
+• Updated value: `19` — New value can replace 18.
+• Keyword: `int` — Describes the type; it is not the variable name.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int age = 18;
+age = 19;
+```
+Why it works: The variable `age` changes from 18 to 19.
+✓ RIGHT
+```c
+float amount = 30.75f;
+```
+Why it works: `amount` stores a real value.
+
+✗ WRONG
+```c
+int int = 18;
+```
+Why it fails or is a bad choice: `int` is a keyword, not a legal variable name.
+✗ WRONG
+```c
+int 2age = 18;
+```
+Why it fails or is a bad choice: The identifier begins with a digit.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+VARIABLE BOX
+age
+┌──────┐
+│  18  │  first
+└──────┘
+   ↓ age = 19;
+┌──────┐
+│  19  │  now
+└──────┘
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `variable` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• A variable has a name and stores a value.
+• Its stored value may change during execution.
+• The type and variable name play different roles.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0015,STG000,CH0015,Variable Names and Case Sensitivity,"1. DEFINITION + ANALOGY
+C is case-sensitive, so uppercase and lowercase letters are treated as different. `Total`, `TOTAL`, and `total` can refer to different identifiers.
+
+Analogy
+Imagine three lockers labelled `A1`, `a1`, and `A1` with different capitalization rules. C reads the exact label, including letter case.
+
+What to understand
+• Variable names should be meaningful and follow identifier rules.
+• `Total` and `total` are distinct names.
+• Changing capitalization accidentally can make C refer to a different variable or an undeclared name.
+• Consistent naming style reduces beginner mistakes.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of case sensitivity so you can see the idea from different angles.
+
+• Different: `sum vs Sum` — C distinguishes the case.
+• Different: `value vs VALUE` — Not the same identifier.
+• Clear name: `average_number` — Meaningful and consistent.
+• Risky style: `aVg_HeIgHt` — Legal-looking but hard to read consistently.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int total = 5;
+int Total = 7;
+```
+Why it works: Two different variables are declared.
+✓ RIGHT
+```c
+int student_age = 18;
+```
+Why it works: Consistent lowercase style.
+
+✗ WRONG
+```c
+int total = 5;
+printf(""%d"", Total);
+```
+Why it fails or is a bad choice: `Total` is not the same identifier as `total`.
+✗ WRONG
+```c
+int marks = 90;
+markS = 95;
+```
+Why it fails or is a bad choice: Different capitalization creates a different name.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+C IS CASE-SENSITIVE
+score ≠ Score ≠ SCORE
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `case sensitivity` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Uppercase and lowercase matter in C identifiers.
+• Use a consistent naming style.
+• A case typo can make C see a different name.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0016,STG000,CH0016,Families of C Data Types,"1. DEFINITION + ANALOGY
+A data type tells C what kind of data a value represents and guides how the compiler stores and operates on that data.
+
+Analogy
+A data type is like choosing the correct container: a bottle for liquid, a box for objects, or an envelope for a letter. The container matches the kind of thing being stored.
+
+What to understand
+• The book groups C data types into primary (fundamental), derived, and user-defined types.
+• Primary types include integer, character, floating-point, double-precision floating-point, and void.
+• Derived types include forms such as arrays, functions and pointers, which are covered later.
+• Choosing a suitable type matters because kinds of data and storage requirements differ.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of data type so you can see the idea from different angles.
+
+• Whole number: `int` — Useful for counts.
+• Character: `char` — Stores a character-sized value.
+• Real number: `float / double` — Used for fractional values.
+• No value: `void` — Used when no value is represented/returned.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int count = 10;
+```
+Why it works: Whole-number data.
+✓ RIGHT
+```c
+double price = 75.84;
+```
+Why it works: Fractional numeric data.
+
+✗ WRONG
+```c
+void count = 10;
+```
+Why it fails or is a bad choice: `void` is not a normal object type for storing a number.
+✗ WRONG
+```c
+char name = ""Asha"";
+```
+Why it fails or is a bad choice: A single char object cannot directly hold a whole string.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+C DATA TYPES
+├─ Primary / fundamental
+│  ├─ integer
+│  ├─ character
+│  ├─ floating point
+│  └─ void
+├─ Derived
+└─ User-defined
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `data type` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• A data type describes the kind of data.
+• Primary, derived and user-defined are broad groups.
+• Use a type suitable for the value you need to store.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0017,STG000,CH0017,"Integer Types: short, int, long, signed, unsigned","1. DEFINITION + ANALOGY
+Integer types store whole numbers. C provides forms such as `short int`, `int`, `long int`, and signed or unsigned versions so programs can choose different integer ranges and representations.
+
+Analogy
+Think of integer types as differently sized number boxes. Some boxes also reserve room for negative values, while unsigned boxes use their range for non-negative values.
+
+What to understand
+• `int` is the common general-purpose integer type.
+• `short` and `long` are integer type modifiers that change the supported range/size according to the implementation.
+• `signed` allows negative and non-negative values.
+• `unsigned` represents non-negative values and uses its range differently.
+• Exact sizes/ranges are implementation-dependent; do not hard-code old machine tables as universal facts.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of integer type so you can see the idea from different angles.
+
+• Common: `int count;` — General integer.
+• Short: `short int small;` — Short integer form.
+• Long: `long int distance;` — Long integer form.
+• Unsigned: `unsigned int items;` — Non-negative integer form.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+unsigned int items = 25U;
+```
+Why it works: Unsigned object with unsigned literal.
+✓ RIGHT
+```c
+long int population = 90000L;
+```
+Why it works: Long integer object and long literal.
+
+✗ WRONG
+```c
+unsigned items = -5;
+```
+Why it fails or is a bad choice: The declaration is syntactically possible, but a negative value conflicts with the beginner purpose of an unsigned quantity.
+✗ WRONG
+```c
+long float x;
+```
+Why it fails or is a bad choice: `long float` is not the intended standard floating type form; use double/long double for wider floating precision.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+INTEGER FAMILY
+short int
+   int
+long int
+Each may have signed/unsigned forms (subject to C rules)
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `integer type` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Integer types store whole numbers.
+• short/int/long provide integer forms.
+• signed and unsigned affect the value range/representation.
+• Exact sizes depend on the C implementation.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0018,STG000,CH0018,Floating-Point Types,"1. DEFINITION + ANALOGY
+Floating-point types store real-number approximations, including values with fractional parts. C commonly provides `float`, `double`, and `long double`.
+
+Analogy
+Integers count whole items; floating-point values measure quantities such as temperature, distance, or average where fractions matter.
+
+What to understand
+• `float` is a floating-point type.
+• `double` normally provides greater precision than `float`.
+• `long double` provides another extended floating form where supported.
+• Floating-point values are approximations in binary storage, so not every decimal fraction is represented exactly.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of floating-point type so you can see the idea from different angles.
+
+• float: `float temperature = 36.5f;` — Fractional measurement.
+• double: `double pi = 3.14159;` — More precision for a real value.
+• long double: `long double precise;` — Extended floating form.
+• Not integer: `17.548` — A real constant.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+float amount = 30.75f;
+```
+Why it works: Explicit float literal.
+✓ RIGHT
+```c
+double average = 3.88;
+```
+Why it works: Double variable stores a real value.
+
+✗ WRONG
+```c
+int temperature = 36.5;
+```
+Why it fails or is a bad choice: Fractional information is not properly represented by an integer type.
+✗ WRONG
+```c
+float value = ""3.5"";
+```
+Why it fails or is a bad choice: A string constant is not a numeric floating value.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+FLOATING-POINT TYPES
+float
+  ↓ generally more precision
+ double
+  ↓ extended form
+ long double
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `floating-point type` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Floating-point types are for real-number approximations.
+• float, double and long double are common forms.
+• Use them when fractional values matter.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0019,STG000,CH0019,Character Type and void,"1. DEFINITION + ANALOGY
+`char` is the basic character-sized integer type used for character data, while `void` represents the absence of a value in contexts such as function return types.
+
+Analogy
+`char` is a small box suited to one character code. `void` is not a box at all; it means there is no value to place there.
+
+What to understand
+• A `char` object can store a character value such as `'A'`.
+• Character values have integer codes internally.
+• `void` is commonly used to say a function returns no value.
+• `void` is not used as an ordinary variable type for storing a data value.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of char so you can see the idea from different angles.
+
+• Character: `char grade = 'A';` — Stores one character value.
+• Character code: `char digit = '5';` — Stores character 5.
+• No returned value: `void show(void);` — Function form with no returned value.
+• Invalid object idea: `void score;` — Not a normal storable object.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+char letter = 'x';
+```
+Why it works: Valid char variable.
+✓ RIGHT
+```c
+void print_message(void);
+```
+Why it works: Valid style for a function that returns no value.
+
+✗ WRONG
+```c
+char letter = ""x"";
+```
+Why it fails or is a bad choice: `""x""` is a string, not a character constant.
+✗ WRONG
+```c
+void score = 10;
+```
+Why it fails or is a bad choice: void does not describe a normal value-holding object.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+char → one character-sized value
+void → no value
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `char` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• char is used for character-sized data.
+• Character constants use single quotes.
+• void means absence of a value in suitable contexts.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0020,STG000,CH0020,Declaring Variables,"1. DEFINITION + ANALOGY
+A variable declaration introduces one or more variable names to the compiler and specifies the data type they will hold before those variables are used.
+
+Analogy
+Before using labelled storage boxes, you first tell the storekeeper which boxes you need and what kind of contents each box will hold.
+
+What to understand
+• General beginner form: `data_type variable_name;`.
+• Several variables of the same type may be declared in one statement separated by commas.
+• A declaration statement ends with a semicolon.
+• Variables can also be initialized when declared.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of declaration so you can see the idea from different angles.
+
+• One variable: `int count;` — Declares an int.
+• Several: `float x, y;` — Declares two floats.
+• Initialized: `int age = 18;` — Declaration plus initial value.
+• Different types: `int count; double price;` — Use separate declarations for different types.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int count;
+```
+Why it works: Declares one int variable.
+✓ RIGHT
+```c
+float x, y;
+```
+Why it works: Declares two variables of the same type.
+✓ RIGHT
+```c
+double price = 75.84;
+```
+Why it works: Declares and initializes.
+
+✗ WRONG
+```c
+count int;
+```
+Why it fails or is a bad choice: Type comes before the variable name in this declaration form.
+✗ WRONG
+```c
+int count
+```
+Why it fails or is a bad choice: Missing semicolon.
+✗ WRONG
+```c
+int count, float price;
+```
+Why it fails or is a bad choice: Different types are not mixed this way in one declaration list.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+DECLARATION
+int count;
+│   │    └─ semicolon
+│   └────── variable name
+└────────── data type
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `declaration` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Declare variables before use.
+• A declaration gives a type and name.
+• Same-type variables may share a comma-separated declaration.
+• End the declaration with a semicolon.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0021,STG000,CH0021,typedef: Giving a Type Another Name,"1. DEFINITION + ANALOGY
+`typedef` lets a programmer create another name for an existing data type. The new name can then be used in later declarations.
+
+Analogy
+It is like giving a long job title a short nickname that still refers to the same role.
+
+What to understand
+• Example: `typedef float units;` makes `units` another name for `float`.
+• The typedef name does not create a brand-new underlying machine type; it creates an alternative type name.
+• Meaningful typedef names can improve readability.
+• After the typedef, declarations can use the new type name.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of typedef so you can see the idea from different angles.
+
+• Alias: `typedef float units;` — Creates type name `units`.
+• Use alias: `units batch1;` — Declares a variable using the alias.
+• Array alias: `typedef int marks[50];` — Creates an alias for an array type.
+• Not a variable: `units` — Here it is a type name after typedef.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+typedef float units;
+units weight;
+```
+Why it works: `units` becomes a usable type name.
+✓ RIGHT
+```c
+typedef int count_type;
+count_type n;
+```
+Why it works: Readable alias for int.
+
+✗ WRONG
+```c
+typedef units float;
+```
+Why it fails or is a bad choice: The existing type is written before the new typedef name in this simple form.
+✗ WRONG
+```c
+typedef float;
+units x;
+```
+Why it fails or is a bad choice: A typedef declaration needs the new identifier.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+existing type ──typedef──> new type name
+float                 units
+                         ↓
+                   units weight;
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `typedef` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• typedef creates another name for a type.
+• The alias can be used in later declarations.
+• It improves readability when used meaningfully.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0022,STG000,CH0022,enum: Named Integer Constants,"1. DEFINITION + ANALOGY
+An enumeration (`enum`) defines a set of named integer constants. The names make related integer choices easier to read and understand.
+
+Analogy
+Instead of remembering that 0 means Monday and 1 means Tuesday, you give those values meaningful names such as `Monday` and `Tuesday`.
+
+What to understand
+• General form: `enum name { value1, value2, ... };`.
+• By default, enumerators begin at 0 and increase by 1 unless values are assigned explicitly.
+• Enumerators are named integer constants.
+• An enum type can be used to declare variables whose values come from that set.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of enum so you can see the idea from different angles.
+
+• Default values: `enum day {Monday, Tuesday, Wednesday};` — Monday=0, Tuesday=1, Wednesday=2 by default.
+• Explicit value: `enum day {Monday=1, Tuesday, Wednesday};` — Following values continue from the assigned value.
+• Variable: `enum day today = Tuesday;` — Uses enum type and named value.
+• Readable: `week_end` — Names can explain meaning better than raw numbers.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+enum day {Mon, Tue, Wed};
+```
+Why it works: Defines three enumerators.
+✓ RIGHT
+```c
+enum state {OFF=0, ON=1};
+```
+Why it works: Defines explicit named integer values.
+
+✗ WRONG
+```c
+enum day (Mon, Tue);
+```
+Why it fails or is a bad choice: Enumeration lists use braces, not parentheses.
+✗ WRONG
+```c
+enum day {Mon Tue};
+```
+Why it fails or is a bad choice: Enumerators need commas between names.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+enum day
+├─ Monday → 0
+├─ Tuesday → 1
+└─ Wednesday → 2
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `enum` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• enum creates related named integer constants.
+• Enumerators normally increase from 0 unless assigned.
+• Names make code more readable than unexplained numbers.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0023,STG000,CH0023,"Storage Classes: auto, static, extern, register","1. DEFINITION + ANALOGY
+A storage class helps describe a variable's storage duration, visibility/linkage, or storage suggestion. The book introduces `auto`, `static`, `extern`, and `register` as important storage classes.
+
+Analogy
+A storage class is like a rule attached to a labelled box describing where the box belongs, how long it should stay available, or how other rooms may refer to it.
+
+What to understand
+• `auto` describes ordinary local automatic variables and is usually omitted.
+• `static` gives static storage duration; a local static variable retains its value between calls.
+• `extern` declares a name whose definition exists elsewhere.
+• `register` historically suggests frequent access; modern compilers decide actual register use.
+• Scope and storage duration are different ideas, so they should not be treated as synonyms.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of storage class so you can see the idea from different angles.
+
+• Automatic local: `int count;` — Ordinary local variable behaves as automatic by default.
+• Static: `static int total;` — Static storage duration.
+• External declaration: `extern int total;` — Refers to a definition elsewhere.
+• Register hint: `register int i;` — Historical storage/access suggestion.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+static int count = 0;
+```
+Why it works: Valid static variable declaration.
+✓ RIGHT
+```c
+extern int total;
+```
+Why it works: Valid external declaration form.
+
+✗ WRONG
+```c
+storage int count;
+```
+Why it fails or is a bad choice: `storage` is not a C storage-class keyword.
+✗ WRONG
+```c
+static extern int x;
+```
+Why it fails or is a bad choice: Do not combine incompatible storage-class specifiers in this beginner form.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+STORAGE CLASS
+├─ auto → ordinary local automatic
+├─ static → static duration
+├─ extern → defined elsewhere
+└─ register → access/storage suggestion
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `storage class` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Storage class adds information beyond the basic data type.
+• auto, static, extern and register are important names.
+• Scope and storage duration are related but not identical.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0024,STG000,CH0024,Assigning Values to Variables,"1. DEFINITION + ANALOGY
+Assignment stores a value in a variable. In C the assignment operator `=` puts the value of the right-hand expression into the variable on the left.
+
+Analogy
+The left side names the box; the right side tells what value to place into that box.
+
+What to understand
+• Example: `initial_value = 0;` stores 0 in the variable.
+• `year = year + 1;` uses the old value of `year`, adds 1, and stores the new result back into `year`.
+• The left side must identify something that can receive a value.
+• Assignment is not the same concept as mathematical equality.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of assignment so you can see the idea from different angles.
+
+• Simple: `balance = 75.84;` — Stores a real value.
+• Character: `yes = 'x';` — Stores a character value.
+• Update: `year = year + 1;` — New value depends on old value.
+• Multiple: `a = b = 0;` — C permits chained assignment; read it carefully.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int year = 1;
+year = year + 1;
+```
+Why it works: The variable is updated to 2.
+✓ RIGHT
+```c
+char yes;
+yes = 'x';
+```
+Why it works: Assignment after declaration.
+
+✗ WRONG
+```c
+18 = age;
+```
+Why it fails or is a bad choice: A literal constant cannot receive an assigned value.
+✗ WRONG
+```c
+int age;
+age == 18;
+```
+Why it fails or is a bad choice: `==` is comparison, not assignment.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+assignment
+variable = value/expression;
+   ↓          ↓
+ destination  new value
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `assignment` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• `=` performs assignment.
+• Left side receives the value from the right side.
+• Assignment can replace a variable's previous value.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0025,STG000,CH0025,Initialization,"1. DEFINITION + ANALOGY
+Initialization gives a variable its first value as part of its declaration. C also allows several variables to be initialized in one declaration.
+
+Analogy
+Declaration creates the labelled box; initialization creates it with something already inside.
+
+What to understand
+• `int p = 0;` declares `p` and gives it an initial value immediately.
+• `int p = 0, q = 0;` initializes multiple same-type variables.
+• Static and external objects are initialized to zero by default when no explicit initializer is supplied; automatic local variables do not automatically get a useful value.
+• Using an uninitialized automatic variable can produce indeterminate results.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of initialization so you can see the idea from different angles.
+
+• Initialized: `int p = 0;` — First value supplied immediately.
+• Multiple: `int p=0, q=0;` — Two initializers.
+• Declared only: `int total;` — No explicit initial value here.
+• Later assignment: `total = 10;` — Assignment after declaration.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int count = 0;
+```
+Why it works: Safe explicit initialization.
+✓ RIGHT
+```c
+double price = 75.84;
+```
+Why it works: Initializes a double.
+
+✗ WRONG
+```c
+int count;
+printf(""%d"", count);
+```
+Why it fails or is a bad choice: Reading an uninitialized automatic local variable is not safe.
+✗ WRONG
+```c
+int count = ;
+```
+Why it fails or is a bad choice: Initializer value is missing.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+DECLARATION ONLY: int count;
+DECLARATION + INITIALIZATION: int count = 0;
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `initialization` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Initialization supplies the first value during declaration.
+• It differs from a later assignment.
+• Initialize automatic local variables before reading them.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0026,STG000,CH0026,Reading Data with scanf,"1. DEFINITION + ANALOGY
+`scanf` is a standard input function that can read formatted values from the keyboard/input stream into variables. A control string describes the expected data format.
+
+Analogy
+`scanf` is like a form reader: the format tells it what kind of answer to expect, and the variable's address tells it where to store that answer.
+
+What to understand
+• Example: `scanf(""%d"", &number);` reads an integer into `number`.
+• The `&` operator supplies the address of a normal scalar variable for conversions such as `%d`.
+• The format specifier must match the kind of value being read.
+• The program waits for input when it reaches the input operation.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of scanf so you can see the idea from different angles.
+
+• Integer input: `scanf(""%d"", &number);` — Reads an int.
+• Several values: `scanf(""%f %f"", &x, &y);` — Reads two floating values when x/y are suitable float variables.
+• Address: `&number` — Tells scanf where to store the value.
+• Format: `%d` — Describes integer input.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+int number;
+scanf(""%d"", &number);
+```
+Why it works: Reads an integer into number.
+✓ RIGHT
+```c
+float x;
+scanf(""%f"", &x);
+```
+Why it works: Reads a float value.
+
+✗ WRONG
+```c
+int number;
+scanf(""%d"", number);
+```
+Why it fails or is a bad choice: For this scalar integer conversion, the address operator is missing.
+✗ WRONG
+```c
+float x;
+scanf(""%d"", &x);
+```
+Why it fails or is a bad choice: The integer format does not match a float variable.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+INPUT 42
+  ↓
+scanf(""%d"", &number)
+             ↓
+        number box = 42
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `scanf` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• scanf reads formatted input.
+• The control string describes the input type.
+• Use the variable address for ordinary numeric scalar inputs such as `%d` and `%f`.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0027,STG000,CH0027,Symbolic Constants with #define,"1. DEFINITION + ANALOGY
+A symbolic constant gives a meaningful name to a fixed replacement value using the preprocessor directive `#define`. The preprocessor substitutes the replacement text before compilation.
+
+Analogy
+Instead of writing the same raw number everywhere, you put a meaningful label on it once and use the label throughout the program.
+
+What to understand
+• Example: `#define MAX 100`.
+• The directive does not end with a semicolon.
+• Symbolic names are conventionally written in uppercase to make them easy to notice, though uppercase is a convention rather than a language requirement.
+• A symbolic constant created by `#define` is not a variable and cannot be changed by assignment.
+• Using meaningful names improves modifiability and readability.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of symbolic constant so you can see the idea from different angles.
+
+• Meaningful: ``#define MAX 100`` — Uses a name instead of repeating 100.
+• Real value: ``#define PI 3.14159`` — Names a real constant.
+• Use: ``int limit = MAX;`` — Preprocessor replaces MAX before compilation.
+• Convention: ``STRENGTH`` — Uppercase makes constants easy to spot.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+#define MAX 100
+int n = MAX;
+```
+Why it works: Correct directive and later use.
+✓ RIGHT
+```c
+#define PI 3.14159
+```
+Why it works: No semicolon is required at the end of the directive.
+
+✗ WRONG
+```c
+#define MAX 100;
+```
+Why it fails or is a bad choice: The semicolon becomes part of the replacement text and is not written as part of the constant definition.
+✗ WRONG
+```c
+# defineMAX 100
+```
+Why it fails or is a bad choice: There must be separation so the directive name is `define` and the symbolic name is distinct.
+✗ WRONG
+```c
+MAX = 200;
+```
+Why it fails or is a bad choice: A macro symbolic constant is not a variable to assign to.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+#define MAX 100
+       │   │
+       │   └─ replacement value
+       └───── symbolic name
+Use: int limit = MAX;
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `symbolic constant` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• #define creates a symbolic replacement name.
+• Do not end the directive with a semicolon.
+• The name is not a variable and cannot be assigned a new value.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0028,STG000,CH0028,const Variables,"1. DEFINITION + ANALOGY
+The `const` qualifier tells the compiler that a variable is intended not to be modified through that name after initialization.
+
+Analogy
+A const variable is a labelled box with a 'do not change' seal placed on it after its initial value is set.
+
+What to understand
+• Example: `const int class_size = 40;`.
+• The object has a data type as well as the `const` qualifier.
+• An assignment such as `class_size = 50;` is not allowed through a const-qualified name.
+• `const` differs from `#define`: const creates a typed object, while a macro performs preprocessor text replacement.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of const so you can see the idea from different angles.
+
+• Typed constant object: `const int class_size = 40;` — Typed int object that should not be modified.
+• Real value: `const double pi = 3.14159;` — Typed double object.
+• Wrong update: `class_size = 50;` — Attempts to modify a const object.
+• Compare: `#define MAX 100` — Macro replacement, not a typed variable object.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+const int class_size = 40;
+```
+Why it works: Valid const-qualified object.
+✓ RIGHT
+```c
+const double rate = 0.1;
+```
+Why it works: Valid typed constant object.
+
+✗ WRONG
+```c
+const int class_size = 40;
+class_size = 50;
+```
+Why it fails or is a bad choice: Attempts to modify the const object.
+✗ WRONG
+```c
+const value = 10;
+```
+Why it fails or is a bad choice: A data type is still required in standard beginner declarations.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+#define MAX 100 → preprocessor replacement
+const int max = 100; → typed object, modification restricted
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `const` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• const is a type qualifier.
+• A const object has a real C type.
+• Do not assign a new value to a const-qualified object through that name.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0029,STG000,CH0029,volatile Variables,"1. DEFINITION + ANALOGY
+The `volatile` qualifier tells the compiler that a variable's value may change for reasons outside the ordinary flow of the current code, so accesses must not be optimized away based on an assumption that the value stays unchanged.
+
+Analogy
+Imagine a notice board that another person can update at any time. Even if your own code did not change it, you must look at the board again instead of trusting an old remembered value.
+
+What to understand
+• Example: `volatile int date;`.
+• A volatile object may be changed by external hardware, interrupt-related activity, or another execution context, depending on the program.
+• `volatile` does not make operations atomic or thread-safe by itself.
+• `const volatile` can describe a value your code should not modify but that may change externally.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of volatile so you can see the idea from different angles.
+
+• Volatile: `volatile int status;` — Value may change outside the visible code path.
+• Const volatile: `volatile const int location = 100;` — Cannot be modified through the name, yet may be externally changed in a real mapped context.
+• Not same as const: `const int n = 5;` — const restricts modification, not external change awareness.
+• Not synchronization: `volatile int flag;` — Does not automatically make multithreaded communication safe.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+volatile int status;
+```
+Why it works: Valid volatile declaration.
+✓ RIGHT
+```c
+volatile const int sensor = 0;
+```
+Why it works: Both qualifiers may appear together.
+
+✗ WRONG
+```c
+volatile = int status;
+```
+Why it fails or is a bad choice: Qualifier belongs in the declaration specifiers, not as an assignment.
+✗ WRONG
+```c
+int volatile();
+```
+Why it fails or is a bad choice: This is not a normal variable declaration for a volatile integer object.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+ordinary variable → compiler may reuse known value
+volatile variable → read/write access must be treated as observable
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `volatile` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• volatile is a qualifier for values that may change externally.
+• It affects compiler assumptions about accesses.
+• It is not a replacement for synchronization/atomic operations.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01
+L_CH0030,STG000,CH0030,Overflow and Underflow,"1. DEFINITION + ANALOGY
+Overflow occurs when a value is outside the representable range of its data type. For floating-point data, underflow describes values whose magnitude is too small to represent normally at the required precision.
+
+Analogy
+A measuring cup has limits. Too much liquid spills over; an amount smaller than the smallest readable mark may disappear into the measurement limit.
+
+What to understand
+• Choosing a data type with insufficient range can produce incorrect or implementation-specific results.
+• Integer overflow behavior depends on signedness and the C rules; signed overflow must not be treated as a predictable wraparound rule.
+• Floating-point overflow can produce values beyond the finite range, while underflow concerns extremely small magnitudes.
+• The correct response is to choose suitable types and validate input/ranges rather than relying on overflow behavior.
+
+Do not try to memorize only the wording. Focus on what the idea lets a C program represent or do.//.//2. EXAMPLES + COMPARISONS
+Here are several forms of overflow so you can see the idea from different angles.
+
+• Too large: `A value beyond the type's maximum` — Overflow risk.
+• Too small magnitude: `Tiny floating value below normal range` — Underflow risk.
+• Prevention: `Choose a type with suitable range` — Design choice.
+• Bad assumption: `Expect every overflow to wrap predictably` — Not a safe general rule.
+
+Compare carefully
+• A valid-looking piece of C can belong to a different category than you first expect.
+• Pay attention to quotes, spelling, prefixes/suffixes, spaces, and whether a word is a C keyword.
+• Ask: “What role is this piece playing in the program?” rather than memorizing the shape alone.//.//3. RIGHT CODE vs WRONG CODE
+Study the contrast. The goal is to notice the smallest rule that changes the result.
+
+✓ RIGHT
+```c
+long long population = 5000000000LL;
+```
+Why it works: Uses a wider integer type for a large illustrative count, assuming the implementation supports long long.
+✓ RIGHT
+```c
+double tiny = 1e-200;
+```
+Why it works: Uses double for a very small real magnitude, subject to implementation range.
+
+✗ WRONG
+```c
+/* assume signed overflow always wraps to zero */
+```
+Why it fails or is a bad choice: Signed overflow is not a portable predictable wraparound technique.
+✗ WRONG
+```c
+char huge = 1000000;
+```
+Why it fails or is a bad choice: The chosen type is clearly unsuitable for such a large illustrative value.
+
+Debugging habit
+When a compiler reports an error, inspect the smallest relevant rule first: spelling, quotes, punctuation, type, declaration, or the exact token before the reported location.//.//4. VISUAL UNDERSTANDING
+Use this mental picture:
+
+TYPE RANGE
+minimum ───────── 0 ───────── maximum
+     value outside → overflow/range problem
+very tiny floating magnitude → underflow risk
+
+Read the diagram from top to bottom. Then connect each label back to the code examples on the previous page.
+
+Mini-check
+Can you point to the part that represents `overflow` without looking back? If not, compare the diagram with one correct example once more.//.//5. QUICK RECAP
+• Every data type has a representable range.
+• Use a type suitable for expected values.
+• Do not rely on signed overflow as a predictable wraparound mechanism.
+• Floating-point underflow concerns extremely small magnitudes.
+
+Before the test
+• Say the rule in your own words.
+• Identify one correct example.
+• Identify one common wrong example and explain why it is wrong.
+• If a test question introduces a small new situation, CLICK will first give you a short gist so you can reason from what you already know.",TRUE,2026-09-01

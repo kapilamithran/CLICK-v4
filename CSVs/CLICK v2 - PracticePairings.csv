@@ -1,0 +1,2 @@
+pairing_id,pair_code,user_id,status,created_at,expires_at,device_name,device_token_hash,connected_at,last_seen
+PAIR-9B3487C412C7,768673,U485B9DDDA04E,expired,2026-09-03T07:26:57.201Z,2026-09-03T07:36:57.201Z,,,,
