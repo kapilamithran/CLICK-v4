@@ -1,0 +1,53 @@
+{
+  "name": "click-practice",
+  "displayName": "CLICK Practice",
+  "description": "Pair with the CLICK web app and solve C practice challenges directly in VS Code.",
+  "version": "0.1.0",
+  "publisher": "clicklearn",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Education", "Other"],
+  "activationEvents": ["onUri"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "click.pair", "title": "CLICK: Pair with Web App" },
+      { "command": "click.openNextPractice", "title": "CLICK: Open Next Practice" },
+      { "command": "click.checkCode", "title": "CLICK: Check Code" },
+      { "command": "click.disconnect", "title": "CLICK: Disconnect" }
+    ],
+    "configuration": {
+      "title": "CLICK Practice",
+      "properties": {
+        "click.backendUrl": {
+          "type": "string",
+          "default": "https://jnxevalckgitxuunjcvv.supabase.co/functions/v1/click-backend",
+          "description": "CLICK backend endpoint."
+        },
+        "click.anonKey": {
+          "type": "string",
+          "default": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpueGV2YWxja2dpdHh1dW5qY3Z2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0OTg2OTYsImV4cCI6MjEwNDA3NDY5Nn0.AtbnOxi8sDI-jTQ1gYJy4_e5tXuHr2yG6OrJ5uYcANo",
+          "description": "CLICK backend public API key."
+        },
+        "click.gccPath": {
+          "type": "string",
+          "default": "gcc",
+          "description": "Path to the gcc executable (default assumes it's on PATH, e.g. via MSYS2 UCRT64)."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "@vscode/vsce": "^2.24.0"
+  }
+}

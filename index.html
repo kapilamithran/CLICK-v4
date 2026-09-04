@@ -1541,13 +1541,15 @@ async function startPracticePairing(){
       }
     }
     practicePairing=r;practiceConnection=null;renderPracticePairBox();
+    try{window.location.href='vscode://clicklearn.click-practice/pair?code='+encodeURIComponent(r.pair_code)}catch(e){}
     clearInterval(practicePairPoll);practicePairPoll=setInterval(checkPracticePairing,1800)
   }catch(e){toast(e.message,'error')}
 }
 function renderPracticePairBox(){
   if(!$('practicePairBox'))return;
   if(practicePairing){
-    $('practicePairBox').innerHTML=`<div class="pair-actions"><div class="pair-code">${esc(practicePairing.pair_code)}</div><button class="btn ghost" id="copyPracticeCode" type="button">Copy</button><span class="pair-status" id="practicePairStatus">Waiting for VS Code… The prepared CLICK VSIX already knows the server address.</span></div>`;
+    $('practicePairBox').innerHTML=`<div class="pair-actions"><div class="pair-code">${esc(practicePairing.pair_code)}</div><button class="btn" id="openVSCode" type="button">Open VS Code</button><button class="btn ghost" id="copyPracticeCode" type="button">Copy</button><span class="pair-status" id="practicePairStatus">Click "Open VS Code", or open it yourself and enter this code (CLICK: Pair with Web App).</span></div>`;
+    $('openVSCode').onclick=()=>{try{window.location.href='vscode://clicklearn.click-practice/pair?code='+encodeURIComponent(practicePairing.pair_code)}catch(e){}};
     $('copyPracticeCode').onclick=async()=>{try{await navigator.clipboard.writeText(String(practicePairing.pair_code));$('practicePairStatus').textContent='Copied — paste it into VS Code.'}catch(e){toast('Pairing code: '+practicePairing.pair_code)}};return;
   }
   if(practiceConnection?.connected){
