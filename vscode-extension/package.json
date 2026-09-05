@@ -17,11 +17,45 @@
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      { "command": "click.pair", "title": "CLICK: Pair with Web App" },
+      { "command": "click.pair", "title": "CLICK: Pair with Web App", "icon": "$(plug)" },
       { "command": "click.openNextPractice", "title": "CLICK: Open Next Practice" },
-      { "command": "click.checkCode", "title": "CLICK: Check Code" },
-      { "command": "click.disconnect", "title": "CLICK: Disconnect" }
+      { "command": "click.checkCode", "title": "CLICK: Check Code", "icon": "$(check)" },
+      { "command": "click.runVisibleTests", "title": "CLICK: Run Visible Tests", "icon": "$(play)" },
+      { "command": "click.disconnect", "title": "CLICK: Disconnect", "icon": "$(debug-disconnect)" },
+      { "command": "click.refreshPractice", "title": "CLICK: Refresh Practice", "icon": "$(refresh)" },
+      { "command": "click.resetStarterCode", "title": "CLICK: Reset Starter Code", "icon": "$(discard)" },
+      { "command": "click.showQuestionPanel", "title": "CLICK: Show Question Panel", "icon": "$(book)" }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "click", "title": "CLICK Practice", "icon": "resources/activity-icon.svg" }
+      ]
+    },
+    "views": {
+      "click": [
+        { "id": "click.questionView", "name": "Question", "type": "webview" },
+        { "id": "click.practiceTree", "name": "My Assignments", "type": "tree" }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "click.practiceTree",
+        "contents": "Not paired with the CLICK web app yet.\n[Pair with Web App](command:click.pair)",
+        "when": "!click.paired"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        { "command": "click.refreshPractice", "when": "view == click.practiceTree", "group": "navigation@1" },
+        { "command": "click.pair", "when": "view == click.practiceTree && !click.paired", "group": "navigation@2" },
+        { "command": "click.disconnect", "when": "view == click.practiceTree && click.paired", "group": "navigation@2" }
+      ],
+      "editor/title": [
+        { "command": "click.runVisibleTests", "when": "resourceLangId == c", "group": "navigation@1" },
+        { "command": "click.checkCode", "when": "resourceLangId == c", "group": "navigation@2" },
+        { "command": "click.showQuestionPanel", "when": "resourceLangId == c", "group": "navigation@3" }
+      ]
+    },
     "configuration": {
       "title": "CLICK Practice",
       "properties": {

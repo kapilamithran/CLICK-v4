@@ -2,47 +2,20 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
-import { exec, execFile } from "child_process";
+import { exec, execFile, ExecFileException } from "child_process";
+import { CheckSummary, MistakeRule, PracticeQuestion, PracticeTest, TestOutcome, TestResultLine } from "./types";
+import { PracticeTreeProvider } from "./practiceTreeProvider";
+import { QuestionViewProvider, QuestionViewMessage } from "./questionViewProvider";
 
 const SECRET_DEVICE_TOKEN = "click.deviceToken";
-
-interface PracticeTest {
-  name: string;
-  input: string;
-  expected_output: string;
-  timeout_ms: number;
-}
-interface MistakeRule {
-  rule_type: "source_regex" | "compiler_regex" | string;
-  pattern: string;
-  message: string;
-}
-interface PracticeQuestion {
-  practice_id: string;
-  stage_id: string;
-  title: string;
-  objective: string;
-  problem_statement: string;
-  constraints: string;
-  sample_input: string;
-  sample_output: string;
-  starter_code: string;
-  visible_tests: PracticeTest[];
-  hidden_tests: PracticeTest[];
-  mistake_rules: MistakeRule[];
-  hints: string[];
-  success_message: string;
-  technique_after_success: string;
-  order: number;
-  completed?: boolean;
-  available?: boolean;
-  lock_reason?: string;
-}
 
 let output: vscode.OutputChannel;
 let statusBar: vscode.StatusBarItem;
 let currentQuestion: PracticeQuestion | null = null;
+let lastQuestions: PracticeQuestion[] = [];
 let workDir: string | null = null;
+let treeProvider: PracticeTreeProvider;
+let questionProvider: QuestionViewProvider;
 
 function cfg<T>(key: string): T {
   return vscode.workspace.getConfiguration().get(key) as T;
@@ -83,45 +56,110 @@ function safeFileName(s: string): string {
   return s.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 60);
 }
 
+function questionFilePath(q: PracticeQuestion): string {
+  const dir = ensureWorkDir();
+  return path.join(dir, `${safeFileName(q.practice_id)}_${safeFileName(q.title)}.c`);
+}
+
+/**
+ * Clean starter code plus a one-line signpost — the problem statement, constraints,
+ * input/output and examples live in the CLICK Practice sidebar, not in the source file.
+ */
+function starterFileContents(q: PracticeQuestion): string {
+  const signpost =
+    `// CLICK — open the "CLICK Practice" view in the Activity Bar for the problem statement, constraints, and examples.\n` +
+    `// Run "CLICK: Check Code" (Ctrl+Shift+P) when ready.\n\n`;
+  return signpost + (q.starter_code || "");
+}
+
+function updateStatusBar(paired: boolean, question: PracticeQuestion | null): void {
+  if (!paired) {
+    statusBar.text = "$(circle-slash) CLICK: Not connected";
+    statusBar.tooltip = 'Run "CLICK: Pair with Web App" to connect.';
+    statusBar.command = "click.pair";
+    return;
+  }
+  statusBar.text = question ? `$(book) CLICK ● ${question.title}` : "$(book) CLICK ● Connected";
+  statusBar.tooltip = "Open the CLICK Practice question panel.";
+  statusBar.command = "click.showQuestionPanel";
+}
+
 async function openChallenge(context: vscode.ExtensionContext, q: PracticeQuestion) {
   currentQuestion = q;
-  const dir = ensureWorkDir();
-  const file = path.join(dir, `${safeFileName(q.practice_id)}_${safeFileName(q.title)}.c`);
-
-  const header = [
-    `/*`,
-    ` * CLICK Practice — ${q.title}`,
-    ` *`,
-    ` * ${q.objective}`,
-    ` *`,
-    ` * ${q.problem_statement.replace(/\n/g, "\n * ")}`,
-    q.constraints ? ` *\n * Constraints:\n * ${q.constraints.replace(/\n/g, "\n * ")}` : "",
-    q.sample_input || q.sample_output
-      ? ` *\n * Sample input:  ${q.sample_input}\n * Sample output: ${q.sample_output}`
-      : "",
-    ` *`,
-    ` * Run "CLICK: Check Code" (Ctrl+Shift+P) when ready.`,
-    ` */`,
-    ``,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const file = questionFilePath(q);
 
   if (!fs.existsSync(file)) {
-    fs.writeFileSync(file, header + (q.starter_code || ""), "utf8");
+    fs.writeFileSync(file, starterFileContents(q), "utf8");
   }
 
   const doc = await vscode.workspace.openTextDocument(file);
   await vscode.window.showTextDocument(doc, { preview: false });
-  statusBar.text = `$(book) CLICK: ${q.title}`;
+
+  updateStatusBar(true, q);
   statusBar.show();
+  questionProvider.setQuestion(q);
+  treeProvider.setCurrent(q.practice_id);
   output.appendLine(`\nOpened practice challenge: ${q.title} (${q.practice_id})`);
 }
 
-async function syncAndOpenNext(context: vscode.ExtensionContext, announce = true) {
+async function openCurrentFile(): Promise<void> {
+  if (!currentQuestion) return;
+  const file = questionFilePath(currentQuestion);
+  if (!fs.existsSync(file)) return;
+  const doc = await vscode.workspace.openTextDocument(file);
+  await vscode.window.showTextDocument(doc, { preview: false });
+}
+
+async function resetStarterCode(context: vscode.ExtensionContext): Promise<void> {
+  if (!currentQuestion) {
+    vscode.window.showWarningMessage("No active CLICK challenge to reset.");
+    return;
+  }
+  const q = currentQuestion;
+  const choice = await vscode.window.showWarningMessage(
+    `Replace your current code for "${q.title}" with the starter code? This cannot be undone.`,
+    { modal: true },
+    "Replace"
+  );
+  if (choice !== "Replace") return;
+
+  const file = questionFilePath(q);
+  fs.writeFileSync(file, starterFileContents(q), "utf8");
+  const doc = await vscode.workspace.openTextDocument(file);
+  await vscode.window.showTextDocument(doc, { preview: false });
+  output.appendLine(`\nReset starter code for: ${q.title}`);
+}
+
+async function handleSyncError(context: vscode.ExtensionContext, e: any): Promise<void> {
+  const msg = String((e && e.message) || e);
+  if (/no longer valid|not connected/i.test(msg)) {
+    await context.secrets.delete(SECRET_DEVICE_TOKEN);
+    currentQuestion = null;
+    lastQuestions = [];
+    treeProvider.setQuestions([]);
+    questionProvider.setPaired(false);
+    await vscode.commands.executeCommand("setContext", "click.paired", false);
+    updateStatusBar(false, null);
+    statusBar.show();
+    vscode.window.showWarningMessage(
+      'CLICK: this device\'s connection is no longer valid. Run "CLICK: Pair with Web App" to reconnect.'
+    );
+    return;
+  }
+  if (/fetch|network/i.test(msg)) {
+    vscode.window.showErrorMessage("CLICK server unavailable. Check your internet connection and try again.");
+    return;
+  }
+  vscode.window.showErrorMessage("CLICK sync failed: " + msg);
+}
+
+async function syncQuestions(
+  context: vscode.ExtensionContext,
+  opts: { openNext: boolean; announce: boolean }
+): Promise<void> {
   const token = await getDeviceToken(context);
   if (!token) {
-    vscode.window.showWarningMessage("CLICK is not paired yet. Run “CLICK: Pair with Web App” first.");
+    vscode.window.showWarningMessage('CLICK is not paired yet. Run "CLICK: Pair with Web App" first.');
     return;
   }
   try {
@@ -129,13 +167,22 @@ async function syncAndOpenNext(context: vscode.ExtensionContext, announce = true
       user: { name: string };
       questions: PracticeQuestion[];
     };
-    const next = data.questions.find((q) => q.available && !q.completed);
-    if (next) {
-      await openChallenge(context, next);
-      if (announce) vscode.window.showInformationMessage(`CLICK: opened "${next.title}"`);
+    lastQuestions = data.questions || [];
+    treeProvider.setQuestions(lastQuestions);
+    treeProvider.setCurrent(currentQuestion ? currentQuestion.practice_id : null);
+
+    if (!opts.openNext) {
+      if (opts.announce) vscode.window.showInformationMessage("CLICK: practice list refreshed.");
       return;
     }
-    const locked = data.questions.find((q) => !q.available && !q.completed);
+
+    const next = lastQuestions.find((q) => q.available && !q.completed);
+    if (next) {
+      await openChallenge(context, next);
+      if (opts.announce) vscode.window.showInformationMessage(`CLICK: opened "${next.title}"`);
+      return;
+    }
+    const locked = lastQuestions.find((q) => !q.available && !q.completed);
     if (locked) {
       vscode.window.showInformationMessage(
         `Next challenge "${locked.title}" is still locked: ${locked.lock_reason || "complete the previous requirement first."}`
@@ -144,7 +191,7 @@ async function syncAndOpenNext(context: vscode.ExtensionContext, announce = true
     }
     vscode.window.showInformationMessage("All available CLICK practice challenges are completed. Nice work!");
   } catch (e: any) {
-    vscode.window.showErrorMessage("CLICK sync failed: " + e.message);
+    await handleSyncError(context, e);
   }
 }
 
@@ -155,17 +202,31 @@ async function claimPairing(context: vscode.ExtensionContext, code: string) {
       device_name: os.hostname() + " (VS Code)",
     })) as unknown as { device_token: string };
     await context.secrets.store(SECRET_DEVICE_TOKEN, data.device_token);
+    await vscode.commands.executeCommand("setContext", "click.paired", true);
+    questionProvider.setPaired(true);
+    updateStatusBar(true, null);
+    statusBar.show();
     vscode.window.showInformationMessage("CLICK: paired successfully!");
-    await syncAndOpenNext(context, false);
+    await syncQuestions(context, { openNext: true, announce: false });
   } catch (e: any) {
     vscode.window.showErrorMessage("CLICK pairing failed: " + e.message);
   }
 }
 
-function runOne(exePath: string, input: string, timeoutMs: number): Promise<{ stdout: string; stderr: string; timedOut: boolean }> {
+interface RunResult {
+  stdout: string;
+  stderr: string;
+  timedOut: boolean;
+  crashed: boolean;
+}
+
+function runOne(exePath: string, input: string, timeoutMs: number): Promise<RunResult> {
   return new Promise((resolve) => {
-    const child = execFile(exePath, [], { timeout: timeoutMs || 5000 }, (err, stdout, stderr) => {
-      resolve({ stdout, stderr, timedOut: !!err && (err as any).killed === true });
+    const child = execFile(exePath, [], { timeout: timeoutMs || 5000 }, (err: ExecFileException | null, stdout, stderr) => {
+      const timedOut = !!err && err.killed === true;
+      const code = err && typeof err.code === "number" ? err.code : 0;
+      const crashed = !!err && !timedOut && (!!err.signal || code > 128 || code < 0);
+      resolve({ stdout: stdout || "", stderr: stderr || "", timedOut, crashed });
     });
     if (child.stdin) {
       child.stdin.write(input || "");
@@ -186,16 +247,135 @@ function matchMistake(rules: MistakeRule[], type: string, text: string): string 
   return null;
 }
 
-async function checkCode(context: vscode.ExtensionContext) {
+function compileSource(gcc: string, sourcePath: string, exePath: string): Promise<{ ok: boolean; stderr: string; err: any }> {
+  return new Promise((resolve) => {
+    exec(`"${gcc}" "${sourcePath}" -o "${exePath}"`, { timeout: 15000 }, (err, _stdout, stderr) => {
+      resolve({ ok: !err, stderr: stderr || "", err });
+    });
+  });
+}
+
+function reportCompileFailure(q: PracticeQuestion, stderr: string, err: any): void {
+  output.appendLine("Compilation");
+  output.appendLine("  ✗ Failed\n");
+  output.appendLine(stderr);
+  questionProvider.setResult({
+    practiceTitle: q.title,
+    compileOk: false,
+    compileError: stderr,
+    results: [],
+    passCount: 0,
+    totalCount: 0,
+    allPassed: false,
+  });
+  const hint = matchMistake(q.mistake_rules, "compiler_regex", stderr);
+  if (hint) {
+    vscode.window.showErrorMessage(hint);
+  } else if (/is not recognized|command not found|ENOENT/i.test(String(err && err.message))) {
+    vscode.window.showErrorMessage(
+      "gcc was not found. Install the C compiler via MSYS2 (see your CLICK setup guide) and make sure it's on PATH."
+    );
+  } else {
+    vscode.window.showErrorMessage("Compile error — see the CLICK output panel.");
+  }
+}
+
+async function runTestSet(
+  exePath: string,
+  tests: PracticeTest[],
+  hiddenStartIndex: number
+): Promise<{ resultLines: TestResultLine[]; passCount: number; firstFailure: { test: PracticeTest; got: string; hidden: boolean } | null }> {
+  let passCount = 0;
+  let firstFailure: { test: PracticeTest; got: string; hidden: boolean } | null = null;
+  const resultLines: TestResultLine[] = [];
+
+  for (let i = 0; i < tests.length; i++) {
+    const t = tests[i];
+    const isHidden = i >= hiddenStartIndex;
+    const name = t.name || `Test ${i + 1}`;
+    const { stdout, timedOut, crashed } = await runOne(exePath, t.input, t.timeout_ms);
+    const got = stdout.trim();
+    const expected = String(t.expected_output || "").trim();
+
+    let outcome: TestOutcome;
+    if (timedOut) outcome = "timeout";
+    else if (crashed) outcome = "crash";
+    else if (got === expected) outcome = "pass";
+    else outcome = "fail";
+
+    if (outcome === "pass") {
+      passCount++;
+    } else if (!firstFailure) {
+      firstFailure = { test: t, got, hidden: isHidden };
+    }
+
+    resultLines.push({ name, outcome, hidden: isHidden });
+    const suffix = outcome === "timeout" ? " (timed out)" : outcome === "crash" ? " (crashed)" : "";
+    output.appendLine(`  ${outcome === "pass" ? "✓" : "✗"} ${name}${suffix}`);
+  }
+
+  return { resultLines, passCount, firstFailure };
+}
+
+function activeSourceEditor(): vscode.TextEditor | null {
   const editor = vscode.window.activeTextEditor;
   if (!editor || !editor.document.fileName.endsWith(".c")) {
     vscode.window.showWarningMessage("Open a .c practice file first.");
-    return;
+    return null;
   }
   if (!currentQuestion) {
-    vscode.window.showWarningMessage("No active CLICK challenge. Run “CLICK: Open Next Practice” first.");
+    vscode.window.showWarningMessage('No active CLICK challenge. Run "CLICK: Open Next Practice" first.');
+    return null;
+  }
+  return editor;
+}
+
+/** "Run" — compiles and runs only the visible tests. Never submits progress. */
+async function runVisibleTests(context: vscode.ExtensionContext) {
+  const editor = activeSourceEditor();
+  if (!editor || !currentQuestion) return;
+  await editor.document.save();
+  const q = currentQuestion;
+  const sourcePath = editor.document.fileName;
+  const exePath = sourcePath.replace(/\.c$/, process.platform === "win32" ? ".exe" : "");
+
+  output.show(true);
+  output.appendLine(`\n--- Running ${q.title} (visible tests) ---`);
+
+  const gcc = cfg<string>("click.gccPath") || "gcc";
+  const compiled = await compileSource(gcc, sourcePath, exePath);
+  if (!compiled.ok) {
+    reportCompileFailure(q, compiled.stderr, compiled.err);
     return;
   }
+
+  output.appendLine("Compilation");
+  output.appendLine("  ✓ Successful\n");
+  output.appendLine("Tests");
+
+  const visible = q.visible_tests || [];
+  const { resultLines, passCount } = await runTestSet(exePath, visible, visible.length);
+  output.appendLine("");
+  output.appendLine(`Visible: ${passCount}/${visible.length} passed`);
+
+  questionProvider.setResult({
+    practiceTitle: q.title,
+    compileOk: true,
+    results: resultLines,
+    passCount,
+    totalCount: visible.length,
+    allPassed: passCount === visible.length,
+  });
+
+  vscode.window.showInformationMessage(
+    `Ran ${visible.length} visible test${visible.length === 1 ? "" : "s"} — ${passCount}/${visible.length} passed. Use Submit to grade against all tests.`
+  );
+}
+
+/** "Submit" — compiles, runs every test (visible + hidden), and records progress on a full pass. */
+async function checkCode(context: vscode.ExtensionContext) {
+  const editor = activeSourceEditor();
+  if (!editor || !currentQuestion) return;
   await editor.document.save();
   const q = currentQuestion;
   const sourcePath = editor.document.fileName;
@@ -206,83 +386,104 @@ async function checkCode(context: vscode.ExtensionContext) {
   output.appendLine(`\n--- Checking ${q.title} ---`);
 
   const gcc = cfg<string>("click.gccPath") || "gcc";
-  await new Promise<void>((resolve) => {
-    exec(`"${gcc}" "${sourcePath}" -o "${exePath}"`, { timeout: 15000 }, async (err, _stdout, stderr) => {
-      if (err) {
-        const hint = matchMistake(q.mistake_rules, "compiler_regex", stderr);
-        output.appendLine("Compile failed:\n" + stderr);
-        if (hint) {
-          vscode.window.showErrorMessage(hint);
-        } else if (/is not recognized|command not found|ENOENT/i.test(String(err.message))) {
-          vscode.window.showErrorMessage(
-            "gcc was not found. Install the C compiler via MSYS2 (see your CLICK setup guide) and make sure it's on PATH."
-          );
-        } else {
-          vscode.window.showErrorMessage("Compile error — see the CLICK output panel.");
-        }
-        resolve();
-        return;
-      }
+  const compiled = await compileSource(gcc, sourcePath, exePath);
+  if (!compiled.ok) {
+    reportCompileFailure(q, compiled.stderr, compiled.err);
+    return;
+  }
 
-      const allTests = [...(q.visible_tests || []), ...(q.hidden_tests || [])];
-      let passCount = 0;
-      let firstFailure: { test: PracticeTest; got: string; hidden: boolean } | null = null;
+  output.appendLine("Compilation");
+  output.appendLine("  ✓ Successful\n");
+  output.appendLine("Tests");
 
-      for (let i = 0; i < allTests.length; i++) {
-        const t = allTests[i];
-        const isHidden = i >= (q.visible_tests || []).length;
-        const { stdout, timedOut } = await runOne(exePath, t.input, t.timeout_ms);
-        const got = stdout.trim();
-        const expected = String(t.expected_output || "").trim();
-        if (!timedOut && got === expected) {
-          passCount++;
-          output.appendLine(`✓ ${t.name || "test " + (i + 1)}`);
-        } else {
-          output.appendLine(`✗ ${t.name || "test " + (i + 1)}${timedOut ? " (timed out)" : ""}`);
-          if (!firstFailure) firstFailure = { test: t, got, hidden: isHidden };
-        }
-      }
+  const visible = q.visible_tests || [];
+  const allTests = [...visible, ...(q.hidden_tests || [])];
+  const { resultLines, passCount, firstFailure } = await runTestSet(exePath, allTests, visible.length);
 
-      if (firstFailure) {
-        const mistakeHit = matchMistake(q.mistake_rules, "source_regex", source);
-        if (mistakeHit) {
-          vscode.window.showWarningMessage(mistakeHit);
-        } else if (!firstFailure.hidden) {
-          vscode.window.showWarningMessage(
-            `"${firstFailure.test.name || "A visible test"}" failed. Expected "${firstFailure.test.expected_output}", got "${firstFailure.got}".`
-          );
-        } else {
-          vscode.window.showWarningMessage(`${passCount}/${allTests.length} tests passed — a hidden test still fails.`);
-        }
-        resolve();
-        return;
-      }
+  output.appendLine("");
+  output.appendLine(`Overall: ${passCount}/${allTests.length} passed`);
 
-      // all tests passed
-      try {
-        const token = await getDeviceToken(context);
-        await api(context, "completePractice", {
-          device_token: token,
-          practice_id: q.practice_id,
-          result_summary: `${passCount}/${allTests.length} tests passed in VS Code.`,
-        });
-        vscode.window.showInformationMessage(q.success_message || "All tests passed! Nice work.");
-        if (q.technique_after_success) {
-          output.appendLine(`\nTechnique: ${q.technique_after_success}`);
-        }
-        await syncAndOpenNext(context, true);
-      } catch (e: any) {
-        vscode.window.showErrorMessage("Could not save your progress: " + e.message);
-      }
-      resolve();
+  const summary: CheckSummary = {
+    practiceTitle: q.title,
+    compileOk: true,
+    results: resultLines,
+    passCount,
+    totalCount: allTests.length,
+    allPassed: passCount === allTests.length,
+  };
+  questionProvider.setResult(summary);
+
+  if (firstFailure) {
+    const mistakeHit = matchMistake(q.mistake_rules, "source_regex", source);
+    if (mistakeHit) {
+      vscode.window.showWarningMessage(mistakeHit);
+    } else if (!firstFailure.hidden) {
+      vscode.window.showWarningMessage(
+        `"${firstFailure.test.name || "A visible test"}" failed. Expected "${firstFailure.test.expected_output}", got "${firstFailure.got}".`
+      );
+    } else {
+      vscode.window.showWarningMessage(`${passCount}/${allTests.length} tests passed — a hidden test still fails.`);
+    }
+    return;
+  }
+
+  // all tests passed
+  try {
+    const token = await getDeviceToken(context);
+    await api(context, "completePractice", {
+      device_token: token,
+      practice_id: q.practice_id,
+      result_summary: `${passCount}/${allTests.length} tests passed in VS Code.`,
     });
-  });
+    vscode.window.showInformationMessage(q.success_message || "All tests passed! Nice work.");
+    if (q.technique_after_success) {
+      output.appendLine(`\nTechnique: ${q.technique_after_success}`);
+    }
+    await syncQuestions(context, { openNext: true, announce: true });
+  } catch (e: any) {
+    vscode.window.showErrorMessage("Could not save your progress: " + e.message);
+  }
+}
+
+function handleQuestionViewMessage(context: vscode.ExtensionContext, message: QuestionViewMessage): void {
+  switch (message.type) {
+    case "checkCode":
+      vscode.commands.executeCommand("click.checkCode");
+      break;
+    case "runVisible":
+      vscode.commands.executeCommand("click.runVisibleTests");
+      break;
+    case "openNext":
+      vscode.commands.executeCommand("click.openNextPractice");
+      break;
+    case "refresh":
+      vscode.commands.executeCommand("click.refreshPractice");
+      break;
+    case "pair":
+      vscode.commands.executeCommand("click.pair");
+      break;
+    case "disconnect":
+      vscode.commands.executeCommand("click.disconnect");
+      break;
+    case "resetStarter":
+      vscode.commands.executeCommand("click.resetStarterCode");
+      break;
+    case "openFile":
+      openCurrentFile();
+      break;
+  }
 }
 
 export function activate(context: vscode.ExtensionContext) {
   output = vscode.window.createOutputChannel("CLICK Practice");
   statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
   context.subscriptions.push(output, statusBar);
+
+  treeProvider = new PracticeTreeProvider();
+  questionProvider = new QuestionViewProvider(context.extensionUri, (msg) => handleQuestionViewMessage(context, msg));
+
+  context.subscriptions.push(vscode.window.registerWebviewViewProvider(QuestionViewProvider.viewId, questionProvider));
+  context.subscriptions.push(vscode.window.registerTreeDataProvider("click.practiceTree", treeProvider));
 
   context.subscriptions.push(
     vscode.window.registerUriHandler({
@@ -307,23 +508,66 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("click.openNextPractice", () => syncAndOpenNext(context, true))
+    vscode.commands.registerCommand("click.openNextPractice", () =>
+      syncQuestions(context, { openNext: true, announce: true })
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("click.refreshPractice", () =>
+      syncQuestions(context, { openNext: false, announce: true })
+    )
   );
 
   context.subscriptions.push(vscode.commands.registerCommand("click.checkCode", () => checkCode(context)));
+
+  context.subscriptions.push(vscode.commands.registerCommand("click.runVisibleTests", () => runVisibleTests(context)));
+
+  context.subscriptions.push(vscode.commands.registerCommand("click.resetStarterCode", () => resetStarterCode(context)));
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("click.showQuestionPanel", async () => {
+      await vscode.commands.executeCommand("click.questionView.focus");
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("click.openChallengeItem", async (practiceId: string) => {
+      const q = lastQuestions.find((x) => x.practice_id === practiceId);
+      if (!q) return;
+      if (!q.available && !q.completed) {
+        vscode.window.showInformationMessage(
+          `"${q.title}" is locked: ${q.lock_reason || "complete the previous requirement first."}`
+        );
+        return;
+      }
+      await openChallenge(context, q);
+    })
+  );
 
   context.subscriptions.push(
     vscode.commands.registerCommand("click.disconnect", async () => {
       await context.secrets.delete(SECRET_DEVICE_TOKEN);
       currentQuestion = null;
-      statusBar.hide();
+      lastQuestions = [];
+      treeProvider.setQuestions([]);
+      questionProvider.setPaired(false);
+      await vscode.commands.executeCommand("setContext", "click.paired", false);
+      updateStatusBar(false, null);
+      statusBar.show();
       vscode.window.showInformationMessage("CLICK: disconnected from this device.");
     })
   );
 
-  getDeviceToken(context).then((token) => {
-    if (token) statusBar.text = "$(book) CLICK: paired";
+  getDeviceToken(context).then(async (token) => {
+    const paired = !!token;
+    await vscode.commands.executeCommand("setContext", "click.paired", paired);
+    questionProvider.setPaired(paired);
+    updateStatusBar(paired, null);
     statusBar.show();
+    if (paired) {
+      await syncQuestions(context, { openNext: false, announce: false });
+    }
   });
 }
 

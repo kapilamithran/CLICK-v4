@@ -5,3 +5,4 @@ click-practice/
 desktop-app/dist/
 desktop-app/node_modules/
 *.vsix
+.wrangler/

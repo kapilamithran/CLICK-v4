@@ -870,15 +870,18 @@ function parsePracticeJson(v: any) {
   try { const x = JSON.parse(s); return Array.isArray(x) ? x : []; } catch { return []; }
 }
 
-function normalizePracticeQuestion(r: any, index: number, practiceTests: any[], practiceMistakes: any[]) {
+function normalizePracticeQuestion(r: any, index: number, practiceTests: any[], practiceMistakes: any[], stages: any[]) {
   const pid = String(r.practice_id || r.id || `PRACTICE-${index + 1}`);
   const ownTests = (practiceTests || []).filter((t: any) => normalizeId(t.practice_id) === normalizeId(pid)).sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0));
   const visible = ownTests.filter((t: any) => !truthy(t.hidden)).map((t: any) => ({ name: String(t.name || ""), input: String(t.input || ""), expected_output: String(t.expected_output || ""), timeout_ms: Number(t.timeout_ms || 5000) }));
   const hidden = ownTests.filter((t: any) => truthy(t.hidden)).map((t: any) => ({ name: String(t.name || ""), input: String(t.input || ""), expected_output: String(t.expected_output || ""), timeout_ms: Number(t.timeout_ms || 5000) }));
   const ownMistakes = (practiceMistakes || []).filter((x: any) => normalizeId(x.practice_id) === normalizeId(pid)).sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0))
     .map((x: any) => ({ rule_type: String(x.rule_type || "source_regex"), pattern: String(x.pattern || ""), message: String(x.message || "") }));
+  const stage = (stages || []).find((st: any) => normalizeId(st.stage_id) === normalizeId(r.stage_id));
   return {
-    practice_id: pid, stage_id: String(r.stage_id || ""), title: String(r.title || r.question || `Practice ${index + 1}`),
+    practice_id: pid, stage_id: String(r.stage_id || ""),
+    stage_title: String(stage?.title || ""), stage_no: stage ? Number(stage.stage_no ?? stage.order ?? 0) : null,
+    title: String(r.title || r.question || `Practice ${index + 1}`),
     objective: String(r.objective || ""), problem_statement: String(r.problem_statement || r.scenario || r.instructions || r.question || ""),
     constraints: String(r.constraints || ""), sample_input: String(r.sample_input || ""), sample_output: String(r.sample_output || ""),
     scenario: String(r.problem_statement || r.scenario || ""), instructions: String(r.problem_statement || r.instructions || r.question || ""),
@@ -903,7 +906,7 @@ async function practiceExtensionSync(b: any) {
   const facts = await prerequisiteFacts(uid, content);
 
   const { data: practiceRowsRaw } = await supabase.from("practice_bank").select("*").eq("active", true);
-  const all = (practiceRowsRaw || []).map((r: any, i: number) => normalizePracticeQuestion(r, i, content.practice_tests, content.practice_mistakes))
+  const all = (practiceRowsRaw || []).map((r: any, i: number) => normalizePracticeQuestion(r, i, content.practice_tests, content.practice_mistakes, content.stages))
     .map((q: any) => {
       const gate = prerequisiteStatus("PRACTICE", q.stage_id, q.practice_id, content, facts);
       return { ...q, completed: done.has(normalizeId(q.practice_id)), available: gate.unlocked, lock_reason: gate.lock_reason || "" };
@@ -940,7 +943,7 @@ async function completePractice(b: any) {
   const content = await publicContent();
   const facts = await prerequisiteFacts(uid, content);
   const { data: practiceRowsRaw } = await supabase.from("practice_bank").select("*").eq("active", true);
-  const all = (practiceRowsRaw || []).map((r: any, i: number) => normalizePracticeQuestion(r, i, content.practice_tests, content.practice_mistakes));
+  const all = (practiceRowsRaw || []).map((r: any, i: number) => normalizePracticeQuestion(r, i, content.practice_tests, content.practice_mistakes, content.stages));
   const q = all.find((x: any) => normalizeId(x.practice_id) === pid);
   if (!q) throw new Error("Practice question not found.");
   const gate = prerequisiteStatus("PRACTICE", q.stage_id, q.practice_id, content, facts);
