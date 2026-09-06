@@ -924,7 +924,8 @@ a.about-card:hover{transform:translateY(-2px)}
 .about-people-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .about-mascot-wrap{display:flex;justify-content:center;padding:12px 0}
 .about-mascot-wrap img{width:100%;max-width:clamp(200px,30vw,320px);height:auto;object-fit:contain;border-radius:var(--r-lg);filter:drop-shadow(0 14px 18px rgba(0,0,0,.25))}
-.page-kabi{height:80px;width:auto;object-fit:contain;flex:0 0 auto;pointer-events:none}
+.page-kabi{height:160px;width:auto;object-fit:contain;flex:0 0 auto;pointer-events:none;filter:drop-shadow(0 10px 16px rgba(0,0,0,.3))}
+.page-kabi.flip{transform:scaleX(-1)}
 @media(max-width:1050px){.about-people-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.about-people-grid{grid-template-columns:1fr}.page-kabi{display:none}}
 </style>
@@ -991,7 +992,7 @@ function toast(message,kind){
   <div id="experimentsRoot" class="exp-section"></div>
 </section>
 <section id="progress" class="page"><div class="section-title"><div><h2>Your progress</h2><div class="meta">A clear view of learning, tests and accuracy.</div></div><img class="page-kabi" id="progressKabi" alt="DADA"></div><div id="metrics" class="grid metrics"></div><div class="card"><h3>Stage journey</h3><div id="progressStages"></div></div></section>
-<section id="leadership" class="page"><div class="section-title"><div><h2>Leadership board</h2><div class="meta">Ranked by total committed XP.</div></div><img class="page-kabi" id="leaderboardKabi" alt="DADA"></div><div class="card"><div id="leaderboard"></div></div></section>
+<section id="leadership" class="page"><div class="section-title"><div><h2>Leadership board</h2><div class="meta">Ranked by total committed XP.</div></div><img class="page-kabi flip" id="leaderboardKabi" alt="DADA"></div><div class="card"><div id="leaderboard"></div></div></section>
 <section id="announcements" class="page"><div class="section-title"><div><h2>Announcements</h2><div class="meta">Managed from the Announcements sheet.</div></div><img class="page-kabi" id="announcementsKabi" alt="DADA"></div><div id="announcementList"></div></section>
 <section id="about" class="page">
   <div class="section-title"><div><h2>Department of Artificial Intelligence &amp; Data Science</h2><div class="meta">The people, mascot and team behind CLICK.</div></div></div>
