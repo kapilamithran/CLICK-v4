@@ -1,254 +1,265 @@
 # Supabase Details
 
-This document lists every change made to the CLICK codebase in recent work that
-**only exists locally** and has **not been applied to the live Supabase
-project** yet. CLICK's architecture has no CI/CD auto-deploy step: editing
-`supabase/functions/click-backend/index.ts` or a CSV in `CSVs/` on disk does
-nothing to the live app by itself. Someone with access to the Supabase project
-has to manually run SQL and/or redeploy the Edge Function for these changes to
-actually take effect for real users.
+This document covers two things:
 
-Each section below explains: **what** to run, **why** it's needed, **how** to
-run it, and **what happens** (both if you run it, and if you don't).
+1. **The automated GitHub → Supabase deployment pipeline** (`.github/workflows/`,
+   `supabase/config.toml`, `supabase/migrations/`) — set up so that pushing to
+   `main` deploys database migrations and the `click-backend` Edge Function
+   automatically, instead of you running SQL/deploying the function by hand.
+2. **What each pending change is, why it matters, and how to verify it landed**
+   — kept from the original version of this doc, now updated to reflect that
+   most of these are deployed by CI once it's enabled, rather than run by hand.
 
-Project ref: `jnxevalckgitxuunjcvv` (from the `BACKEND_URL` in `index.html`).
+Project ref (confirmed against the live app's `BACKEND_URL`, **not** the
+"REC-ACADEMIC" project that was connected to GitHub by mistake — see the
+warning at the end of this doc): `jnxevalckgitxuunjcvv`
 Dashboard: `https://supabase.com/dashboard/project/jnxevalckgitxuunjcvv`
 
 ---
 
-## How to run things (two ways, pick whichever you have)
+## Part A — The automated pipeline
 
-**A. Supabase Dashboard (no install required)**
-- SQL: Dashboard → **SQL Editor** → **New query** → paste → **Run**.
-- Edge Function: Dashboard → **Edge Functions** → `click-backend` → open the
-  code editor → paste the full contents of
-  `supabase/functions/click-backend/index.ts` → **Deploy**.
+### How it works
 
-**B. Supabase CLI (if you have it installed / prefer the terminal)**
+```
+Claude Code / VS Code edits a file
+        ↓
+git commit
+        ↓
+git push origin main
+        ↓
+GitHub Actions (only if relevant files changed)
+        ↓
+  supabase/migrations/**  → .github/workflows/supabase-migrations.yml → supabase db push
+  supabase/functions/**   → .github/workflows/supabase-functions.yml  → supabase functions deploy
+        ↓
+Production Supabase project (jnxevalckgitxuunjcvv) updated
+```
+
+Two separate workflows, each triggered only by the paths it cares about, so
+an unrelated push (say, an `index.html` frontend change) never touches
+Supabase at all:
+
+| Workflow | Triggers on changes to | Runs |
+|---|---|---|
+| `.github/workflows/supabase-migrations.yml` | `supabase/migrations/**` | `supabase link` → `supabase migration list` (visible in the log) → `supabase db push --yes` |
+| `.github/workflows/supabase-functions.yml` | `supabase/functions/**`, `supabase/config.toml` | `supabase functions deploy click-backend` |
+
+Both use the official `supabase/setup-cli@v1` GitHub Action (verified against
+Supabase's own current documentation and example repository, not from memory)
+to install the CLI — no Docker, no local Supabase install required on the
+runner.
+
+### GitHub Secrets required
+
+Set these under **GitHub repo → Settings → Secrets and variables → Actions →
+New repository secret**. Names only — I never had or printed the actual
+values:
+
+| Secret name | Used by | What it is |
+|---|---|---|
+| `SUPABASE_ACCESS_TOKEN` | both workflows | A personal access token from your Supabase account (Dashboard → your avatar → Account → Access Tokens). Authenticates the CLI to the Supabase *management* API. |
+| `SUPABASE_PROJECT_ID` | both workflows | `jnxevalckgitxuunjcvv` — tells the CLI which project to target. This is not secret in the sense of being sensitive (it's already visible in `index.html`'s `BACKEND_URL`), but it's stored as a secret anyway so it's not duplicated as a literal string inside the workflow files. |
+| `SUPABASE_DB_PASSWORD` | migrations workflow only | Your project's Postgres database password (Dashboard → Project Settings → Database → Database password — reset it there if you don't have it, since Supabase never shows it again after project creation). Required because `supabase db push` connects directly to Postgres, which the management-API access token alone can't authenticate to. |
+
+The Edge Function workflow does **not** need `SUPABASE_DB_PASSWORD` — deploying
+a function goes through the management API only, never a direct Postgres
+connection.
+
+### ⚠️ Before you enable this: establish the migration baseline (one-time, manual, and required)
+
+**This is the step that protects your existing production data. Do not skip
+it or enable the workflow before doing it.**
+
+Your production database already has all the tables, from `schema.sql` and
+`fix_grants.sql` having been run by hand in the SQL Editor, long before this
+migration system existed. I copied those two files verbatim into
+`supabase/migrations/20260101000000_baseline_schema.sql` and
+`supabase/migrations/20260101000001_baseline_grants.sql` so the full schema
+history is represented in the repo — but if the migrations workflow's first
+run tried to actually *execute* them, `db push` would attempt to `create
+table stages (...)` etc. against tables that already exist, and fail (in the
+best case) or, in some other project, silently do the wrong thing. Both files
+have a loud comment header saying the same thing.
+
+The fix is to tell Supabase's remote migration-history table "these two are
+already applied" without running them — this is Supabase's own documented
+process for adopting an existing database into migrations, not something
+improvised for this project. Run this **yourself, once, from a terminal with
+the Supabase CLI**, before merging/enabling the workflow:
+
 ```
 supabase login
 supabase link --project-ref jnxevalckgitxuunjcvv
+supabase migration list
 ```
-then the specific command for each item is given below. Run `supabase link`
-once per machine; `supabase login` persists your session.
 
-Whichever method you used to deploy this Edge Function the *first* time is
-the safest one to keep using (in particular, if the function was originally
-deployed with JWT verification turned off for custom-auth reasons, redeploying
-via the Dashboard's inline editor preserves that setting automatically; the
-CLI's `--no-verify-jwt` flag is only needed if you're deploying fresh via CLI
-for the first time).
+`migration list` shows two columns — local migrations (everything in
+`supabase/migrations/`) and remote migrations (what the project's history
+table currently thinks is applied, almost certainly empty right now). Confirm
+the two baseline files show as local-only, then mark them applied:
+
+```
+supabase migration repair 20260101000000 --status applied
+supabase migration repair 20260101000001 --status applied
+```
+
+Run `supabase migration list` again to confirm both now show as applied on
+the remote side too. **Only after this** is it safe to push to `main` and let
+the migrations workflow run — at that point, the only migrations left for it
+to actually execute are the two pending data changes below (§1 and §2 in
+Part B), which were designed to be safe to run automatically either way (see
+each section for why).
+
+I did not run any of this myself — I have no Supabase credentials in this
+environment. This whole subsection is a set of exact commands for you to run.
 
 ---
 
-## 1. Deploy the updated Edge Function
+## Part B — What's pending, and what it does
+
+Once the baseline above is established and the workflow is enabled, the items
+below happen automatically on push. If you'd rather not enable full
+automation yet, everything here can still be run by hand exactly as described
+(Dashboard SQL Editor / Edge Functions page, or the CLI commands shown).
+
+---
+
+### 1. `click-backend` Edge Function changes
 
 **File:** `supabase/functions/click-backend/index.ts`
+**Auto-deploys via:** `supabase-functions.yml`, on any push touching this file
 
-### Why
-Two changes have been made to this file locally that have **not** been pushed
-to the live function yet:
+Two changes are in this file that the live function doesn't have yet:
 
 1. **`stage_title` / `stage_no` added to `normalizePracticeQuestion()`** — lets
    the Practice list show a human-readable stage name/number instead of just
    the raw `stage_id`. Currently has no visible effect because the practice
-   bank is empty (see §3 below), but it's a correctness fix that should still
-   ship.
-2. **`CODE_FILL` branch added to `isAnswerCorrect()`** — this is the function
-   that decides, server-side, whether a submitted test answer is correct. It
-   is the actual scoring authority: it's what awards XP, decides whether a
-   heart is lost, and marks a question "done" (see
-   `supabase/functions/click-backend/index.ts` around line 643, the
-   `saveTestAnswer` action). **Without this deployed, a student who correctly
-   answers a `CODE_FILL` question will see "✓ Correct!" in the browser (the
-   client-side check already has this logic — see §7 of the git history / the
-   CODE_FILL merge), but the server will independently re-check the answer
-   with its own `isAnswerCorrect()` and, without this branch, will fall
-   through to a raw `expected === actual` string comparison — which will
-   almost always fail for a JSON-array answer, since minor formatting
-   differences (e.g. `["age","18"]` vs `["age", "18"]`) don't match
-   character-for-character. That means real students would silently lose an
-   attempt and get no XP for a genuinely correct `CODE_FILL` answer**, even
-   though nothing looks wrong in their browser. This is the most
-   user-impacting item in this whole document — deploy it before pointing any
-   real student at a `CODE_FILL` question (see §2, which is also required for
-   the question content itself to be live).
+   bank is empty, but it's a correctness fix that should still ship.
+2. **`CODE_FILL` branch added to `isAnswerCorrect()`** — the server-side
+   scoring authority (awards XP, decides heart loss, marks a question done —
+   see the `saveTestAnswer` action). **Without this deployed, a student who
+   correctly answers a `CODE_FILL` question sees "✓ Correct!" client-side, but
+   the server falls back to a raw `expected === actual` string comparison,
+   which almost always fails for a JSON-array answer.** That silently costs
+   the student an attempt and XP for a genuinely correct answer. This is the
+   most user-impacting item in this document.
 
-### How
-**Dashboard:** Edge Functions → `click-backend` → paste the current contents
-of `supabase/functions/click-backend/index.ts` → Deploy.
+**Manual fallback** (if not using the automated workflow yet): Dashboard →
+Edge Functions → `click-backend` → paste the file's contents → Deploy; or CLI
+`supabase functions deploy click-backend` after linking.
 
-**CLI:**
-```
-supabase functions deploy click-backend
-```
-(run from the repo root, after `supabase link` — see the intro above)
-
-### What happens
-The live function is replaced with the new code. There is no data migration —
-this is a stateless code swap, takes effect immediately, and is trivially
-reversible (redeploy the previous version if something looks wrong). All
-other existing behavior (login, pairing, Check Code, progress, every other
-question type) is unchanged; the diff is purely additive (see the two items
-above — nothing existing was removed or altered).
-
-### Verify it worked
-After deploying, open the Function's **Logs** tab in the Dashboard and submit
-a test answer in the app — you should see a fresh invocation log with no
-errors. To specifically confirm the `CODE_FILL` fix, you also need §2 done
-first (there's no live `CODE_FILL` question to test against until then).
+**Verify:** Function Logs tab shows a fresh invocation with no errors after a
+deploy; the CODE_FILL fix specifically needs §2 below done too, since there's
+no live CODE_FILL question to test against otherwise.
 
 ---
 
-## 2. Sync the 10 CODE_FILL question rows
+### 2. Sync the 10 CODE_FILL question rows
 
-**File:** `supabase/update_codefill_questions.sql`
+**File:** `supabase/migrations/20260907090100_update_codefill_questions.sql`
+(same content as the original `supabase/update_codefill_questions.sql`, now
+also living in `migrations/` so CI applies it)
+**Auto-deploys via:** `supabase-migrations.yml`
 
-### Why
 Ten questions (`Q000004`, `Q000009`, `Q000014`, `Q000019`, `Q000024`,
-`Q000029`, `Q000034`, `Q000039`, `Q000044`, `Q000049`) were converted from the
-`TYPE_CODE` question type to the new `CODE_FILL` type — this was merged into
-the local `CSVs/CLICK v2 - Questions.csv` reference file, but **that CSV is
-not read by the running app**; the app reads the live `questions` table in
-Supabase. Right now the live table still has the old `TYPE_CODE` version of
-these 10 rows. Until this SQL runs, these questions will keep behaving as
-plain "type your code" questions in the real app — the new fill-in-the-blank
-UI (§1 above) will never appear for them, regardless of the frontend/backend
-code being deployed.
+`Q000029`, `Q000034`, `Q000039`, `Q000044`, `Q000049`) were converted from
+`TYPE_CODE` to `CODE_FILL` in the local `CSVs/CLICK v2 - Questions.csv`
+reference file — but the app reads the live `questions` table, not that CSV.
+Until this runs, these 10 questions keep behaving as plain "type your code"
+questions for real students.
 
-### How
-**Dashboard / CLI (SQL Editor either way):**
-1. Open `supabase/update_codefill_questions.sql` in this repo.
-2. Run the `select` at the top first — confirm it returns exactly these 10
-   rows with their *current* (`TYPE_CODE`) content, so you know what you're
-   about to overwrite.
-3. Run the ten `update` statements below it (the whole file is safe to run in
-   one paste — the `select` is just there for you to sanity-check first).
+**What it changes:** `type`, `prompt`, `code`, `answer`, `explanation`, `hint`
+columns on exactly those 10 rows. `stage_id`, `chapter_id`, `xp`, `order`,
+`active` untouched. Does not delete or reset any existing `attempts` history.
 
-### What happens
-Each of the 10 rows gets its `type`, `prompt`, `code`, `answer`,
-`explanation`, and `hint` columns replaced with the CODE_FILL versions (e.g.
-`Q000004`'s `code` becomes `int {{1}} = {{2}};` and its `answer` becomes the
-JSON array `["age", "18"]`). `stage_id`, `chapter_id`, `xp`, `order`, and
-`active` are untouched. This only affects these exact 10 `question_id`s —
-nothing else in the `questions` table is touched. It does **not** delete or
-reset any existing student `attempts` rows tied to these questions from
-before the conversion; a student who already completed one of these under the
-old `TYPE_CODE` wording keeps that history, they just won't see it offered
-again unless the test resets normally.
+**Safe to auto-apply regardless of whether you already ran it by hand**: every
+`update` sets fixed final values by `question_id` — re-running it is a no-op
+if it already happened.
 
-### Verify it worked
-Re-run just the `select` at the top of the file — it should now show `type =
-CODE_FILL` and the new `code`/`answer` content for all 10 rows. Then, in the
-app, take the relevant chapter test (Stage 0, Chapters 1–10) and confirm the
-fill-in-the-blank editor appears instead of a plain textarea.
+**Verify:** the `select` at the top of the file, re-run, shows `type =
+CODE_FILL` for all 10; in the app, take Stage 0 Chapters 1–10 and confirm the
+fill-in-the-blank editor appears.
 
 ---
 
-## 3. Remove the retired Stage 0 practice challenges
+### 3. Remove the retired Stage 0 practice challenges
 
-**File:** `supabase/remove_stage0_practice_challenges.sql`
+**File:** `supabase/migrations/20260907090000_remove_stage0_practice_challenges.sql`
+(same content as the original `supabase/remove_stage0_practice_challenges.sql`)
+**Auto-deploys via:** `supabase-migrations.yml`
 
-### Why
 Ten Stage 0 practice challenges ("A Name C Will Accept" through "Choose
-Enough Range") were removed from the app's UI/content earlier — this SQL is
-what actually deletes their rows from the live `practice_bank` table (and,
-via `on delete cascade`, their matching `practice_tests` / `practice_mistakes`
-/ `practice_progress` rows). **This may already have been run** — it was
-handed to you as a manual step in an earlier session and this doc can't tell
-from the repo alone whether you ran it. Run the `select` first; if it returns
-zero rows, it's already done and you can skip the `delete`.
+Enough Range") were removed from the app's UI/content earlier; this deletes
+their rows from `practice_bank` (cascading to `practice_tests` /
+`practice_mistakes` / `practice_progress`).
 
-### How
-Same as above: open `supabase/remove_stage0_practice_challenges.sql`, run the
-`select`, confirm it lists exactly those 10 titles (or confirm it returns
-nothing, meaning it's already done), then run the `delete`.
+**Safe to auto-apply regardless of prior manual runs**: the `delete` matches
+specific titles — if they're already gone, it deletes zero rows.
 
-### What happens
-If the 10 rows are still present: they're deleted from `practice_bank`,
-and every `practice_tests`, `practice_mistakes`, and `practice_progress` row
-that references them is cascade-deleted too — including any student's
-recorded progress specifically on those 10 challenges. Nothing else in
-`practice_bank` (any other stage) or the `stages`/`chapters` tables (Stage
-0's Learn content) is touched.
-
-### Verify it worked
-Re-run the `select` — it should return zero rows.
+**Verify:** re-run the `select` at the top — should return zero rows.
 
 ---
 
-## 4. Experiments 0–16 (57 questions) — not ready to script yet
+### 4. Experiments 0–16 (57 questions) — still not ready to script
 
-This is different from the items above: it is **not a "run this SQL" task**
-yet, because the mapping is genuinely undecided, not just undeployed.
-
-### Why this is blocked
-The Experiments feature (Experiment 0–16, 57 questions, built earlier) is
-fully implemented in the app's UI and reads its content from a JS constant
-(`EXPERIMENTS` in `index.html`) — **not from Supabase**. Clicking "Open in VS
-Code" on an Experiments question currently shows *"This experiment question
-is not yet available through the CLICK VS Code extension"* — this is
-intentional, honest behavior, not a bug: there is nowhere in the live
-database for these 57 questions to live yet.
-
-The closest existing tables are `practice_bank` / `practice_tests` /
-`practice_mistakes`, but their columns don't fully cover what an Experiments
-question needs:
-
-| Experiments question needs | `practice_bank` has? |
-|---|---|
-| `difficulty` (easy/medium/hard) | No matching column |
-| `marks`, `timeLimitSeconds`, `memoryLimitMB` | No matching columns |
-| `workspaceFolder`, `file` (exact VS Code folder/file mapping) | No matching columns |
-| experiment number / week grouping | Only has `stage_id`, no experiment concept |
-| multiple `publicTests[]` + `hiddenTests[]` per question | `practice_tests` *can* represent this (one row per test case, with a `hidden` boolean) — this one maps reasonably well |
-
-### What needs to happen before this can be scripted
-Someone needs to decide, and confirm, one of:
-- **Option A** — extend `practice_bank` with new columns (`difficulty`,
-  `marks`, `time_limit_seconds`, `memory_limit_mb`, `workspace_folder`,
-  `file_name`, `experiment_number`) via an `alter table` migration, then seed
-  all 57 rows into `practice_bank`/`practice_tests`/`practice_mistakes`.
-- **Option B** — create dedicated `experiments` / `experiment_questions`
-  tables mirroring the `EXPERIMENTS` JS structure more directly, and extend
-  the Edge Function + VS Code extension to read from them.
-
-Once you pick one, I can generate the exact `alter table`/`create table` and
-`insert` SQL for all 57 questions from the existing `EXPERIMENTS` data — but
-I'm not going to guess at a schema change and seed real data against it
-without that decision being made first, since it's not reversible in the same
-low-risk way the items above are (it changes the shape of a live table other
-code also reads).
+Unchanged from before: this is genuinely blocked on a schema decision, not
+just undeployed. `practice_bank` is missing columns for `difficulty`, `marks`,
+time/memory limits, and the exact VS Code `workspaceFolder`/`file` mapping
+that Experiments questions need. See the two options previously laid out (extend
+`practice_bank`, or add dedicated `experiments`/`experiment_questions`
+tables) — once you pick one, I can write the migration and seed data for it.
+This is **not** something the new CI pipeline changes; it still needs that
+decision first, then a hand-written migration (which the pipeline will then
+deploy like any other).
 
 ---
 
-## 5. Reference only — do not re-run
+### 5. Reference only — do not turn into a migration, do not re-run
 
-**Files:** `supabase/schema.sql`, `supabase/fix_grants.sql`
+**Files:** `supabase/schema.sql`, `supabase/fix_grants.sql` (the originals —
+their content now also lives in the two baseline migration files, see Part A)
 
-These were used once, when the Supabase project was first set up, and are
-kept in the repo for reference / disaster recovery, not as a recurring task.
+Kept as standalone files for readability/disaster-recovery reference. Their
+*content* is what's now represented by the baseline migrations, but as loose
+files they're informational only — don't paste them into the SQL Editor
+again on the live project (schema.sql has no `if not exists` guards and would
+error on tables that already exist).
 
-- **`schema.sql`** creates every table (`stages`, `questions`, `users`,
-  `practice_bank`, …) from scratch and enables Row Level Security on all of
-  them. The tables already exist on the live project (that's what your
-  users/login/progress are stored in right now) — running this again will
-  fail with "relation already exists" errors, since it has no `if not
-  exists` guards. Only use it if you are standing up a **brand-new** empty
-  Supabase project from zero.
-- **`fix_grants.sql`** restores default Postgres privilege grants on the
-  `public` schema. You'd only need this again if the schema were ever
-  dropped and recreated (which `schema.sql` alone doesn't undo) — RLS with
-  zero policies already blocks the `anon`/`authenticated` keys from touching
-  any row directly regardless, so this is purely a "the Edge Function's
-  service-role key stopped working" recovery step, not something routine.
+---
+
+## Important: the "REC-ACADEMIC" mix-up
+
+Earlier, GitHub was connected to a Supabase project called **REC-ACADEMIC**
+(ref `zwdmredbjktvecvpfurx`) via the Dashboard's native GitHub integration.
+That is a **different, unrelated project** — it currently has zero deployed
+Edge Functions and there's no evidence it shares CLICK's schema. You confirmed
+`jnxevalckgitxuunjcvv` is the real production project.
+
+Two things follow from this:
+1. **`config.toml`, both workflows, and the migrations above all target
+   `jnxevalckgitxuunjcvv`** — set your `SUPABASE_PROJECT_ID` secret to that
+   value, not REC-ACADEMIC's ref.
+2. If REC-ACADEMIC's Dashboard-native GitHub integration ("Deploy to
+   production" / branching) is still connected, it's watching for a
+   `supabase/migrations/` folder same as ours now has — meaning it could try
+   to apply *our* migrations to the *wrong* project. Consider disconnecting
+   that integration (Dashboard → REC-ACADEMIC project → Settings →
+   Integrations → GitHub → disconnect) unless you have another actual use for
+   REC-ACADEMIC, to avoid two systems both reacting to the same repo.
 
 ---
 
 ## Summary checklist
 
-- [ ] §1 — Redeploy `click-backend` Edge Function (stage_title/stage_no + CODE_FILL checking)
-- [ ] §2 — Run `update_codefill_questions.sql` (10 rows, TYPE_CODE → CODE_FILL)
-- [ ] §3 — Run `remove_stage0_practice_challenges.sql` if not already done (check the SELECT first)
-- [ ] §4 — Decide Option A or B for Experiments, then come back for seed SQL
-- [ ] §5 — No action; reference only
+**One-time, manual, before enabling anything:**
+- [ ] Confirm/reset `SUPABASE_DB_PASSWORD` in the Dashboard, note it down
+- [ ] Create a `SUPABASE_ACCESS_TOKEN` in the Dashboard (Account → Access Tokens)
+- [ ] Add all three GitHub Secrets to the repo (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_ID=jnxevalckgitxuunjcvv`)
+- [ ] Run the baseline-repair commands in Part A against `jnxevalckgitxuunjcvv` (**do this before the first push that touches `supabase/migrations/`**)
+- [ ] Decide what to do about REC-ACADEMIC's GitHub connection (see above)
+
+**After that, on every push to `main`:**
+- [ ] Changes to `supabase/functions/**` or `supabase/config.toml` → Edge Function auto-deploys (covers §1)
+- [ ] Changes to `supabase/migrations/**` → migrations auto-apply (covers §2, §3, and any future migration)
+- [ ] §4 (Experiments) still needs a schema decision before it can become a migration at all
