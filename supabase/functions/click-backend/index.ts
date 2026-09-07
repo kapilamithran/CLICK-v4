@@ -114,6 +114,19 @@ function isAnswerCorrect(q: any, answer: string): boolean {
   const actual = String(answer || "").trim();
   if (type === "TRUE_FALSE") return expected.toLowerCase() === actual.toLowerCase();
   if (type === "TYPE_CODE") return canonicalC(expected) === canonicalC(actual);
+  if (type === "CODE_FILL") {
+    const parse = (raw: string): string[] => {
+      const text = String(raw || "").trim();
+      if (!text) return [];
+      try {
+        const value = JSON.parse(text);
+        if (Array.isArray(value)) return value.map((x: any) => String(x ?? ""));
+      } catch (_) {}
+      return text.split("|||").map((x: string) => String(x));
+    };
+    const exp = parse(expected), act = parse(actual);
+    return exp.length === act.length && exp.every((v, i) => canonicalC(v) === canonicalC(act[i]));
+  }
   if (type === "ORDER") return expected.replace(/\s+/g, "") === actual.replace(/\s+/g, "");
   if (type === "BLANK") return normalizeBlank(expected) === normalizeBlank(actual);
   return expected === actual;

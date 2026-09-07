@@ -21,4 +21,4 @@ Attempts,Every answer attempt,Backend-managed,Up to three attempts per question 
 PracticeProgress,Permanent VS Code practice completion,Backend-managed,Do not erase unless intentionally starting over.
 PracticePairings,Website-to-VS-Code pairing records,Backend-managed,Only one live connection is kept per student by the v16.3+ backend.
 Settings,Application settings,Safe configurable values,QUESTIONS_PER_CHAPTER should remain 5 for this curriculum design.
-QuestionTypes,Authoring reference,Nothing required,Existing checking/normalization behavior remains in force.
+QuestionTypes,Authoring reference,"For CODE_FILL use {{1}}, {{2}}, ... inside Questions.code and a JSON array in Questions.answer, e.g. [\"stdio.h\",\"printf\"]",Existing checking/normalization behavior remains in force.

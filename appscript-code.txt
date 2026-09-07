@@ -1352,6 +1352,21 @@ function isAnswerCorrect_(q,answer) {
   // spaces/newlines/comments outside string/char literals are ignored.
   if (type === 'TYPE_CODE') return canonicalC_(expected) === canonicalC_(actual);
 
+  if (type === 'CODE_FILL') {
+    const parseCodeFill_ = raw => {
+      const text = String(raw || '').trim();
+      if (!text) return [];
+      try {
+        const value = JSON.parse(text);
+        if (Array.isArray(value)) return value.map(x => String(x == null ? '' : x));
+      } catch (e) {}
+      return text.split('|||').map(x => String(x));
+    };
+    const exp = parseCodeFill_(expected);
+    const act = parseCodeFill_(actual);
+    return exp.length === act.length && exp.every((v,i) => canonicalC_(v) === canonicalC_(act[i]));
+  }
+
   // ORDER is built from fixed sheet fragments. Ignore whitespace only;
   // keep the || separators/operator characters intact.
   if (type === 'ORDER') {

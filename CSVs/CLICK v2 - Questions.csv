@@ -5,12 +5,7 @@ Q000003,STG000,CH0001,PREDICT_OUTPUT,"Gist: `printf` displays values using a for
 
 What output does the program produce?","#include <stdio.h>
 int main(void){ printf(""A""); return 0; }",A,"The program produces `A`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
-Q000004,STG000,CH0001,TYPE_CODE,"Gist: A one-line C answer can combine the current **character set** rule with earlier ideas about the earlier C rules. Write the smallest line that satisfies this instruction:
-
-Use this required form:
-`int age = 18;`
-
-Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int age = 18;,A suitable answer is `int age = 18;`. It follows the current character set rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000004,STG000,CH0001,CODE_FILL,"Complete the missing parts to form a valid C declaration using ordinary letters, digits, spaces, = and ; from the C character set.",int {{1}} = {{2}};,"[""age"", ""18""]","`age` is a valid identifier and `18` is written with decimal digits. Together with `int`, `=`, and `;`, the line uses valid C source characters.","Fill the variable name first, then the integer value.",2,4,TRUE
 Q000005,STG000,CH0001,MCQ,Final recap: Which choice best follows the chapter rules for **character set**?,,int age = 18;,"`int age = 18;` is the best choice. Uses letters, digits, spaces, = and ; from the C character set. The other choices break a rule from this chapter or one of the earlier ideas.","Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
 Q000006,STG000,CH0002,BLANK,"Complete the core idea: In this chapter, **token** means or describes ________.",,smallest meaningful units,Token: A token is one of the smallest meaningful units in a C program. C programs are built by arranging tokens according to C syntax.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
 Q000007,STG000,CH0002,FIND_ERROR,You just recalled the rule for **token**. Which example breaks that rule?,,intcount = 10;,"`intcount` is one identifier, not the two tokens `int` and `count`.","Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
@@ -18,12 +13,7 @@ Q000008,STG000,CH0002,PREDICT_OUTPUT,"Gist: `printf` displays values using a for
 
 What output does the program produce?","#include <stdio.h>
 int main(void){ int count=10; printf(""%d"",count); return 0; }",10,"The program produces `10`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
-Q000009,STG000,CH0002,TYPE_CODE,"Gist: A one-line C answer can combine the current **token** rule with earlier ideas about character set. Write the smallest line that satisfies this instruction:
-
-Use this required form:
-`int count = 10;`
-
-Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int count = 10;,A suitable answer is `int count = 10;`. It follows the current token rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000009,STG000,CH0002,CODE_FILL,Complete the missing tokens in this declaration. Each box represents one meaningful token.,int {{1}} = {{2}};,"[""count"", ""10""]","The statement is built from separate tokens: `int`, `count`, `=`, `10`, and `;`.",The first blank is an identifier token; the second is a constant token.,2,4,TRUE
 Q000010,STG000,CH0002,MCQ,Final recap: Which choice best follows the chapter rules for **token** while also respecting the earlier **character set** idea?,,int count = 10;,`int count = 10;` is the best choice. Can be separated into meaningful tokens: int | count | = | 10 | ; The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
 Q000011,STG000,CH0003,BLANK,"Complete the core idea: In this chapter, **keyword** means or describes ________.",,predefined meaning,"Keyword: A keyword is a word with a predefined meaning in C. An identifier is a programmer-chosen name for a variable, function, array, or another program element.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
 Q000012,STG000,CH0003,FIND_ERROR,You just recalled the rule for **keyword**. Which example breaks that rule?,,int int = 18;,`int` cannot be reused as an identifier.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
@@ -31,12 +21,7 @@ Q000013,STG000,CH0003,PREDICT_OUTPUT,"Gist: `printf` displays values using a for
 
 What output does the program produce?","#include <stdio.h>
 int main(void){ int age=18; printf(""%d"",age); return 0; }",18,"The program produces `18`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
-Q000014,STG000,CH0003,TYPE_CODE,"Gist: A one-line C answer can combine the current **keyword** rule with earlier ideas about token, character set. Write the smallest line that satisfies this instruction:
-
-Use this required form:
-`int age = 18;`
-
-Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int age = 18;,A suitable answer is `int age = 18;`. It follows the current keyword rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000014,STG000,CH0003,CODE_FILL,Fill the missing keyword and identifier to make a valid declaration.,{{1}} {{2}} = 18;,"[""int"", ""age""]","`int` is a C keyword with predefined meaning, while `age` is a programmer-chosen identifier.","Use the integer-type keyword first, then a valid programmer-chosen name.",2,4,TRUE
 Q000015,STG000,CH0003,MCQ,Final recap: Which choice best follows the chapter rules for **keyword** while also respecting the earlier **token** idea and **character set**?,,int age = 18;,`int age = 18;` is the best choice. `int` is a keyword and `age` is an identifier. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
 Q000016,STG000,CH0004,BLANK,"Complete the core idea: In this chapter, **identifier** means or describes ________.",,"letters, digits and underscores","Identifier: An identifier is a name used for a program element. In beginner ANSI C, it should begin with a letter, continue with letters, digits, or underscores, contain no spaces, and must not be a keyword.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
 Q000017,STG000,CH0004,FIND_ERROR,You just recalled the rule for **identifier**. Which example breaks that rule?,,int 2score = 90;,An identifier cannot begin with a digit.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
@@ -44,12 +29,7 @@ Q000018,STG000,CH0004,PREDICT_OUTPUT,"Gist: `printf` displays values using a for
 
 What output does the program produce?","#include <stdio.h>
 int main(void){ int Score=5; int score=7; printf(""%d %d"",Score,score); return 0; }",5 7,"The program produces `5 7`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
-Q000019,STG000,CH0004,TYPE_CODE,"Gist: A one-line C answer can combine the current **identifier** rule with earlier ideas about keyword, token. Write the smallest line that satisfies this instruction:
-
-Use this required form:
-`int student_age = 18;`
-
-Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int student_age = 18;,A suitable answer is `int student_age = 18;`. It follows the current identifier rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000019,STG000,CH0004,CODE_FILL,Complete the declaration with a valid identifier that follows the chapter rules.,int {{1}} = 18;,"[""student_age""]","`student_age` begins with a letter, contains only letters and an underscore, has no spaces, and is not a C keyword.",Use the meaningful identifier taught in the example: student_age.,2,4,TRUE
 Q000020,STG000,CH0004,MCQ,Final recap: Which choice best follows the chapter rules for **identifier** while also respecting the earlier **keyword** idea and **token**?,,int score2 = 90;,`int score2 = 90;` is the best choice. Digit comes after the name starts. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
 Q000021,STG000,CH0005,BLANK,"Complete the core idea: In this chapter, **constant** means or describes ________.",,fixed values,"Constant: A constant is a fixed value that does not change while the program is executing. C uses several kinds of constants, including numeric constants and character-related constants.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
 Q000022,STG000,CH0005,FIND_ERROR,You just recalled the rule for **constant**. Which example breaks that rule?,,int age = eighteen;,"`eighteen` is treated as an identifier, not the numeric constant 18.","Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
@@ -57,12 +37,8 @@ Q000023,STG000,CH0005,PREDICT_OUTPUT,"Gist: `printf` displays values using a for
 
 What output does the program produce?","#include <stdio.h>
 int main(void){ printf(""%d"",25); return 0; }",25,"The program produces `25`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
-Q000024,STG000,CH0005,TYPE_CODE,"Gist: A one-line C answer can combine the current **constant** rule with earlier ideas about identifier, keyword. Write the smallest line that satisfies this instruction:
-
-Use this required form:
-`int value = 25;`
-
-Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int value = 25;,A suitable answer is `int value = 25;`. It follows the current constant rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000024,STG000,CH0005,CODE_FILL,Fill the two constants so the first is an integer constant and the second is a real constant.,"int count = {{1}};
+double price = {{2}};","[""25"", ""3.14""]",`25` is an integer constant and `3.14` is a real constant. Both are fixed literal values written directly in the program.,Use the chapter examples: one whole-number literal and one decimal real literal.,2,4,TRUE
 Q000025,STG000,CH0005,MCQ,Final recap: Which choice best follows the chapter rules for **constant** while also respecting the earlier **identifier** idea and **keyword**?,,int age = 18;,`int age = 18;` is the best choice. `18` is an integer constant used to initialize a variable. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
 Q000026,STG000,CH0006,BLANK,"Complete the core idea: In this chapter, **integer constant** means or describes ________.",,whole-number literal,Integer constant: A decimal integer constant is a whole-number literal written with decimal digits. It has no decimal point and may have an optional leading sign in an expression.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
 Q000027,STG000,CH0006,FIND_ERROR,You just recalled the rule for **integer constant**. Which example breaks that rule?,,"int people = 20,000;",The comma is not a thousands separator in a C integer literal.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
@@ -70,12 +46,7 @@ Q000028,STG000,CH0006,PREDICT_OUTPUT,"Gist: `printf` displays values using a for
 
 What output does the program produce?","#include <stdio.h>
 int main(void){ int n=123; printf(""%d"",n); return 0; }",123,"The program produces `123`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
-Q000029,STG000,CH0006,TYPE_CODE,"Gist: A one-line C answer can combine the current **integer constant** rule with earlier ideas about constant, identifier. Write the smallest line that satisfies this instruction:
-
-Use this required form:
-`int count = 20000;`
-
-Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int count = 20000;,A suitable answer is `int count = 20000;`. It follows the current integer constant rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000029,STG000,CH0006,CODE_FILL,Complete the declaration with the decimal integer constant shown in Learn.,int count = {{1}};,"[""20000""]",`20000` is a decimal integer constant: it contains only decimal digits and no decimal point.,"Enter only the whole-number literal, without commas or spaces.",2,4,TRUE
 Q000030,STG000,CH0006,MCQ,Final recap: Which choice best follows the chapter rules for **integer constant** while also respecting the earlier **constant** idea and **identifier**?,,int people = 20000;,`int people = 20000;` is the best choice. A plain decimal integer literal. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
 Q000031,STG000,CH0007,BLANK,"Complete the core idea: In this chapter, **octal** means or describes ________.",,leading 0,"Octal: C can write integer constants in number bases other than decimal. A leading `0` indicates octal notation, while a leading `0x` or `0X` indicates hexadecimal notation.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
 Q000032,STG000,CH0007,FIND_ERROR,You just recalled the rule for **octal**. Which example breaks that rule?,,int a = 089;,An octal constant cannot contain 8 or 9.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
@@ -83,12 +54,8 @@ Q000033,STG000,CH0007,PREDICT_OUTPUT,"Gist: `printf` displays values using a for
 
 What output does the program produce?","#include <stdio.h>
 int main(void){ int n=0xA; printf(""%d"",n); return 0; }",10,"The program produces `10`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
-Q000034,STG000,CH0007,TYPE_CODE,"Gist: A one-line C answer can combine the current **octal** rule with earlier ideas about integer constant, constant. Write the smallest line that satisfies this instruction:
-
-Use this required form:
-`int mask = 0x0F;`
-
-Type that C line exactly in meaning. Normal whitespace differences are ignored.",,int mask = 0x0F;,A suitable answer is `int mask = 0x0F;`. It follows the current octal rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000034,STG000,CH0007,CODE_FILL,"Complete both integer constants: first an octal form, then a hexadecimal form.","int octalValue = {{1}};
+int hexValue = {{2}};","[""037"", ""0x9F""]",`037` uses a leading 0 for octal notation. `0x9F` uses the 0x prefix and hexadecimal digits.,Octal begins with `0`; hexadecimal begins with `0x` or `0X`.,2,4,TRUE
 Q000035,STG000,CH0007,MCQ,Final recap: Which choice best follows the chapter rules for **octal** while also respecting the earlier **integer constant** idea and **constant**?,,int a = 037;,`int a = 037;` is the best choice. Valid octal integer constant. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
 Q000036,STG000,CH0008,BLANK,"Complete the core idea: In this chapter, **suffix** means or describes ________.",,attached letter,Suffix: An integer constant can use suffix letters such as `U`/`u` for unsigned and `L`/`l` for long so the literal is treated with the intended integer category.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
 Q000037,STG000,CH0008,FIND_ERROR,You just recalled the rule for **suffix**. Which example breaks that rule?,,long distance = 90000 L;,Do not separate the suffix from the literal with a space.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
@@ -96,12 +63,7 @@ Q000038,STG000,CH0008,PREDICT_OUTPUT,"Gist: `printf` displays values using a for
 
 What output does the program produce?","#include <stdio.h>
 int main(void){ unsigned long n=12UL; printf(""%lu"",n); return 0; }",12,"The program produces `12`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
-Q000039,STG000,CH0008,TYPE_CODE,"Gist: A one-line C answer can combine the current **suffix** rule with earlier ideas about octal, integer constant. Write the smallest line that satisfies this instruction:
-
-Use this required form:
-`unsigned long n = 1234UL;`
-
-Type that C line exactly in meaning. Normal whitespace differences are ignored.",,unsigned long n = 1234UL;,A suitable answer is `unsigned long n = 1234UL;`. It follows the current suffix rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000039,STG000,CH0008,CODE_FILL,Fill the declaration so the integer literal carries both unsigned and long suffixes.,unsigned long n = {{1}};,"[""1234UL""]",`1234UL` combines `U` for unsigned and `L` for long directly on the integer literal.,Attach both suffix letters directly to 1234.,2,4,TRUE
 Q000040,STG000,CH0008,MCQ,Final recap: Which choice best follows the chapter rules for **suffix** while also respecting the earlier **octal** idea and **integer constant**?,,unsigned long n = 1234UL;,`unsigned long n = 1234UL;` is the best choice. The literal explicitly matches an unsigned long form. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
 Q000041,STG000,CH0009,BLANK,"Complete the core idea: In this chapter, **real constant** means or describes ________.",,decimal point,Real constant: A real constant represents a number with a fractional value. In decimal notation it is written with a decimal point and digits before or after the point.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
 Q000042,STG000,CH0009,FIND_ERROR,You just recalled the rule for **real constant**. Which example breaks that rule?,,double price = 75 .84;,The space separates the tokens.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
@@ -109,12 +71,8 @@ Q000043,STG000,CH0009,PREDICT_OUTPUT,"Gist: `printf` displays values using a for
 
 What output does the program produce?","#include <stdio.h>
 int main(void){ double x=2.5; printf(""%.1f"",x); return 0; }",2.5,"The program produces `2.5`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
-Q000044,STG000,CH0009,TYPE_CODE,"Gist: A one-line C answer can combine the current **real constant** rule with earlier ideas about suffix, octal. Write the smallest line that satisfies this instruction:
-
-Use this required form:
-`double price = 75.84;`
-
-Type that C line exactly in meaning. Normal whitespace differences are ignored.",,double price = 75.84;,A suitable answer is `double price = 75.84;`. It follows the current real constant rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000044,STG000,CH0009,CODE_FILL,Complete the two real constants in decimal notation.,"double price = {{1}};
+double rate = {{2}};","[""75.84"", ""0.0083""]",Both `75.84` and `0.0083` are valid real constants written in decimal notation with a decimal point.,Enter decimal real literals; do not add quotes.,2,4,TRUE
 Q000045,STG000,CH0009,MCQ,Final recap: Which choice best follows the chapter rules for **real constant** while also respecting the earlier **suffix** idea and **octal**?,,double price = 75.84;,`double price = 75.84;` is the best choice. Valid real constant. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
 Q000046,STG000,CH0010,BLANK,"Complete the core idea: In this chapter, **scientific notation** means or describes ________.",,mantissa and exponent,Scientific notation: Scientific notation writes a real constant using a mantissa and an exponent separated by `e` or `E`. The exponent tells how many powers of ten scale the mantissa.,"Use the chapter's definition, not just the shape of one example.",1,1,TRUE
 Q000047,STG000,CH0010,FIND_ERROR,You just recalled the rule for **scientific notation**. Which example breaks that rule?,,double x = 1.5E2.5;,Exponent cannot contain a decimal point.,"Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
@@ -122,12 +80,8 @@ Q000048,STG000,CH0010,PREDICT_OUTPUT,"Gist: `printf` displays values using a for
 
 What output does the program produce?","#include <stdio.h>
 int main(void){ double x=1E2; printf(""%.0f"",x); return 0; }",100,"The program produces `100`. Follow the declaration/value notation first, then the value passed to `printf`.",Trace only the value that is finally printed. Ignore lines that only declare or label the value.,2,3,TRUE
-Q000049,STG000,CH0010,TYPE_CODE,"Gist: A one-line C answer can combine the current **scientific notation** rule with earlier ideas about real constant, suffix. Write the smallest line that satisfies this instruction:
-
-Use this required form:
-`double x = 1.5E-3;`
-
-Type that C line exactly in meaning. Normal whitespace differences are ignored.",,double x = 1.5E-3;,A suitable answer is `double x = 1.5E-3;`. It follows the current scientific notation rule while keeping the earlier syntax/naming rules intact.,"Start from the required data/type word or directive, then the identifier/value, then the correct punctuation.",2,4,TRUE
+Q000049,STG000,CH0010,CODE_FILL,Complete both scientific-notation constants. Use the compact forms taught in Learn.,"double small = {{1}};
+double large = {{2}};","[""1.5E-3"", ""1.2E6""]","`1.5E-3` uses a negative exponent for a small value, while `1.2E6` uses a positive exponent written without an explicit plus sign.",Use `E` between the mantissa and exponent; no spaces belong inside the literal.,2,4,TRUE
 Q000050,STG000,CH0010,MCQ,Final recap: Which choice best follows the chapter rules for **scientific notation** while also respecting the earlier **real constant** idea and **suffix**?,,double distance = 1.2E6;,`double distance = 1.2E6;` is the best choice. Valid exponential notation. The other choices break a rule from this chapter or one of the earlier ideas.,"Check one rule at a time: category/type, identifier/notation, then punctuation or quoting.",2,5,TRUE
 Q000051,STG000,CH0011,BLANK,"Complete the core idea: In this chapter, **character constant** means or describes ________.",,single quotes,"Character constant: A single-character constant represents one character enclosed in single quotation marks, such as `'A'`, `'5'`, or `'x'`.","Use the chapter's definition, not just the shape of one example.",1,1,TRUE
 Q000052,STG000,CH0011,FIND_ERROR,You just recalled the rule for **character constant**. Which example breaks that rule?,,"char grade = ""A"";","Double quotes make a string, not a single-character constant.","Compare each option with the smallest naming, notation, type, quote, or declaration rule from Learn.",1,2,TRUE
