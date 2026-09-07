@@ -310,6 +310,29 @@ async function logout(b: any) {
   return { ok: true };
 }
 
+async function adminGetMaxIds(b: any) {
+  required(b, ["admin_key"]);
+  const expectedKey = Deno.env.get("ADMIN_RESET_KEY");
+  if (!expectedKey || String(b.admin_key) !== expectedKey) throw new Error("Not authorized.");
+
+  const tables: Record<string, string> = {
+    stages: "stage_id", chapters: "chapter_id", learn_content: "learn_id",
+    questions: "question_id", options: "option_id", test_hints: "hint_id",
+    glossary: "term_id", practice_bank: "practice_id", practice_tests: "test_id",
+    practice_mistakes: "mistake_id",
+  };
+  const result: Record<string, string | null> = {};
+  for (const [table, col] of Object.entries(tables)) {
+    const { data } = await supabase.from(table).select(col).order(col, { ascending: false }).limit(1);
+    result[table] = (data && data[0] && (data[0] as any)[col]) || null;
+  }
+
+  const { data: glossaryRows } = await supabase.from("glossary").select("term_id,term");
+  const { data: stageRows } = await supabase.from("stages").select("stage_id,stage_no,title,order").order("stage_no", { ascending: true });
+
+  return { ok: true, max_ids: result, glossary: glossaryRows || [], stages: stageRows || [] };
+}
+
 async function adminResetPassword(b: any) {
   required(b, ["admin_key", "identifier", "new_password"]);
   const expectedKey = Deno.env.get("ADMIN_RESET_KEY");
@@ -1065,6 +1088,7 @@ Deno.serve(async (req: Request) => {
       case "session": return json(await sessionInfo(b));
       case "logout": return json(await logout(b));
       case "adminResetPassword": return json(await adminResetPassword(b));
+      case "adminGetMaxIds": return json(await adminGetMaxIds(b));
       case "completeOnboarding": return json(await completeOnboarding(b));
       case "setUsername": return json(await setUsername(b));
       case "bootstrap": return json(await bootstrap(b));
