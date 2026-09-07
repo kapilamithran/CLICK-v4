@@ -181,7 +181,7 @@ ${body}
   }
 
   private questionBody(q: PracticeQuestion): string {
-    const section = (label: string, value: string | undefined, pre = false): string => {
+    const section = (label: string, value: string | null | undefined, pre = false): string => {
       if (!value || !value.trim()) return "";
       const content = pre ? `<pre><code>${escapeHtml(value)}</code></pre>` : `<p>${mdInline(value)}</p>`;
       return `<h3>${escapeHtml(label)}</h3>${content}`;
@@ -201,18 +201,24 @@ ${body}
             .join("")}`
         : "";
 
-    // Only the objective/problem statement flow under one "Question" heading — every
-    // other value here (time limit, stage) comes straight from real challenge data;
-    // CLICK has no difficulty/marks fields yet, so those are left out rather than guessed.
     const questionText = [q.objective, q.problem_statement].filter((v) => v && v.trim()).map((v) => `<p>${mdInline(v!)}</p>`).join("");
 
-    const eyebrow =
-      q.stage_title && q.stage_title.trim()
-        ? `<div class="eyebrow">Experiment ${(typeof q.stage_no === "number" ? q.stage_no : 0) + 1} · ${escapeHtml(q.stage_title)}</div>`
-        : "";
+    const isExperiment = typeof q.experiment_number === "number";
+    const eyebrow = isExperiment
+      ? `<div class="eyebrow">Experiment ${q.experiment_number}</div>`
+      : q.stage_title && q.stage_title.trim()
+      ? `<div class="eyebrow">Experiment ${(typeof q.stage_no === "number" ? q.stage_no : 0) + 1} · ${escapeHtml(q.stage_title)}</div>`
+      : "";
 
-    const timeLimitMs = q.visible_tests?.[0]?.timeout_ms ?? q.hidden_tests?.[0]?.timeout_ms;
-    const timeLimitBadge = timeLimitMs ? `<span class="badge">${Math.round(timeLimitMs / 1000)}s limit</span>` : "";
+    const timeLimitSeconds = q.time_limit_seconds ?? Math.round((q.visible_tests?.[0]?.timeout_ms ?? q.hidden_tests?.[0]?.timeout_ms ?? 0) / 1000);
+    const timeLimitBadge = timeLimitSeconds ? `<span class="badge">${timeLimitSeconds}s limit</span>` : "";
+    const memoryBadge = q.memory_limit_mb ? `<span class="badge">${q.memory_limit_mb} MB</span>` : "";
+    const marksBadge = q.marks != null ? `<span class="badge">${q.marks} marks</span>` : "";
+    const difficultyBadge = q.difficulty ? `<span class="badge">${escapeHtml(q.difficulty)}</span>` : "";
+
+    const ioFormat = [section("Input Format", q.input_format), section("Output Format", q.output_format)].join("");
+
+    const explanation = section("Explanation", q.technique_after_success);
 
     const viewResults = this.lastResult
       ? `<details class="view-results"><summary>View results</summary>${this.resultBody()}</details>`
@@ -222,7 +228,7 @@ ${body}
 <div class="status"><span class="dot"></span> Connected</div>
 ${eyebrow}
 <h2>${escapeHtml(q.title)}</h2>
-<div class="badge-row">${timeLimitBadge}</div>
+<div class="badge-row">${difficultyBadge}${marksBadge}${timeLimitBadge}${memoryBadge}</div>
 <span class="badge tag">Practice question</span>
 <div class="actions">
   <button data-action="runVisible">Run</button>
@@ -233,8 +239,10 @@ ${viewResults}
 <hr class="divider">
 <h3>Question</h3>
 ${questionText}
+${ioFormat}
 ${section("Constraints", q.constraints)}
 ${examples}
+${explanation}
 ${hints}
 <hr class="divider">
 <div class="actions">

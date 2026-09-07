@@ -6,3 +6,4 @@ FIND_ERROR,Debug one small broken snippet,Exact selected/text answer,Usually,HIG
 BLANK,Recall one token/operator/short term,Leading/trailing whitespace ignored,No,HIGH
 MCQ,Use only when a conceptual micro-topic cannot be tested naturally by production,Exact selected option,Yes,LOW
 TRUE_FALSE,Reserve for occasional review only,TRUE/FALSE,Yes,VERY LOW
+CODE_FILL,"Show C code with one or more editable blanks embedded inside the code","Each blank is checked in order using C-code normalization; author code placeholders as {{1}}, {{2}}, ... and store answer as a JSON array",No,HIGH

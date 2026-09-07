@@ -1,0 +1,37 @@
+# Supabase CLI project configuration for CLICK.
+# Reference: https://supabase.com/docs/guides/cli/config
+#
+# This file makes the local repo a "linked" Supabase project so the CLI (and
+# the GitHub Actions workflows in .github/workflows/) know which remote
+# project to target. It does not itself connect to or change anything in the
+# remote project — the project_id below only takes effect when a command is
+# run with valid Supabase credentials (see supabase/supabase_details.md).
+
+# Confirmed 2026-09 to be the actual CLICK production project (see
+# supabase_details.md "Which project is production" for how this was
+# verified against another, unrelated project that was connected by mistake).
+project_id = "jnxevalckgitxuunjcvv"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.migrations]
+enabled = true
+
+[functions.click-backend]
+# Matches the project's existing custom session_token auth (not Supabase Auth
+# JWTs) — confirmed against the live project's current Edge Function setting
+# before this file was created. Do NOT change this without checking the
+# Dashboard first (Edge Functions -> click-backend -> "Enforce JWT
+# Verification"): flipping it would either break every request (turning it
+# on) or silently drop an intended protection (turning it off).
+verify_jwt = false

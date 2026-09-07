@@ -33,6 +33,16 @@ export interface PracticeQuestion {
   completed?: boolean;
   available?: boolean;
   lock_reason?: string;
+  // Present only for Experiment 0-16 questions; null/undefined for every
+  // other practice_bank row.
+  difficulty?: string | null;
+  marks?: number | null;
+  time_limit_seconds?: number | null;
+  memory_limit_mb?: number | null;
+  workspace_folder?: string | null;
+  experiment_number?: number | null;
+  input_format?: string | null;
+  output_format?: string | null;
 }
 
 export type TestOutcome = "pass" | "fail" | "timeout" | "crash";

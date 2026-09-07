@@ -2,7 +2,7 @@
   "name": "click-practice",
   "displayName": "CLICK Practice",
   "description": "Pair with the CLICK web app and solve C practice challenges directly in VS Code.",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "publisher": "clicklearn",
   "engines": {
     "vscode": "^1.85.0"
