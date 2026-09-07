@@ -6,7 +6,13 @@ export class PracticeTreeItem extends vscode.TreeItem {
     super(question.title, vscode.TreeItemCollapsibleState.None);
 
     const expLabel =
-      typeof question.stage_no === "number" ? `Exp ${question.stage_no + 1}` : question.stage_id ? `Stage ${question.stage_id}` : "";
+      typeof question.experiment_number === "number"
+        ? `Experiment ${question.experiment_number}`
+        : typeof question.stage_no === "number"
+        ? `Exp ${question.stage_no + 1}`
+        : question.stage_id
+        ? `Stage ${question.stage_id}`
+        : "";
     const statusLabel = question.completed ? "Completed" : !question.available ? "Locked" : isCurrent ? "In progress" : "Available";
     this.description = expLabel ? `${expLabel} · ${statusLabel}` : statusLabel;
 

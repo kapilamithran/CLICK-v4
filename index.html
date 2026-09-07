@@ -1819,7 +1819,8 @@ function bindExpNav(root,exp){
 }
 function openExperimentQuestionInVSCode(exp,q){
   if(practiceConnection&&practiceConnection.connected){
-    toast('This experiment question is not yet available through the CLICK VS Code extension. It will open there once this challenge is added to the CLICK practice bank.');
+    try{window.location.href='vscode://clicklearn.click-practice/open?id='+encodeURIComponent(q.id)}catch(e){}
+    toast('Opening "'+q.title+'" in VS Code…');
   }else{
     toast('Pair your account with VS Code first, then this question can be opened there.');
     document.getElementById('practicePairBox')?.scrollIntoView({behavior:'smooth',block:'center'})

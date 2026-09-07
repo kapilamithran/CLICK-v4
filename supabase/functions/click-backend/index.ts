@@ -906,6 +906,17 @@ function normalizePracticeQuestion(r: any, index: number, practiceTests: any[], 
     success_message: String(r.success_message || "All tests passed. Nice work!"),
     technique_after_success: String(r.technique_after_success || ""),
     order: Number(r.order || index + 1),
+    // Experiment 0-16 fields. Null/undefined for every pre-existing practice_bank
+    // row (these columns are additive-only), so this is purely additive for the
+    // web/extension too - existing questions simply carry these as null.
+    difficulty: r.difficulty ? String(r.difficulty) : null,
+    marks: r.marks === null || r.marks === undefined ? null : Number(r.marks),
+    time_limit_seconds: r.time_limit_seconds === null || r.time_limit_seconds === undefined ? null : Number(r.time_limit_seconds),
+    memory_limit_mb: r.memory_limit_mb === null || r.memory_limit_mb === undefined ? null : Number(r.memory_limit_mb),
+    workspace_folder: r.workspace_folder ? String(r.workspace_folder) : null,
+    experiment_number: r.experiment_number === null || r.experiment_number === undefined ? null : Number(r.experiment_number),
+    input_format: r.input_format ? String(r.input_format) : null,
+    output_format: r.output_format ? String(r.output_format) : null,
   };
 }
 

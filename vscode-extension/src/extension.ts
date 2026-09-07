@@ -56,7 +56,25 @@ function safeFileName(s: string): string {
   return s.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 60);
 }
 
+/**
+ * Experiment questions get the richer Programming-C/Experiment-NN/<slug>/
+ * folder structure the web question page describes, instead of the flat
+ * click-practice/ naming used for regular Practice Bank challenges.
+ */
+function ensureExperimentDir(workspaceFolder: string): string {
+  const folders = vscode.workspace.workspaceFolders;
+  const base = folders && folders.length ? folders[0].uri.fsPath : path.join(os.homedir(), "CLICK-Practice");
+  const dir = path.join(base, "Programming-C", ...workspaceFolder.split("/"));
+  fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
 function questionFilePath(q: PracticeQuestion): string {
+  if (q.workspace_folder) {
+    // Every Experiment question's authored source file is named solution.c
+    // (there is no per-question filename field to read this from).
+    return path.join(ensureExperimentDir(q.workspace_folder), "solution.c");
+  }
   const dir = ensureWorkDir();
   return path.join(dir, `${safeFileName(q.practice_id)}_${safeFileName(q.title)}.c`);
 }
@@ -176,7 +194,11 @@ async function syncQuestions(
       return;
     }
 
-    const next = lastQuestions.find((q) => q.available && !q.completed);
+    // Experiment questions are deliberately excluded from the auto "next"
+    // pick - they're a separately-browsed collection (no fixed sequence),
+    // opened by explicit selection (web deep-link or the tree view) only,
+    // never surprising a student who just wants their next Stage practice.
+    const next = lastQuestions.find((q) => q.available && !q.completed && q.experiment_number == null);
     if (next) {
       await openChallenge(context, next);
       if (opts.announce) vscode.window.showInformationMessage(`CLICK: opened "${next.title}"`);
@@ -190,6 +212,42 @@ async function syncQuestions(
       return;
     }
     vscode.window.showInformationMessage("All available CLICK practice challenges are completed. Nice work!");
+  } catch (e: any) {
+    await handleSyncError(context, e);
+  }
+}
+
+/**
+ * Opens one specific challenge by practice_id (e.g. an Experiment question
+ * id like "E00-Q1"), regardless of queue position - triggered by the web's
+ * "Open in VS Code" deep link (see the uriHandler in activate()). Reuses the
+ * exact same sync/open machinery as everything else; this does not add a
+ * second question-resolution path.
+ */
+async function openSpecificChallenge(context: vscode.ExtensionContext, practiceId: string): Promise<void> {
+  const token = await getDeviceToken(context);
+  if (!token) {
+    vscode.window.showWarningMessage('CLICK is not paired yet. Run "CLICK: Pair with Web App" first, then open this question again.');
+    return;
+  }
+  try {
+    const data = (await api(context, "practiceExtensionSync", { device_token: token })) as unknown as {
+      questions: PracticeQuestion[];
+    };
+    lastQuestions = data.questions || [];
+    treeProvider.setQuestions(lastQuestions);
+
+    const q = lastQuestions.find((x) => x.practice_id === practiceId);
+    if (!q) {
+      vscode.window.showErrorMessage(`CLICK: question "${practiceId}" could not be found. It may not be published yet - try again after refreshing, or reopen it from the web page.`);
+      return;
+    }
+    if (!q.available) {
+      vscode.window.showWarningMessage(`"${q.title}" is locked: ${q.lock_reason || "complete the previous requirement first."}`);
+      return;
+    }
+    await openChallenge(context, q);
+    treeProvider.setCurrent(q.practice_id);
   } catch (e: any) {
     await handleSyncError(context, e);
   }
@@ -294,8 +352,13 @@ async function runTestSet(
     const isHidden = i >= hiddenStartIndex;
     const name = t.name || `Test ${i + 1}`;
     const { stdout, timedOut, crashed } = await runOne(exePath, t.input, t.timeout_ms);
-    const got = stdout.trim();
-    const expected = String(t.expected_output || "").trim();
+    // Normalize CRLF -> LF before comparing: on Windows, a MinGW-compiled
+    // binary's stdout is opened in text mode, so every "\n" the student's
+    // program prints comes back as "\r\n" - without this, every multi-line
+    // expected_output (stored as plain "\n") would fail even for perfectly
+    // correct code, on every Windows machine.
+    const got = stdout.replace(/\r\n/g, "\n").trim();
+    const expected = String(t.expected_output || "").replace(/\r\n/g, "\n").trim();
 
     let outcome: TestOutcome;
     if (timedOut) outcome = "timeout";
@@ -492,6 +555,11 @@ export function activate(context: vscode.ExtensionContext) {
         const code = params.get("code");
         if (code) {
           claimPairing(context, code);
+          return;
+        }
+        const openId = params.get("open");
+        if (openId) {
+          openSpecificChallenge(context, openId);
         }
       },
     })
