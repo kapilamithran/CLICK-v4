@@ -557,9 +557,15 @@ export function activate(context: vscode.ExtensionContext) {
           claimPairing(context, code);
           return;
         }
-        const openId = params.get("open");
-        if (openId) {
-          openSpecificChallenge(context, openId);
+        // The web's "Open in VS Code" link is shaped as
+        // vscode://clicklearn.click-practice/open?id=<practice_id> - "open" is
+        // the URI *path*, not a query key, so the id must be read from the
+        // query string's "id" parameter, not from params.get("open").
+        if (uri.path === "/open") {
+          const openId = params.get("id");
+          if (openId) {
+            openSpecificChallenge(context, openId);
+          }
         }
       },
     })

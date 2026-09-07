@@ -5,4 +5,5 @@ click-practice/
 desktop-app/dist/
 desktop-app/node_modules/
 *.vsix
+!assets/downloads/CLICK-Practice.vsix
 .wrangler/
