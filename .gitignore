@@ -8,3 +8,4 @@ desktop-app/node_modules/
 !assets/downloads/CLICK-Practice.vsix
 .wrangler/
 CLICK - Google Play package/
+admin-tools/.admin-key

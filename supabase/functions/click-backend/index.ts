@@ -16,6 +16,20 @@ const CORS: Record<string, string> = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Memoizes a fetcher for `ttlMs`, shared across invocations on the same warm
+// isolate. Settings/content tables are read on nearly every action but change
+// rarely, so refetching them fresh every call was the dominant source of
+// per-request latency under concurrent load.
+function cached<T>(ttlMs: number, fetcher: () => Promise<T>): () => Promise<T> {
+  let entry: { value: T; expires: number } | null = null;
+  return async () => {
+    if (entry && entry.expires > Date.now()) return entry.value;
+    const value = await fetcher();
+    entry = { value, expires: Date.now() + ttlMs };
+    return value;
+  };
+}
+
 function json(data: unknown) {
   return new Response(JSON.stringify(data), {
     headers: { "Content-Type": "application/json", ...CORS },
@@ -134,12 +148,12 @@ function isAnswerCorrect(q: any, answer: string): boolean {
 
 // ---------------- settings ----------------
 
-async function settingsMap(): Promise<Record<string, string>> {
+const settingsMap = cached(30_000, async (): Promise<Record<string, string>> => {
   const { data } = await supabase.from("settings").select("key,value");
   const map: Record<string, string> = {};
   (data || []).forEach((r: any) => (map[r.key] = r.value));
   return map;
-}
+});
 
 function defaultHearts(settings: Record<string, string>): number {
   return Number(settings.DEFAULT_HEARTS || 3);
@@ -296,6 +310,30 @@ async function logout(b: any) {
   return { ok: true };
 }
 
+async function adminResetPassword(b: any) {
+  required(b, ["admin_key", "identifier", "new_password"]);
+  const expectedKey = Deno.env.get("ADMIN_RESET_KEY");
+  if (!expectedKey || String(b.admin_key) !== expectedKey) throw new Error("Not authorized.");
+
+  const settings = await settingsMap();
+  const minLen = Number(settings.MIN_PASSWORD_LENGTH || 6);
+  if (String(b.new_password).length < minLen) throw new Error(`Password must be at least ${minLen} characters.`);
+
+  const identifier = String(b.identifier).trim();
+  const { data: user } = await supabase.from("users").select("user_id,name,email,roll_no")
+    .or(`email.ilike.${identifier},roll_no.ilike.${identifier}`).maybeSingle();
+  if (!user) throw new Error("No account found with that email or roll number.");
+
+  const salt = crypto.randomUUID().replace(/-/g, "");
+  const hash = await passwordHash(String(b.new_password), salt);
+  const { error } = await supabase.from("users").update({ password_hash: hash, password_salt: salt }).eq("user_id", user.user_id);
+  if (error) throw new Error(error.message);
+
+  await supabase.from("sessions").update({ active: false }).eq("user_id", user.user_id).eq("active", true);
+
+  return { ok: true, user: { name: user.name, email: user.email, roll_no: user.roll_no } };
+}
+
 async function completeOnboarding(b: any) {
   required(b, ["session_token"]);
   const settings = await settingsMap();
@@ -307,7 +345,7 @@ async function completeOnboarding(b: any) {
 
 // ---------------- content ----------------
 
-async function publicContent() {
+const publicContent = cached(30_000, async () => {
   const [stagesR, chaptersR, learnR, practiceR, practiceTestsR, practiceMistakesR, annR, phrasesR, prereqR] = await Promise.all([
     supabase.from("stages").select("*").eq("active", true),
     supabase.from("chapters").select("*").eq("active", true),
@@ -337,9 +375,9 @@ async function publicContent() {
     phrases: phrasesR.data || [],
     prerequisites: prereqR.data || [],
   };
-}
+});
 
-async function testContent() {
+const testContent = cached(30_000, async () => {
   const [qR, oR, hR, gR, qtR] = await Promise.all([
     supabase.from("questions").select("*").eq("active", true),
     supabase.from("options").select("*").eq("active", true),
@@ -351,7 +389,7 @@ async function testContent() {
     questions: qR.data || [], options: oR.data || [], hints: hR.data || [],
     glossary: gR.data || [], question_terms: qtR.data || [],
   };
-}
+});
 
 async function prerequisiteFacts(uid: string, content: any) {
   const [lpR, trR, ppR] = await Promise.all([
@@ -1026,6 +1064,7 @@ Deno.serve(async (req: Request) => {
       case "login": return json(await login(b));
       case "session": return json(await sessionInfo(b));
       case "logout": return json(await logout(b));
+      case "adminResetPassword": return json(await adminResetPassword(b));
       case "completeOnboarding": return json(await completeOnboarding(b));
       case "setUsername": return json(await setUsername(b));
       case "bootstrap": return json(await bootstrap(b));
