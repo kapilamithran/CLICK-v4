@@ -7,3 +7,4 @@ desktop-app/node_modules/
 *.vsix
 !assets/downloads/CLICK-Practice.vsix
 .wrangler/
+CLICK - Google Play package/

@@ -6,3 +6,7 @@ appscript-code.txt
 supabase/**
 wrangler.jsonc
 .assetsignore
+desktop-app/**
+vscode-extension/**
+click-pwa/**
+CLICK - Google Play package/**

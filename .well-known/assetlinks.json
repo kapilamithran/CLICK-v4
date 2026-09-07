@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.click.learnc",
+        "sha256_cert_fingerprints": ["98:18:84:80:0A:B2:9D:5D:0D:7E:41:F8:9D:6B:79:08:73:EA:9A:64:C3:B2:34:29:45:83:BC:90:CC:2B:28:C5"]
+      }
+    }]
