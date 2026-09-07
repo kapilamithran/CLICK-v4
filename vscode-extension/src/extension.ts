@@ -350,7 +350,10 @@ async function runTestSet(
   for (let i = 0; i < tests.length; i++) {
     const t = tests[i];
     const isHidden = i >= hiddenStartIndex;
-    const name = t.name || `Test ${i + 1}`;
+    // Hidden tests never surface their real name (it can hint at the exact
+    // scenario being probed) in either the output channel log or the results
+    // list below - only an anonymous, numbered label and a pass/fail outcome.
+    const name = isHidden ? `Hidden test ${i - hiddenStartIndex + 1}` : t.name || `Test ${i + 1}`;
     const { stdout, timedOut, crashed } = await runOne(exePath, t.input, t.timeout_ms);
     // Normalize CRLF -> LF before comparing: on Windows, a MinGW-compiled
     // binary's stdout is opened in text mode, so every "\n" the student's
@@ -374,7 +377,16 @@ async function runTestSet(
 
     resultLines.push({ name, outcome, hidden: isHidden });
     const suffix = outcome === "timeout" ? " (timed out)" : outcome === "crash" ? " (crashed)" : "";
-    output.appendLine(`  ${outcome === "pass" ? "✓" : "✗"} ${name}${suffix}`);
+    // Hidden tests are logged only as part of the aggregate line below, never
+    // one-by-one - per-test pass/fail position is itself a side channel a
+    // student could probe (rerun, see which position flips) to map out
+    // hidden test structure without ever seeing an input or expected output.
+    if (!isHidden) output.appendLine(`  ${outcome === "pass" ? "✓" : "✗"} ${name}${suffix}`);
+  }
+  const hiddenResults = resultLines.filter((r) => r.hidden);
+  if (hiddenResults.length) {
+    const hiddenPassed = hiddenResults.filter((r) => r.outcome === "pass").length;
+    output.appendLine(`  ${hiddenPassed === hiddenResults.length ? "✓" : "✗"} Hidden tests: ${hiddenPassed}/${hiddenResults.length} passed`);
   }
 
   return { resultLines, passCount, firstFailure };

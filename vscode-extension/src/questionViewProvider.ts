@@ -258,12 +258,24 @@ ${hints}
       return `<div class="result-line fail">✗ Compilation failed — see the CLICK Practice output panel</div>`;
     }
     const lines = r.results
+      .filter((t) => !t.hidden)
       .map((t) => {
         const icon = t.outcome === "pass" ? "✓" : "✗";
         const suffix = t.outcome === "timeout" ? " (timed out)" : t.outcome === "crash" ? " (crashed)" : "";
         return `<div class="result-line ${t.outcome}">${icon} ${escapeHtml(t.name)}${suffix}</div>`;
       })
       .join("");
-    return `<p><strong>${r.passCount}/${r.totalCount} passed</strong></p>${lines}`;
+    // Hidden tests are never listed individually here - only a combined
+    // pass/fail count - so their names, inputs and per-test outcomes stay
+    // unavailable even to a student inspecting this panel.
+    const hiddenResults = r.results.filter((t) => t.hidden);
+    const hiddenLine = hiddenResults.length
+      ? (() => {
+          const hiddenPassed = hiddenResults.filter((t) => t.outcome === "pass").length;
+          const icon = hiddenPassed === hiddenResults.length ? "✓" : "✗";
+          return `<div class="result-line ${hiddenPassed === hiddenResults.length ? "pass" : "fail"}">${icon} Hidden tests: ${hiddenPassed}/${hiddenResults.length} passed</div>`;
+        })()
+      : "";
+    return `<p><strong>${r.passCount}/${r.totalCount} passed</strong></p>${lines}${hiddenLine}`;
   }
 }
