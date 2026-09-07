@@ -1352,6 +1352,8 @@ let onboardingAutoTourChecked=false;
 async function loadApp(forceRefresh=false){
   const r=await post('bootstrap',{session_token:session.token,force_refresh:!!forceRefresh});
   applyAppState(r);
+  if(!r.user?.username){showUsernameGate();return}
+  hideUsernameGate();
   // Profile is already visible; warm the complete test bank quietly in parallel.
   preloadTestData(!!forceRefresh);
   if(!onboardingAutoTourChecked){onboardingAutoTourChecked=true;if(!truthyClient(r.user?.onboarding_completed))setTimeout(()=>startTour(false),450)}
@@ -2307,5 +2309,42 @@ if ("serviceWorker" in navigator) {
     apply(current);
   });
 })();
+</script>
+<div id="usernameGate" class="authgate hidden">
+  <div class="card" style="max-width:420px;width:100%">
+    <h2 style="margin:0 0 8px">Pick a username</h2>
+    <p class="meta" style="margin:0 0 16px">This is what shows on the leaderboard instead of your real name.</p>
+    <div class="field"><label>Username</label><input id="usernameInput" type="text" placeholder="e.g. code_ninja_42" maxlength="20"></div>
+    <div class="error" id="usernameError"></div>
+    <button class="btn" id="usernameSubmit" type="button" style="width:100%">Save username</button>
+  </div>
+</div>
+<script>
+function showUsernameGate(){
+  $('usernameGate').classList.remove('hidden');
+  $('usernameError').textContent='';
+  $('usernameInput').value='';
+  $('usernameInput').focus();
+}
+function hideUsernameGate(){
+  $('usernameGate').classList.add('hidden');
+}
+async function submitUsername(){
+  const val=$('usernameInput').value.trim();
+  $('usernameError').textContent='';
+  if(!/^[a-zA-Z0-9_]{3,20}$/.test(val)){
+    $('usernameError').textContent='3-20 characters: letters, numbers, underscores only.';
+    return;
+  }
+  try{
+    await post('setUsername',{session_token:session.token,username:val});
+    hideUsernameGate();
+    await loadApp(false);
+  }catch(e){
+    $('usernameError').textContent=e.message;
+  }
+}
+$('usernameSubmit').onclick=submitUsername;
+$('usernameInput').addEventListener('keydown',e=>{if(e.key==='Enter')submitUsername()});
 </script>
 </body></html>

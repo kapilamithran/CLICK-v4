@@ -184,8 +184,29 @@ function safeUser(u: any) {
     stages_completed: Number(u.stages_completed || 0), last_completed_stage: u.last_completed_stage || "",
     last_learn_stage: u.last_learn_stage || "", last_learn_chapter: u.last_learn_chapter || "",
     heart_recovery_stage_id: u.heart_recovery_stage_id || "", heart_recovery_chapter_id: u.heart_recovery_chapter_id || "",
-    role: u.role || "student",
+    role: u.role || "student", username: u.username || "",
   };
+}
+
+async function setUsername(b: any) {
+  required(b, ["session_token", "username"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const username = String(b.username).trim();
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+    throw new Error("Username must be 3-20 characters: letters, numbers, and underscores only.");
+  }
+  const { data: existing } = await supabase.from("users").select("user_id").ilike("username", username).maybeSingle();
+  if (existing && existing.user_id !== s.user_id) {
+    throw new Error("That username is already taken. Try a different one.");
+  }
+  const { error } = await supabase.from("users").update({ username }).eq("user_id", s.user_id);
+  if (error) {
+    if ((error as any).code === "23505") throw new Error("That username is already taken. Try a different one.");
+    throw new Error(error.message);
+  }
+  const { data: user } = await supabase.from("users").select("*").eq("user_id", s.user_id).single();
+  return { ok: true, user: safeUser(user) };
 }
 
 // ---------------- accounts ----------------
@@ -363,9 +384,9 @@ function prerequisiteStatus(targetType: string, targetStageId: string, targetCha
 }
 
 async function leaderboard() {
-  const { data } = await supabase.from("users").select("name,roll_no,department,total_xp,stages_completed,accuracy_percent").eq("status", "active");
+  const { data } = await supabase.from("users").select("name,username,roll_no,department,total_xp,stages_completed,accuracy_percent").eq("status", "active");
   return (data || []).map((u: any) => ({
-    name: u.name, roll_no: u.roll_no, department: u.department, total_xp: Number(u.total_xp || 0),
+    name: u.username || u.name, roll_no: u.roll_no, department: u.department, total_xp: Number(u.total_xp || 0),
     stages_completed: Number(u.stages_completed || 0), accuracy_percent: Number(u.accuracy_percent || 0),
   })).sort((a: any, b: any) => b.total_xp - a.total_xp || b.stages_completed - a.stages_completed).slice(0, 100);
 }
@@ -982,6 +1003,7 @@ Deno.serve(async (req: Request) => {
       case "session": return json(await sessionInfo(b));
       case "logout": return json(await logout(b));
       case "completeOnboarding": return json(await completeOnboarding(b));
+      case "setUsername": return json(await setUsername(b));
       case "bootstrap": return json(await bootstrap(b));
       case "preloadTestData": return json(await preloadTestData(b));
       case "completeLearn": return json(await completeLearn(b));

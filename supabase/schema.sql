@@ -200,7 +200,8 @@ create table users (
   last_learn_chapter          text,
   heart_recovery_stage_id     text,
   heart_recovery_chapter_id   text,
-  role                        text not null default 'student'
+  role                        text not null default 'student',
+  username                    text unique
 );
 create index idx_users_email on users(lower(email));
 
