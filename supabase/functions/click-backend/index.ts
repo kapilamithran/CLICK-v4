@@ -673,7 +673,7 @@ async function startTest(b: any) {
   let pool = testBank.questions.filter((q: any) => normalizeId(q.stage_id) === normalizeId(sid) && normalizeId(q.chapter_id) === normalizeId(cid));
   if (!pool.length) throw new Error("No active questions found for this chapter.");
 
-  const count = Math.max(1, Number(settings.QUESTIONS_PER_CHAPTER || 5));
+  const count = Math.max(1, Number(chapter.question_limit || settings.QUESTIONS_PER_CHAPTER || 5));
   pool = pool.sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0));
   const selected = pool.slice(0, count);
 
