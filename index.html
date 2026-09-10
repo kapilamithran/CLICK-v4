@@ -226,6 +226,23 @@ textarea.test-v11-input{min-height:145px;resize:vertical}
   border-bottom:2px dotted #8b5cf6;cursor:pointer;padding-bottom:1px
 }
 .test-v11-code .test-hint{color:#fff}
+.test-glossary-term{
+  border-bottom:2px dotted var(--gloss-color,#8b5cf6);color:var(--gloss-color,#8b5cf6);
+  cursor:pointer;padding-bottom:1px;font-weight:700
+}
+.test-glossary-term:hover{background:color-mix(in srgb,var(--gloss-color,#8b5cf6) 14%,transparent);border-radius:5px}
+.test-match-wrap{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin:16px 0 8px}
+.test-match-col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.test-match-item{
+  border:2px solid rgba(28,35,64,.16);border-bottom-width:4px;background:var(--bg);
+  border-radius:12px;padding:10px 12px;font:750 13px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;
+  cursor:pointer;text-align:left;overflow-wrap:break-word
+}
+.test-match-item.selected{border-color:#f6c945;background:#fff7dd}
+.test-match-item.matched{border-color:#22c55e;background:#eafcef;color:#166534;cursor:default}
+.test-match-item.matched::after{content:"✓";float:right;font-weight:800}
+.test-match-item:disabled{opacity:.62;cursor:default}
+@media(max-width:480px){.test-match-wrap{grid-template-columns:1fr}}
 #testTooltip{
   position:fixed;z-index:250;max-width:290px;background:var(--bg);
   border:1px solid rgba(28,35,64,.14);border-radius:16px;padding:13px 15px;
@@ -1933,10 +1950,15 @@ function testEscape(s){
   return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;")
     .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")
 }
-function testHintHTML(text,isCode=false){
+function testHintHTML(text,isCode=false,terms=[]){
   const codeSpans=[];
   const raw=String(text??"").replace(/`([^`\n]+)`/g,(_,c)=>`@@ICODE${codeSpans.push(c)-1}@@`);
-  const keys=Object.keys(TEST_HINTS).sort((a,b)=>b.length-a.length);
+  const glossaryMap={};
+  (terms||[]).forEach(t=>{
+    const label=String(t.display_text||t.term||"").trim();
+    if(label)glossaryMap[label]={def:t.definition||"",color:t.color||"#5867d8"}
+  });
+  const keys=[...new Set([...Object.keys(TEST_HINTS),...Object.keys(glossaryMap)])].sort((a,b)=>b.length-a.length);
   let out="",i=0;
   while(i<raw.length){
     let found=null;
@@ -1944,7 +1966,10 @@ function testHintHTML(text,isCode=false){
       if(raw.startsWith(k,i)){found=k;break}
     }
     if(found){
-      out+=`<span class="${isCode?'test-hint':'test-question-hint'}" data-test-hint="${testEscape(TEST_HINTS[found])}">${testEscape(found)}</span>`;
+      const g=glossaryMap[found];
+      out+=g
+        ?`<span class="test-glossary-term" data-test-hint="${testEscape(g.def)}" data-glossary="1" style="--gloss-color:${testEscape(g.color)}">${testEscape(found)}</span>`
+        :`<span class="${isCode?'test-hint':'test-question-hint'}" data-test-hint="${testEscape(TEST_HINTS[found])}">${testEscape(found)}</span>`;
       i+=found.length
     }else{
       out+=testEscape(raw[i]);i++
@@ -1953,15 +1978,22 @@ function testHintHTML(text,isCode=false){
   out=applyInlineEmphasis(out).replace(/@@ICODE(\d+)@@/g,(_,n)=>`<code>${testEscape(codeSpans[Number(n)])}</code>`);
   return out.replace(/\n/g,"<br>")
 }
+function showTestTooltip(el){
+  const tip=$("testTooltip");tip.innerHTML=mdInline(el.dataset.testHint).replace(/\n/g,"<br>");tip.classList.add("show");
+  const r=el.getBoundingClientRect();
+  tip.style.left=Math.min(Math.max(12,r.left),window.innerWidth-310)+"px";
+  let top=r.bottom+10;if(top+110>window.innerHeight)top=Math.max(12,r.top-115);
+  tip.style.top=top+"px"
+}
 function bindTestHints(){
   document.querySelectorAll("[data-test-hint]").forEach(el=>{
     el.onclick=e=>{
       e.stopPropagation();
-      const tip=$("testTooltip");tip.innerHTML=mdInline(el.dataset.testHint).replace(/\n/g,"<br>");tip.classList.add("show");
-      const r=el.getBoundingClientRect();
-      tip.style.left=Math.min(Math.max(12,r.left),window.innerWidth-310)+"px";
-      let top=r.bottom+10;if(top+110>window.innerHeight)top=Math.max(12,r.top-115);
-      tip.style.top=top+"px"
+      showTestTooltip(el)
+    };
+    if(el.dataset.glossary==="1"){
+      el.onmouseenter=()=>showTestTooltip(el);
+      el.onmouseleave=()=>{const t=$("testTooltip");if(t)t.classList.remove("show")}
     }
   })
 }
@@ -1993,12 +2025,13 @@ function typeLabel(t){
     PREDICT_OUTPUT:"PREDICT OUTPUT",
     FIND_ERROR:"FIND THE ERROR",
     BLANK:"FILL THE BLANK",
-    CODE_FILL:"FILL THE CODE"
+    CODE_FILL:"FILL THE CODE",
+    MATCH_FOLLOWING:"MATCH THE FOLLOWING"
   })[t]||"QUESTION"
 }
 function testProfessorFor(q){
   if(q.type==="ORDER"||q.type==="TYPE_CODE"||q.type==="BLANK"||q.type==="CODE_FILL")return DADA_HALF.coding||KABI.coding;
-  if(q.type==="PREDICT_OUTPUT"||q.type==="FIND_ERROR")return DADA_HALF.thinking||KABI.thinking;
+  if(q.type==="PREDICT_OUTPUT"||q.type==="FIND_ERROR"||q.type==="MATCH_FOLLOWING")return DADA_HALF.thinking||KABI.thinking;
   return DADA_HALF.teaching||KABI.teaching
 }
 function enterTestPage(){
@@ -2015,12 +2048,50 @@ function leaveTestPage(destination="home"){
   window.scrollTo({top:0,behavior:"instant"})
 }
 function renderTestChoices(q){
-  return q.options.map((o,i)=>`<button class="option" type="button" data-i="${i}" data-value="${testEscape(o.value||o.text)}">${testHintHTML(o.text||o.value,false)}</button>`).join("")
+  return q.options.map((o,i)=>`<button class="option" type="button" data-i="${i}" data-value="${testEscape(o.value||o.text)}">${testHintHTML(o.text||o.value,false,q.terms)}</button>`).join("")
 }
 function renderTestOrder(q){
   testState.order=[];
   return `<div id="testOrderAnswer" class="test-v11-answer"></div>
-    <div class="test-v11-tokens">${q.options.map((o,i)=>`<button class="test-v11-token" type="button" data-i="${i}" data-value="${testEscape(o.value||o.text)}">${testHintHTML(o.text||o.value,false)}</button>`).join("")}</div>`
+    <div class="test-v11-tokens">${q.options.map((o,i)=>`<button class="test-v11-token" type="button" data-i="${i}" data-value="${testEscape(o.value||o.text)}">${testHintHTML(o.text||o.value,false,q.terms)}</button>`).join("")}</div>`
+}
+function renderTestMatch(q){
+  const half=Math.floor(q.options.length/2);
+  testState.match={};testState.matchSelectedLeft=null;
+  const left=q.options.slice(0,half),right=q.options.slice(half);
+  const col=(items,side)=>items.map((o,i)=>`<button class="test-match-item" type="button" data-side="${side}" data-i="${i}">${testHintHTML(o.text||o.value,false,q.terms)}</button>`).join("");
+  return `<div class="test-match-wrap"><div class="test-match-col">${col(left,"left")}</div><div class="test-match-col">${col(right,"right")}</div></div>`
+}
+function selectMatchItem(btn){
+  if(testState.answered)return;
+  const side=btn.dataset.side,i=Number(btn.dataset.i);
+  if(btn.classList.contains("matched")){
+    const pair=btn.dataset.pair;
+    const peers=document.querySelectorAll(`.test-match-item[data-pair="${pair}"]`);
+    const leftBtn=Array.from(peers).find(x=>x.dataset.side==="left");
+    if(leftBtn)delete testState.match[Number(leftBtn.dataset.i)];
+    peers.forEach(x=>{x.classList.remove("matched");delete x.dataset.pair});
+    return
+  }
+  if(side==="left"){
+    document.querySelectorAll('.test-match-item[data-side="left"]:not(.matched)').forEach(x=>x.classList.remove("selected"));
+    btn.classList.add("selected");
+    testState.matchSelectedLeft=i;
+  }else{
+    if(testState.matchSelectedLeft==null)return;
+    const li=testState.matchSelectedLeft;
+    const leftBtn=document.querySelector(`.test-match-item[data-side="left"][data-i="${li}"]`);
+    if(!leftBtn||leftBtn.classList.contains("matched"))return;
+    testState.match[li]=i;
+    const pairId=li+"-"+i;
+    leftBtn.classList.remove("selected");leftBtn.classList.add("matched");leftBtn.dataset.pair=pairId;
+    btn.classList.add("matched");btn.dataset.pair=pairId;
+    testState.matchSelectedLeft=null;
+  }
+}
+function resetTestMatch(){
+  testState.match={};testState.matchSelectedLeft=null;
+  document.querySelectorAll(".test-match-item").forEach(x=>{x.classList.remove("matched","selected");delete x.dataset.pair;x.disabled=false})
 }
 function renderTestInput(q){
   return q.type==="TYPE_CODE"
@@ -2111,6 +2182,11 @@ function cachedAnswerCorrect(q,answer){
   if(type==='CODE_FILL')return codeFillAnswerCorrect(expected,actual);
   if(type==='ORDER')return expected.replace(/\s+/g,'')===actual.replace(/\s+/g,'');
   if(type==='BLANK')return expected.replace(/\s+/g,' ').trim()===actual.replace(/\s+/g,' ').trim();
+  if(type==='MATCH_FOLLOWING'){
+    const parsePairs=raw=>new Set(String(raw||'').split(',').map(p=>p.trim()).filter(Boolean));
+    const exp=parsePairs(expected),act=parsePairs(actual);
+    return exp.size>0&&exp.size===act.size&&[...exp].every(p=>act.has(p))
+  }
   return expected===actual
 }
 function queueTestAttempt(q,answer){
@@ -2175,7 +2251,7 @@ async function startTest(sid,cid){
     // Merge private checking data from the profile-time cache.
     r.questions=(r.questions||[]).map(q=>{
       const cq=cachedQuestion(q.question_id);
-      return cq?{...q,answer:cq.answer,explanation:cq.explanation||q.explanation||'',hint:cq.hint||q.hint||''}:q
+      return cq?{...q,answer:cq.answer,explanation:cq.explanation||q.explanation||'',hint:cq.hint||q.hint||'',terms:cq.terms||q.terms||[]}:q
     });
 
     testState={
@@ -2189,7 +2265,7 @@ async function startTest(sid,cid){
 function renderTest(){
   const q=testState.questions[testState.index];
   const pct=(testState.index/testState.questions.length)*100;
-  testState.answered=false;testState.selected=null;testState.order=[];
+  testState.answered=false;testState.selected=null;testState.order=[];testState.match={};testState.matchSelectedLeft=null;
 
   $("testBar").style.width=pct+"%";
   $("testRoundNo").textContent=`${testState.index+1}/${testState.questions.length}`;
@@ -2197,7 +2273,7 @@ function renderTest(){
   $("testPendingText").textContent=testState.pending;
   $("testTypeLabel").textContent=typeLabel(q.type);
   $("testProfessorMini").src=testProfessorFor(q);
-  $("testQuestionTitle").innerHTML=mdInline(q.prompt).replace(/\n/g,"<br>");
+  $("testQuestionTitle").innerHTML=testHintHTML(q.prompt,false,q.terms).replace(/\n/g,"<br>");
   const hintPart=q.hint?` · <span class="question-hint-trigger" data-test-hint="${testEscape(q.hint)}">DADA hint</span>`:"";
   $("testQuestionExplain").innerHTML=`<b>${testEscape(testState.test.chapter_title||testState.test.title||"Chapter test")}</b>${hintPart} <span class="meta">· ${q.xp} XP</span>`;
   $("testQuestionCode").innerHTML=(q.code&&q.type!=="CODE_FILL")?`<div class="test-v11-code">${testEscape(q.code).replace(/\n/g,"<br>")}</div>`:"";
@@ -2217,6 +2293,9 @@ function renderTest(){
     })
   }else if(q.type==="TYPE_CODE"||q.type==="BLANK"){
     $("testExercise").innerHTML=renderTestInput(q)
+  }else if(q.type==="MATCH_FOLLOWING"){
+    $("testExercise").innerHTML=renderTestMatch(q);
+    document.querySelectorAll(".test-match-item").forEach(btn=>btn.onclick=()=>selectMatchItem(btn))
   }else{
     $("testExercise").innerHTML=renderTestChoices(q);
     document.querySelectorAll("#testExercise .option").forEach(btn=>btn.onclick=()=>selectTestChoice(btn))
@@ -2258,6 +2337,7 @@ function currentTestAnswer(){
   if(q.type==="ORDER")return testState.order.map(x=>x.value).join("||");
   if(q.type==="CODE_FILL")return JSON.stringify(Array.from(document.querySelectorAll("#testExercise .test-code-fill-box")).map(x=>String(x.value||'').trim()));
   if(q.type==="TYPE_CODE"||q.type==="BLANK")return ($("testTextAnswer")?.value||"").trim();
+  if(q.type==="MATCH_FOLLOWING")return Object.keys(testState.match||{}).map(li=>`${li}-${testState.match[li]}`).join(",");
   return testState.selected
 }
 
@@ -2272,6 +2352,11 @@ async function checkTestAnswer(){
       const firstEmpty=Array.from(boxes).find(x=>!String(x.value||'').trim());
       firstEmpty?.focus();
       return
+    }
+  }else if(q.type==="MATCH_FOLLOWING"){
+    const half=document.querySelectorAll('.test-match-item[data-side="left"]').length;
+    if(!half||Object.keys(testState.match||{}).length!==half){
+      replayTestClass($("testLessonCard"),"screen-vibrate");return
     }
   }else if(answer===null||answer===undefined||String(answer).trim()===""){
     replayTestClass($("testLessonCard"),"screen-vibrate");return
@@ -2300,7 +2385,7 @@ async function checkTestAnswer(){
   const f=$("testFeedbackV11");
   if(correct){
     f.className="feedback show good";
-    f.innerHTML=`✓ Correct! +${q.xp} pending XP<div style="font-weight:600;margin-top:4px">${testHintHTML(q.explanation||"Nice work.",false)}</div><img class="professor-feedback" src="${DADA_HALF.praise||KABI.praise}" alt="DADA congratulating">`;
+    f.innerHTML=`✓ Correct! +${q.xp} pending XP<div style="font-weight:600;margin-top:4px">${testHintHTML(q.explanation||"Nice work.",false,q.terms)}</div><img class="professor-feedback" src="${DADA_HALF.praise||KABI.praise}" alt="DADA congratulating">`;
     testCorrectSound();animateTestXP();bindTestHints();
     $("testCheck").disabled=false;
     $("testCheck").textContent=testState.index===testState.questions.length-1?"FINISH":"CONTINUE";
@@ -2324,6 +2409,8 @@ async function checkTestAnswer(){
         (Array.from(boxes).find(x=>!String(x.value||'').trim())||boxes[0])?.focus()
       }else if(q.type==="TYPE_CODE"||q.type==="BLANK"){
         const input=$("testTextAnswer");if(input){input.disabled=false;input.focus()}
+      }else if(q.type==="MATCH_FOLLOWING"){
+        resetTestMatch()
       }else{
         document.querySelectorAll("#testExercise .option").forEach(x=>{x.disabled=false;x.classList.remove("selected")})
       }
@@ -2334,7 +2421,7 @@ async function checkTestAnswer(){
 
   f.className="feedback show bad";
   const shownAnswer=q.type==='CODE_FILL'?codeFillDisplayAnswer(q.answer):q.answer;
-  f.innerHTML=`✗ Three attempts used.<div style="font-weight:600;margin-top:4px">${testHintHTML((shownAnswer?'Correct answer: '+shownAnswer+'. ':'')+(q.explanation||'Review this idea before continuing.'),false)}</div>${heartLost?`<div class="heart-note">❤️ One heart was lost. It will not refill after this test. Complete Learn for this chapter to restore hearts.</div>`:''}<img class="professor-feedback" src="${DADA_HALF.encourage||KABI.sad}" alt="DADA encouraging review">`;
+  f.innerHTML=`✗ Three attempts used.<div style="font-weight:600;margin-top:4px">${testHintHTML((shownAnswer?'Correct answer: '+shownAnswer+'. ':'')+(q.explanation||'Review this idea before continuing.'),false,q.terms)}</div>${heartLost?`<div class="heart-note">❤️ One heart was lost. It will not refill after this test. Complete Learn for this chapter to restore hearts.</div>`:''}<img class="professor-feedback" src="${DADA_HALF.encourage||KABI.sad}" alt="DADA encouraging review">`;
   bindTestHints();
 
   if(failed){

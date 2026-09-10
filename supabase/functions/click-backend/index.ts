@@ -143,6 +143,11 @@ function isAnswerCorrect(q: any, answer: string): boolean {
   }
   if (type === "ORDER") return expected.replace(/\s+/g, "") === actual.replace(/\s+/g, "");
   if (type === "BLANK") return normalizeBlank(expected) === normalizeBlank(actual);
+  if (type === "MATCH_FOLLOWING") {
+    const parsePairs = (raw: string) => new Set(raw.split(",").map((p) => p.trim()).filter(Boolean));
+    const exp = parsePairs(expected), act = parsePairs(actual);
+    return exp.size > 0 && exp.size === act.size && [...exp].every((p) => act.has(p));
+  }
   return expected === actual;
 }
 
