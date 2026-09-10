@@ -194,11 +194,12 @@ async function syncQuestions(
       return;
     }
 
-    // Experiment questions are deliberately excluded from the auto "next"
-    // pick - they're a separately-browsed collection (no fixed sequence),
-    // opened by explicit selection (web deep-link or the tree view) only,
-    // never surprising a student who just wants their next Stage practice.
-    const next = lastQuestions.find((q) => q.available && !q.completed && q.experiment_number == null);
+    // Experiment questions, and the new Stage 0-5 curriculum coding questions,
+    // are both deliberately excluded from the auto "next" pick - they're
+    // separately-browsed collections (no fixed sequence), opened by explicit
+    // selection (web deep-link or the tree view) only, never surprising a
+    // student who just wants their next (as-yet-unbuilt) sequential Stage practice.
+    const next = lastQuestions.find((q) => q.available && !q.completed && q.experiment_number == null && !q.stage_id);
     if (next) {
       await openChallenge(context, next);
       if (opts.announce) vscode.window.showInformationMessage(`CLICK: opened "${next.title}"`);

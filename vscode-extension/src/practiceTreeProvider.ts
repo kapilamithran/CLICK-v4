@@ -9,7 +9,7 @@ export class PracticeTreeItem extends vscode.TreeItem {
       typeof question.experiment_number === "number"
         ? `Experiment ${question.experiment_number}`
         : typeof question.stage_no === "number"
-        ? `Exp ${question.stage_no + 1}`
+        ? `Stage ${question.stage_no}`
         : question.stage_id
         ? `Stage ${question.stage_id}`
         : "";
