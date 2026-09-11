@@ -117,6 +117,11 @@ async function openChallenge(context: vscode.ExtensionContext, q: PracticeQuesti
   statusBar.show();
   questionProvider.setQuestion(q);
   treeProvider.setCurrent(q.practice_id);
+  // Reveal the Question view automatically so the student sees the problem
+  // statement immediately, without having to run "CLICK: Show Question
+  // Panel" by hand first. Same reveal mechanism that command already uses
+  // (a sidebar view, so it sits beside solution.c, not over it).
+  await vscode.commands.executeCommand("click.questionView.focus");
   output.appendLine(`\nOpened practice challenge: ${q.title} (${q.practice_id})`);
 }
 

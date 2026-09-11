@@ -246,7 +246,7 @@ ${explanation}
 ${hints}
 <hr class="divider">
 <div class="actions">
-  <button class="secondary" data-action="openFile">Open main.c</button>
+  <button class="secondary" data-action="openFile">Open Source File</button>
   <button class="secondary" data-action="refresh">Refresh</button>
 </div>`;
   }

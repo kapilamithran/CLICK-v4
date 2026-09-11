@@ -1707,23 +1707,18 @@ function practiceGuideHTML(){
     },
     {
       title:'8. Install the CLICK Practice extension',
-      body:`In VS Code open Extensions → click the <b>…</b> menu → <b>Install from VSIX…</b> → select the <b>CLICK-Practice-v16.3.3.vsix</b> file supplied by your teacher. Restart VS Code if asked.`,
-      check:'A CLICK Practice icon should appear in the VS Code Activity Bar, and “CLICK: Connect Account” should appear in the Command Palette.'
+      body:`In VS Code open Extensions → click the <b>…</b> menu → <b>Install from VSIX…</b> → select the <b>CLICK-Practice.vsix</b> file you downloaded above. Restart VS Code if asked. It already knows CLICK’s server address, so there is nothing else to configure.`,
+      check:'A CLICK Practice icon should appear in the VS Code Activity Bar, and “CLICK: Pair with Web App” should appear in the Command Palette.'
     },
     {
-      title:'9. Confirm the CLICK extension is teacher-configured',
-      body:`Install the staff-provided <b>CLICK-Practice-v16.3.3-STUDENT.vsix</b>. It already contains the CLICK server address, so students should not paste any <code>/exec</code> URL. If this prepared VSIX does not connect, stop and ask your staff member to configure/reissue the CLICK Practice VSIX with the correct Apps Script <code>/exec</code> endpoint.`,
-      warning:'The Web App /exec address is an endpoint, not a password. CLICK still protects student actions with login sessions and one-time/device tokens. Do not put passwords or secret keys in the extension.'
-    },
-    {
-      title:'10. Pair VS Code with your CLICK account',
-      body:`Return to this Practice page → click <b>GENERATE PAIRING CODE</b>. In VS Code press <code>Ctrl+Shift+P</code> → choose <b>CLICK: Connect Account</b> → enter the 6-digit code. The code expires after 10 minutes.`,
+      title:'9. Pair VS Code with your CLICK account',
+      body:`Return to this Practice page → click <b>GENERATE PAIRING CODE</b>. In VS Code press <code>Ctrl+Shift+P</code> → choose <b>CLICK: Pair with Web App</b> → enter the 6-digit code. The code expires after 10 minutes.`,
       check:'The webpage should change to “Connected to VS Code”. VS Code then refreshes the CLICK sidebar and automatically opens your first unlocked challenge.'
     },
     {
-      title:'11. Run a first compiler check',
-      body:`Open a CLICK challenge, then run <b>CLICK: Check Code</b>. CLICK saves <code>main.c</code>, compiles it locally with GCC, runs the configured tests, and returns DADA’s feedback.`,
-      check:'If the program compiles and all tests pass, the challenge is marked complete on the website automatically.'
+      title:'10. Run a first compiler check',
+      body:`Open a CLICK challenge, then run <b>CLICK: Check Code</b>. CLICK saves <code>solution.c</code>, compiles it locally with GCC, runs the configured tests, and returns DADA’s feedback.`,
+      check:'A notification appears saying the tests passed, and the challenge is marked complete on the website automatically.'
     }
   ];
   const mac=[
@@ -1749,22 +1744,17 @@ function practiceGuideHTML(){
     },
     {
       title:'5. Install the CLICK Practice extension',
-      body:`Open Extensions → <b>…</b> → <b>Install from VSIX…</b> → choose <b>CLICK-Practice-v16.3.3.vsix</b>. Restart VS Code if prompted.`,
+      body:`Open Extensions → <b>…</b> → <b>Install from VSIX…</b> → choose <b>CLICK-Practice.vsix</b>. Restart VS Code if prompted. It already knows CLICK’s server address, so there is nothing else to configure.`,
       check:'The CLICK Practice Activity Bar icon and CLICK commands should appear.'
     },
     {
-      title:'6. Confirm the CLICK extension is teacher-configured',
-      body:`Install the staff-provided <b>CLICK-Practice-v16.3.3-STUDENT.vsix</b>. It is already configured for CLICK. If it does not connect, ask your staff member to configure/reissue the VSIX with the correct Apps Script <code>/exec</code> endpoint.`,
-      warning:'If CLICK says the backend is not configured, ask your teacher for the prepared VSIX instead of entering URLs yourself.'
-    },
-    {
-      title:'7. Pair your account',
-      body:`On this webpage click <b>GENERATE PAIRING CODE</b>. In VS Code press <code>⌘⇧P</code> → choose <b>CLICK: Connect Account</b> → enter the 6-digit code.`,
+      title:'6. Pair your account',
+      body:`On this webpage click <b>GENERATE PAIRING CODE</b>. In VS Code press <code>⌘⇧P</code> → choose <b>CLICK: Pair with Web App</b> → enter the 6-digit code.`,
       check:'The Practice page should report that VS Code is connected.'
     },
     {
-      title:'8. Open and check a challenge',
-      body:`Use the CLICK sidebar or Command Palette → <b>CLICK: Open Next Practice</b>. Edit the generated <code>main.c</code>, then run <b>CLICK: Check Code</b>.`,
+      title:'7. Open and check a challenge',
+      body:`Use the CLICK sidebar or Command Palette → <b>CLICK: Open Next Practice</b>. Edit the generated <code>solution.c</code>, then run <b>CLICK: Check Code</b>.`,
       check:'CLICK compiles locally with clang, runs visible and hidden tests, and syncs a pass back to the webpage.'
     }
   ];
@@ -1778,13 +1768,13 @@ int main(void) {
   <div class="setup-mini-test practice-command-guide">
     <b>Final quick guide — commands you will actually use</b>
     <div class="guide-steps" style="margin-top:10px">
-      <div class="guide-step"><div class="guide-no">1</div><div><b>Connect your CLICK account</b><span>${practiceOS==='windows'?'<code>Ctrl+Shift+P</code>':'<code>⌘⇧P</code>'} → <b>CLICK: Connect Account</b> → enter the 6-digit code from this webpage. Use this after first installation, after Disconnect, or when staff asks you to pair again.</span></div></div>
+      <div class="guide-step"><div class="guide-no">1</div><div><b>Connect your CLICK account</b><span>${practiceOS==='windows'?'<code>Ctrl+Shift+P</code>':'<code>⌘⇧P</code>'} → <b>CLICK: Pair with Web App</b> → enter the 6-digit code from this webpage. Use this after first installation, after Disconnect, or when staff asks you to pair again.</span></div></div>
       <div class="guide-step"><div class="guide-no">2</div><div><b>Open your next coding challenge</b><span>${practiceOS==='windows'?'<code>Ctrl+Shift+P</code>':'<code>⌘⇧P</code>'} → <b>CLICK: Open Next Practice</b>. Use this if the next unlocked challenge did not open automatically.</span></div></div>
-      <div class="guide-step"><div class="guide-no">3</div><div><b>Check and SUBMIT your code</b><span>${practiceOS==='windows'?'<code>Ctrl+Shift+P</code>':'<code>⌘⇧P</code>'} → <b>CLICK: Check Code</b>. This is the important command. The normal VS Code ▶ Run button only runs your program; it does <b>not</b> update CLICK progress.</span><div class="guide-check">✓ A successful CLICK submission should say <b>PracticeProgress saved…</b> in the CLICK Output panel.</div></div></div>
+      <div class="guide-step"><div class="guide-no">3</div><div><b>Check and SUBMIT your code</b><span>${practiceOS==='windows'?'<code>Ctrl+Shift+P</code>':'<code>⌘⇧P</code>'} → <b>CLICK: Check Code</b>. This is the important command. The normal VS Code ▶ Run button only runs your program; it does <b>not</b> update CLICK progress.</span><div class="guide-check">✓ A successful CLICK submission shows a notification that your tests passed.</div></div></div>
       <div class="guide-step"><div class="guide-no">4</div><div><b>Refresh CLICK practice data</b><span>${practiceOS==='windows'?'<code>Ctrl+Shift+P</code>':'<code>⌘⇧P</code>'} → <b>CLICK: Refresh Practice</b>. Use this after staff changes prerequisites or if the sidebar does not immediately show a newly unlocked challenge.</span></div></div>
-      <div class="guide-step"><div class="guide-no">5</div><div><b>Disconnect this computer</b><span>${practiceOS==='windows'?'<code>Ctrl+Shift+P</code>':'<code>⌘⇧P</code>'} → <b>CLICK: Disconnect Account</b>. Use this before pairing a different CLICK account or when staff asks you to reconnect.</span></div></div>
+      <div class="guide-step"><div class="guide-no">5</div><div><b>Disconnect this computer</b><span>${practiceOS==='windows'?'<code>Ctrl+Shift+P</code>':'<code>⌘⇧P</code>'} → <b>CLICK: Disconnect</b>. Use this before pairing a different CLICK account or when staff asks you to reconnect.</span></div></div>
     </div>
-    <div class="guide-warning">⚠ <b>Do not use the normal ▶ Run button as your submission.</b> You may use Run while experimenting, but always finish with <b>CLICK: Check Code</b> so the webpage and Google Sheet receive your progress.</div>
+    <div class="guide-warning">⚠ <b>Do not use the normal ▶ Run button as your submission.</b> You may use Run while experimenting, but always finish with <b>CLICK: Check Code</b> so the webpage receives your progress.</div>
   </div>`;
 }
 function bindPracticeSetup(){
