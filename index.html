@@ -1255,34 +1255,56 @@ function hideLoading(){
 }
 
 // ---------------- branded video overlays (replace the generic spinner at specific moments) ----------------
-let videoOverlayFallback=null;
-function showVideoOverlay(name,opts={}){
+// Cloudflare Workers' static-asset serving ignores HTTP Range requests (always
+// returns a full 200, never 206), which strict mobile WebView video players
+// -- including the APK's -- can refuse to play at all. Fetching as a blob and
+// playing from an object URL sidesteps range-based streaming entirely.
+const VIDEO_BLOB_CACHE={};
+function getVideoSrc(name){
+  if(VIDEO_BLOB_CACHE[name])return VIDEO_BLOB_CACHE[name];
+  const p=fetch('assets/videos/'+name).then(r=>r.blob()).then(b=>URL.createObjectURL(b)).catch(()=>'assets/videos/'+name);
+  VIDEO_BLOB_CACHE[name]=p;
+  return p;
+}
+function prefetchVideos(){
+  ['after-login.mp4','after-logout.mp4','chapter-intro.mp4','chapter-outro.mp4','copy-paste-restriction.mp4','learning-page-transition.mp4','test-complete.mp4','test-entry.mp4'].forEach(getVideoSrc);
+}
+// Always plays `name` to completion (its real 'ended' event) before resolving.
+// The timeout is a safety net only -- tightened to the video's own duration
+// once known, so a genuine load/playback failure can't freeze the popup
+// forever, but a normal video is never cut short.
+function showVideoOverlay(name){
   const wrap=$('videoOverlay'),el=$('overlayVideo');
   if(!wrap||!el)return Promise.resolve();
-  return new Promise(resolve=>{
-    let done=false;
-    const finish=()=>{if(done)return;done=true;clearTimeout(videoOverlayFallback);el.onended=null;resolve()};
-    el.src='assets/videos/'+name;
-    el.currentTime=0;
-    wrap.classList.remove('hidden');
-    el.play().catch(()=>{});
-    if(opts.waitForEnd===false){resolve();return}
+  wrap.classList.remove('hidden');
+  return getVideoSrc(name).then(src=>new Promise(resolve=>{
+    let done=false,fallback=null;
+    const finish=()=>{if(done)return;done=true;clearTimeout(fallback);el.onended=null;el.onerror=null;el.onloadedmetadata=null;resolve()};
     el.onended=finish;
-    videoOverlayFallback=setTimeout(finish,opts.maxMs||4000);
-  });
+    el.onerror=finish;
+    el.onloadedmetadata=()=>{
+      clearTimeout(fallback);
+      fallback=setTimeout(finish,(isFinite(el.duration)?el.duration*1000:6000)+3000);
+    };
+    fallback=setTimeout(finish,15000);
+    el.src=src;
+    el.load();
+    el.play().catch(()=>{});
+  }));
 }
 function hideVideoOverlay(){
   const wrap=$('videoOverlay'),el=$('overlayVideo');
   if(wrap)wrap.classList.add('hidden');
-  if(el){el.pause();el.onended=null}
-  clearTimeout(videoOverlayFallback);
+  if(el){el.pause();el.onended=null;el.onerror=null;el.onloadedmetadata=null}
 }
-// Shows `name` at least while `run()` is in flight (with the same 220ms
-// flash-guard the generic loader uses), hiding as soon as it resolves.
+// Plays `name` to completion AND waits for `run()` -- whichever takes longer
+// -- before hiding, so the popup never closes before the video has finished.
 function withVideoOverlay(name,run){
-  let shown=false;
-  const timer=setTimeout(()=>{shown=true;showVideoOverlay(name,{waitForEnd:false})},220);
-  return run().finally(()=>{clearTimeout(timer);if(shown)hideVideoOverlay()});
+  const videoDone=showVideoOverlay(name);
+  return run().then(
+    result=>videoDone.then(()=>{hideVideoOverlay();return result}),
+    err=>videoDone.then(()=>{hideVideoOverlay();throw err})
+  );
 }
 
 async function post(action,payload={}){
@@ -1571,6 +1593,7 @@ async function loadApp(forceRefresh=false){
   hideUsernameGate();
   // Profile is already visible; warm the complete test bank quietly in parallel.
   preloadTestData(!!forceRefresh);
+  prefetchVideos();
   if(!onboardingAutoTourChecked){onboardingAutoTourChecked=true;if(!truthyClient(r.user?.onboarding_completed))setTimeout(()=>startTour(false),450)}
 }
 function renderHeader(){let u=app.user;$('topHearts').textContent=u.hearts;$('topXP').textContent=u.total_xp;$('topName').textContent=u.name;$('topRoll').textContent=u.roll_no;$('avatar').textContent=(u.name||'S').trim()[0].toUpperCase();$('welcome').textContent='Welcome '+u.name+'!';$('motivation').textContent=phrase('home')||phrase('motivation')||'Small steps build strong code.'}
