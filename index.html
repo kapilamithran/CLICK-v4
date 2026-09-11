@@ -955,6 +955,82 @@ a.about-card:hover{transform:translateY(-2px)}
 @media(max-width:1050px){.about-people-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.about-people-grid{grid-template-columns:1fr}.page-kabi{display:none}}
 </style>
+<style>
+/* Staff monitoring dashboard -- entirely separate from the student app shell */
+.staff-page{position:fixed;inset:0;z-index:40;background:var(--bg);overflow-y:auto}
+.staff-login-box{max-width:400px;margin:9vh auto;padding:36px 32px;border-radius:var(--r-lg);background:var(--card-bg);border:var(--card-border);text-align:center}
+.staff-login-box .brand-logo{height:48px;width:auto;margin-bottom:10px}
+.staff-login-box h1{margin:0 0 4px;font-size:24px}
+.staff-login-box .meta{margin:0 0 22px}
+.staff-field{display:block;text-align:left;font-size:13px;font-weight:800;color:var(--ink-soft);margin-bottom:14px}
+.staff-field input{width:100%;margin-top:6px;padding:12px 14px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:15px;box-shadow:var(--pressed-sm)}
+.staff-pass-wrap{position:relative}
+.staff-pass-wrap input{padding-right:64px}
+.staff-pass-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:0;color:var(--accent);font-weight:800;font-size:12px;cursor:pointer;padding:6px}
+.staff-login-error{min-height:18px;color:var(--red,#e11d48);font-size:13px;font-weight:700;margin:6px 0 14px;text-align:left}
+.staff-login-box button.btn{width:100%}
+#staffApp{display:grid;grid-template-columns:220px 1fr}
+.staff-sidebar{background:var(--card-bg);border-right:var(--card-border);display:flex;flex-direction:column;padding:20px 14px}
+.staff-brand{display:flex;align-items:center;gap:10px;padding:0 6px 20px;font-weight:900;font-family:var(--font-head)}
+.staff-brand .brand-logo{height:28px;width:auto}
+.staff-nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.staff-nav button{text-align:left;padding:11px 14px;border-radius:var(--r-sm);border:0;background:transparent;color:var(--ink-soft);font-weight:800;font-size:14px;cursor:pointer}
+.staff-nav button:hover{background:rgba(255,255,255,.06)}
+.staff-nav button.active{background:var(--accent);color:var(--accent-ink)}
+.staff-sidebar-foot{border-top:1px solid var(--line);padding-top:14px;margin-top:14px}
+.staff-who{font-size:12px;color:var(--muted);margin-bottom:10px;overflow-wrap:anywhere}
+.staff-main{padding:22px 28px;overflow-y:auto;min-width:0}
+.staff-topbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.staff-filters{display:flex;gap:10px;flex-wrap:wrap;flex:1}
+.staff-filters select,.staff-filters input{padding:10px 12px;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:13px;font-weight:700}
+.staff-filters input{flex:1;min-width:220px}
+.staff-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px}
+.staff-stat-card{padding:16px 18px;border-radius:var(--r-md);background:var(--card-bg);border:var(--card-border)}
+.staff-stat-card .staff-stat-label{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft)}
+.staff-stat-card .staff-stat-value{font-size:28px;font-weight:900;font-family:var(--font-head);margin-top:6px}
+.staff-section-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.staff-section-card{padding:18px 20px;border-radius:var(--r-md);background:var(--card-bg);border:var(--card-border);cursor:pointer;transition:.12s transform}
+.staff-section-card:hover{transform:translateY(-2px)}
+.staff-section-card h3{margin:0 0 8px}
+.staff-section-bar{height:8px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden;margin:10px 0}
+.staff-section-bar>i{display:block;height:100%;background:var(--accent)}
+.staff-section-meta{font-size:12.5px;color:var(--ink-soft);display:flex;flex-direction:column;gap:3px}
+.staff-empty{padding:40px 20px;text-align:center;color:var(--muted);font-weight:700}
+.staff-table-wrap{overflow-x:auto;border-radius:var(--r-md);border:1px solid var(--line)}
+table.staff-table{width:100%;border-collapse:collapse;min-width:920px;font-size:13.5px}
+table.staff-table th{text-align:left;padding:12px 14px;background:rgba(255,255,255,.04);color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+table.staff-table td{padding:12px 14px;border-top:1px solid var(--line);white-space:nowrap}
+table.staff-table tr.staff-row-clickable{cursor:pointer}
+table.staff-table tr.staff-row-clickable:hover{background:rgba(255,255,255,.04)}
+.staff-badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;background:var(--bg);border:1px solid var(--line)}
+.staff-badge.staff-active{color:var(--green)}
+.staff-badge.staff-started{color:var(--amber)}
+.staff-badge.staff-none{color:var(--muted)}
+.staff-detail-back{background:transparent;border:0;color:var(--accent);font-weight:800;cursor:pointer;padding:0;margin-bottom:16px}
+.staff-detail-head{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:20px}
+.staff-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:24px}
+.staff-panel{padding:18px 20px;border-radius:var(--r-md);background:var(--card-bg);border:var(--card-border);margin-bottom:20px}
+.staff-panel h3{margin:0 0 14px}
+.staff-timeline{list-style:none;margin:0;padding:0;border-left:2px solid var(--line);margin-left:6px}
+.staff-timeline li{position:relative;padding:0 0 16px 20px}
+.staff-timeline li::before{content:"";position:absolute;left:-7px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--accent)}
+.staff-timeline time{display:block;font-size:11px;color:var(--muted);font-weight:800}
+.staff-select-wrap{display:flex;gap:8px;align-items:center;margin-bottom:16px}
+@media(max-width:900px){
+  #staffApp{grid-template-columns:1fr}
+  .staff-sidebar{flex-direction:row;align-items:center;padding:10px 14px;overflow-x:auto}
+  .staff-brand{padding:0 12px 0 0}
+  .staff-nav{flex-direction:row}
+  .staff-nav button{white-space:nowrap}
+  .staff-sidebar-foot{border-top:0;margin:0 0 0 auto;padding:0;display:flex;align-items:center;gap:10px}
+  .staff-who{display:none}
+  .staff-main{padding:16px}
+}
+@media(max-width:480px){
+  .staff-login-box{margin:6vh 14px;padding:26px 20px}
+  table.staff-table{min-width:760px}
+}
+</style>
 </head><body><script>(function(){try{if(localStorage.getItem('clickTheme')==='light')document.documentElement.setAttribute('data-theme','light')}catch(e){}})()</script><script>
 function toast(message,kind){
   kind=kind||'info';
@@ -1030,6 +1106,55 @@ function toast(message,kind){
   <div class="about-section"><h3>Meet Our Mascot</h3><div class="about-mascot-wrap"><img id="aboutMascot" alt="DADA Mascot"></div></div>
 </section>
 </main></div><nav class="mobiletabs"><button data-page="home">Home</button><button data-page="learn">Learn</button><button data-page="practice">Practice</button><button data-page="progress">Profile</button><button data-page="leadership">Leaders</button><button data-page="announcements">News</button><button data-page="about">About</button></nav></div>
+
+<section id="staffLoginPage" class="staff-page hidden">
+  <div class="staff-login-box">
+    <img class="brand-logo" id="staffLoginLogo" alt="CLICK">
+    <h1>CLICK Staff</h1>
+    <p class="meta">Sign in to monitor student progress.</p>
+    <form id="staffLoginForm">
+      <label class="staff-field">Email or Username<input type="text" id="staffEmail" required autocomplete="username"></label>
+      <label class="staff-field">Password
+        <div class="staff-pass-wrap">
+          <input type="password" id="staffPassword" required autocomplete="current-password">
+          <button type="button" id="staffPassToggle" class="staff-pass-toggle">Show</button>
+        </div>
+      </label>
+      <div id="staffLoginError" class="staff-login-error" role="alert"></div>
+      <button class="btn" type="submit" id="staffLoginBtn">Sign In</button>
+    </form>
+  </div>
+</section>
+
+<section id="staffApp" class="staff-page hidden">
+  <aside class="staff-sidebar">
+    <div class="staff-brand"><img class="brand-logo" id="staffAppLogo" alt="CLICK"><span>CLICK Staff</span></div>
+    <nav class="staff-nav" id="staffNav">
+      <button data-staff-view="dashboard" type="button">Dashboard</button>
+      <button data-staff-view="students" type="button">Students</button>
+      <button data-staff-view="sections" type="button">Sections</button>
+      <button data-staff-view="submissions" type="button">Submissions</button>
+    </nav>
+    <div class="staff-sidebar-foot">
+      <div class="staff-who" id="staffWhoAmI"></div>
+      <button id="staffLogoutBtn" class="btn ghost" type="button">Logout</button>
+    </div>
+  </aside>
+  <main class="staff-main">
+    <div class="staff-topbar">
+      <div class="staff-filters">
+        <select id="staffSectionFilter" aria-label="Section filter"><option value="">All Sections</option></select>
+        <select id="staffPeriodFilter" aria-label="Date range">
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="last7days">Last 7 Days</option>
+        </select>
+        <input type="search" id="staffSearch" placeholder="Search name, roll no, username, email…" aria-label="Search students">
+      </div>
+    </div>
+    <div id="staffContent"></div>
+  </main>
+</section>
 
 <section id="testPage" class="click-test-page hidden" aria-label="Stage test">
   <div class="click-test-inner">
@@ -2503,7 +2628,217 @@ async function nextTestRound(){
 $("testBack").onclick=()=>{
   if(confirm("Leave this unfinished test? Pending XP from this test will not be added."))leaveTestPage("home")
 };
+
+// ---------------- staff monitoring dashboard ----------------
+// Entirely separate from the student app: own session (clickStaffSession),
+// own auth flow, own render functions. Reuses post()/esc() and the backend's
+// {action,...} contract -- no second Supabase client, no new framework.
+let staffSession=JSON.parse(localStorage.getItem('clickStaffSession')||'null');
+let staffView='dashboard',staffSectionsCache=[],staffDetailId=null,staffFilters={section:'',period:'today',search:''};
+
+function isStaffMode(){return new URLSearchParams(location.search).get('staff')==='1'||!!staffSession}
+async function spost(action,payload={}){return post(action,Object.assign({},payload,{staff_session_token:staffSession?.token}))}
+function staffCopyLogo(){const src=document.querySelector('.brand-logo.auth')?.src||document.querySelector('.brand-logo.top')?.src;if(src){if($('staffLoginLogo'))$('staffLoginLogo').src=src;if($('staffAppLogo'))$('staffAppLogo').src=src}}
+function staffShowLogin(){$('authGate').classList.add('hidden');staffCopyLogo();$('staffLoginPage').classList.remove('hidden');$('staffApp').classList.add('hidden')}
+function staffShowApp(){$('authGate').classList.add('hidden');$('staffLoginPage').classList.add('hidden');$('staffApp').classList.remove('hidden')}
+function staffLogoutLocal(){localStorage.removeItem('clickStaffSession');staffSession=null;staffShowLogin()}
+
+function diffFmt(n){return Math.round(n*10)/10}
+function statusBadgeClass(s){return s==='Completed Today\'s Work'||s==='Active Today'?'staff-active':s==='Started Today'?'staff-started':'staff-none'}
+function staffFmtTime(iso){if(!iso)return '—';try{return new Date(iso).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})}catch(e){return iso}}
+
+async function staffBoot(){
+  staffShowApp();
+  if(staffSession?.staff)$('staffWhoAmI').innerHTML=`<b>${esc(staffSession.staff.name)}</b><br>${esc(staffSession.staff.email)}`;
+  try{
+    const sec=await spost('staffSections');
+    staffSectionsCache=sec.sections;
+    const sel=$('staffSectionFilter');
+    sel.innerHTML='<option value="">All Sections</option>'+sec.sections.map(s=>`<option value="${esc(s.section_id)}">${esc(s.section_name)}</option>`).join('')+`<option value="UNASSIGNED">Unassigned (${sec.unassigned_count})</option>`;
+    sel.value=staffFilters.section;
+  }catch(e){
+    if(/staff session|no longer active/i.test(e.message)){staffLogoutLocal();return}
+    toast(e.message,'error');
+  }
+  renderStaffView();
+}
+
+// Every navigation/filter change bumps this; each async render below checks
+// it's still current before writing to the DOM, so a slow, superseded
+// fetch (e.g. a debounced search that resolves after the user has already
+// moved to a different view/filter) can never clobber newer content.
+let staffRenderGen=0;
+function renderStaffView(){
+  const gen=++staffRenderGen;
+  document.querySelectorAll('#staffNav [data-staff-view]').forEach(b=>b.classList.toggle('active',b.dataset.staffView===staffView&&!staffDetailId));
+  const content=$('staffContent');
+  if(staffDetailId){renderStaffDetailView(content,gen);return}
+  if(staffView==='dashboard')renderStaffDashboardView(content,gen);
+  else if(staffView==='sections')renderStaffSectionsView(content,gen);
+  else if(staffView==='students')renderStaffStudentsView(content,gen);
+  else if(staffView==='submissions')renderStaffSubmissionsView(content,gen);
+}
+
+async function renderStaffDashboardView(root,gen){
+  root.innerHTML='<div class="staff-empty">Loading…</div>';
+  try{
+    const d=await spost('staffDashboardSummary',{section_id:staffFilters.section,period:staffFilters.period});
+    if(gen!==staffRenderGen)return;
+    const cards=[
+      ['Total Students',d.total_students],['Active Today',d.active_today],['No Activity Today',d.inactive_today],
+      ['Completed Today',d.completed_today],['Tests Attempted Today',d.tests_attempted_today],
+      ['Submissions Today',d.submissions_today],['Average Accuracy',diffFmt(d.average_accuracy)+'%'],
+    ];
+    root.innerHTML=`<div class="staff-summary-grid">${cards.map(([label,val])=>`<div class="staff-stat-card"><div class="staff-stat-label">${esc(label)}</div><div class="staff-stat-value">${esc(String(val))}</div></div>`).join('')}</div>
+    ${d.total_students===0?`<div class="staff-empty">No students have been assigned to a section yet. Once sections are populated, this dashboard will fill in automatically — nothing here is hard-coded.</div>`:''}
+    <div class="staff-panel"><h3>Sections at a glance</h3><div class="staff-section-grid" id="staffDashSections"></div></div>`;
+    renderStaffSectionCards($('staffDashSections'),staffSectionsCache);
+  }catch(e){if(gen===staffRenderGen)root.innerHTML=`<div class="staff-empty">${esc(e.message)}</div>`}
+}
+
+function renderStaffSectionCards(root,sections){
+  root.innerHTML=sections.map(s=>{
+    const pct=s.capacity?Math.round((s.student_count/s.capacity)*100):0;
+    return `<div class="staff-section-card" data-section="${esc(s.section_id)}"><h3>${esc(s.section_name)}</h3>
+      <div class="staff-section-meta"><span>${s.student_count} / ${s.capacity} Students</span><span>${s.available_seats} Seats Available</span></div>
+      <div class="staff-section-bar"><i style="width:${pct}%"></i></div>
+      ${s.student_count?`<div class="staff-section-meta"><span>${s.active_today} Active Today · ${s.inactive_today} No Activity</span><span>Avg Accuracy: ${diffFmt(s.average_accuracy)}%</span></div>`:'<div class="staff-section-meta">No students assigned yet.</div>'}
+    </div>`;
+  }).join('');
+  root.querySelectorAll('[data-section]').forEach(el=>el.onclick=()=>{
+    staffFilters.section=el.dataset.section;$('staffSectionFilter').value=staffFilters.section;
+    staffView='students';renderStaffView();
+  });
+}
+
+async function renderStaffSectionsView(root,gen){
+  root.innerHTML='<div class="staff-empty">Loading…</div>';
+  try{
+    const sec=await spost('staffSections',{period:staffFilters.period});
+    if(gen!==staffRenderGen)return;
+    staffSectionsCache=sec.sections;
+    root.innerHTML=`<div class="staff-panel"><h3>Sections</h3><div class="staff-section-grid" id="staffSectionsGrid"></div></div>`;
+    renderStaffSectionCards($('staffSectionsGrid'),sec.sections);
+  }catch(e){if(gen===staffRenderGen)root.innerHTML=`<div class="staff-empty">${esc(e.message)}</div>`}
+}
+
+async function renderStaffStudentsView(root,gen){
+  root.innerHTML='<div class="staff-empty">Loading…</div>';
+  try{
+    const r=await spost('staffStudents',{section_id:staffFilters.section,search:staffFilters.search,page:1,page_size:100});
+    if(gen!==staffRenderGen)return;
+    if(!r.students.length){root.innerHTML='<div class="staff-empty">No students have been assigned yet.</div>';return}
+    root.innerHTML=`<div class="staff-table-wrap"><table class="staff-table"><thead><tr>
+      <th>Student</th><th>Roll Number</th><th>Section</th><th>Last Active</th><th>Today\'s Activity</th>
+      <th>Questions Today</th><th>Accuracy</th><th>XP</th><th>Stage / Chapter</th><th>Status</th>
+    </tr></thead><tbody>${r.students.map(s=>`<tr class="staff-row-clickable" data-student="${esc(s.student_id)}">
+      <td>${esc(s.name)}</td><td>${esc(s.roll_no)}</td><td>${esc(s.section_name)}</td>
+      <td>${staffFmtTime(s.last_active)}</td>
+      <td>${s.questions_attempted_today} attempted, ${s.tests_attempted_today} test(s)</td>
+      <td>${s.questions_attempted_today}/${s.questions_correct_today} correct</td>
+      <td>${diffFmt(s.accuracy_percent)}%</td><td>${s.total_xp}</td>
+      <td>${esc(s.current_stage||'—')} / ${esc(s.current_chapter||'—')}</td>
+      <td><span class="staff-badge ${statusBadgeClass(s.status_today)}">${esc(s.status_today)}</span></td>
+    </tr>`).join('')}</tbody></table></div>
+    <p class="meta" style="margin-top:10px">${r.total} student${r.total===1?'':'s'}${staffFilters.search?` matching "${esc(staffFilters.search)}"`:''}${staffFilters.section?` in this section`:''}.</p>`;
+    root.querySelectorAll('[data-student]').forEach(el=>el.onclick=()=>{staffDetailId=el.dataset.student;renderStaffView()});
+  }catch(e){if(gen===staffRenderGen)root.innerHTML=`<div class="staff-empty">${esc(e.message)}</div>`}
+}
+
+async function renderStaffSubmissionsView(root,gen){
+  root.innerHTML='<div class="staff-empty">Loading…</div>';
+  try{
+    const r=await spost('staffRecentSubmissions',{section_id:staffFilters.section});
+    if(gen!==staffRenderGen)return;
+    if(!r.submissions.length){root.innerHTML='<div class="staff-empty">No submissions recorded yet.</div>';return}
+    root.innerHTML=`<div class="staff-table-wrap"><table class="staff-table"><thead><tr>
+      <th>Student</th><th>Roll Number</th><th>Section</th><th>Question</th><th>Type</th><th>Submitted At</th><th>Result</th><th>Score</th>
+    </tr></thead><tbody>${r.submissions.map(s=>`<tr>
+      <td>${esc(s.name)}</td><td>${esc(s.roll_no)}</td><td>${esc(s.section_name)}</td>
+      <td>${esc(s.question_prompt||s.question_id)}</td><td>${esc(s.question_type||'—')}</td>
+      <td>${staffFmtTime(s.submitted_at)}</td>
+      <td><span class="staff-badge ${s.result==='Correct'?'staff-active':'staff-none'}">${esc(s.result)}</span></td>
+      <td>${s.score}</td>
+    </tr>`).join('')}</tbody></table></div>`;
+  }catch(e){if(gen===staffRenderGen)root.innerHTML=`<div class="staff-empty">${esc(e.message)}</div>`}
+}
+
+async function renderStaffDetailView(root,gen){
+  root.innerHTML='<div class="staff-empty">Loading…</div>';
+  try{
+    const d=await spost('staffStudentDetail',{student_id:staffDetailId});
+    if(gen!==staffRenderGen)return;
+    const st=d.student,p=d.progress;
+    const timelineHtml=d.today.timeline.length
+      ?`<ul class="staff-timeline">${d.today.timeline.map(t=>`<li><time>${new Date(t.at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</time>${esc(t.label)}</li>`).join('')}</ul>`
+      :`<div class="staff-empty">No activity recorded today.</div>`;
+    const recentHtml=[...d.recent_activity.test_runs.map(t=>`Chapter test — ${esc(t.chapter_id)} (${t.status}) — ${staffFmtTime(t.started_at)}`),
+                       ...d.recent_activity.learn_progress.slice(0,5).map(l=>`Learn — ${esc(l.chapter_id)}${l.completed?' completed':''} — ${staffFmtTime(l.updated_at)}`)]
+      .sort().reverse().slice(0,10).map(x=>`<li>${x}</li>`).join('')||'<li class="meta">No recent activity.</li>';
+    const practiceHtml=d.practice.length?d.practice.map(p2=>`<li>${esc(p2.practice_id)} — ${esc(p2.status)}</li>`).join(''):'<li class="meta">No practice attempts yet.</li>';
+    const expHtml=d.experiments.length?d.experiments.map(p2=>`<li>${esc(p2.practice_id)} — ${esc(p2.status)}</li>`).join(''):'<li class="meta">No experiment activity yet.</li>';
+
+    root.innerHTML=`<button class="staff-detail-back" type="button" id="staffBackBtn">← Back</button>
+    <div class="staff-detail-head"><div><h2 style="margin:0">${esc(st.name)}</h2><p class="meta" style="margin:4px 0 0">${esc(st.roll_no)} · ${esc(st.email)} · ${esc(st.section_name)}</p></div>
+      <div><label class="meta">Section: <select id="staffDetailSectionSel"><option value="">Unassigned</option>${staffSectionsCache.map(s=>`<option value="${esc(s.section_id)}" ${s.section_id===st.section_id?'selected':''}>${esc(s.section_name)}</option>`).join('')}</select></label></div>
+    </div>
+    <div class="staff-detail-grid">
+      <div class="staff-panel"><h3>Learning Progress</h3>
+        <p>Stage: ${esc(p.current_stage||'—')} · Chapter: ${esc(p.current_chapter||'—')}</p>
+        <p>Stages completed: ${p.stages_completed} · Tests completed: ${p.tests_completed}</p>
+        <p>XP: ${p.total_xp} · Accuracy: ${diffFmt(p.accuracy_percent)}% · Hearts: ${p.hearts} · Streak: ${p.streak}</p>
+        <p>Questions attempted: ${p.questions_attempted} (${p.correct_answers} correct)</p>
+      </div>
+      <div class="staff-panel"><h3>Coding / VS Code</h3>
+        <p>${d.coding.vscode_connected?`Connected — ${esc(d.coding.device_name||'device')}`:'Not connected to VS Code'}</p>
+        <p class="meta">Last seen: ${staffFmtTime(d.coding.last_seen)}</p>
+      </div>
+    </div>
+    <div class="staff-panel"><h3>Today's Activity</h3>${timelineHtml}</div>
+    <div class="staff-panel"><h3>Recent Activity</h3><ul>${recentHtml}</ul></div>
+    <div class="staff-detail-grid">
+      <div class="staff-panel"><h3>Practice</h3><ul>${practiceHtml}</ul></div>
+      <div class="staff-panel"><h3>Experiments</h3><ul>${expHtml}</ul></div>
+    </div>`;
+    $('staffBackBtn').onclick=()=>{staffDetailId=null;renderStaffView()};
+    $('staffDetailSectionSel').onchange=async(e)=>{
+      const newSection=e.target.value;
+      if(!newSection){e.target.value=st.section_id||'';toast('Removing a student from a section is not supported yet — assign them to a different section instead.','error');return}
+      try{await spost('staffAssignSection',{student_id:st.student_id,section_id:newSection});toast('Section updated.');const sec=await spost('staffSections');staffSectionsCache=sec.sections;renderStaffView()}
+      catch(x){toast(x.message,'error');e.target.value=st.section_id||''}
+    };
+  }catch(e){if(gen===staffRenderGen)root.innerHTML=`<button class="staff-detail-back" type="button" onclick="staffDetailId=null;renderStaffView()">← Back</button><div class="staff-empty">${esc(e.message)}</div>`}
+}
+
+staffCopyLogo();
+$('staffPassToggle').onclick=()=>{const inp=$('staffPassword');const show=inp.type==='password';inp.type=show?'text':'password';$('staffPassToggle').textContent=show?'Hide':'Show'};
+$('staffLoginForm').onsubmit=async(e)=>{
+  e.preventDefault();$('staffLoginError').textContent='';$('staffLoginBtn').disabled=true;
+  try{
+    const r=await post('staffLogin',{email:$('staffEmail').value.trim(),password:$('staffPassword').value});
+    staffSession={token:r.staff_session_token,staff:r.staff};
+    localStorage.setItem('clickStaffSession',JSON.stringify(staffSession));
+    $('staffPassword').value='';
+    await staffBoot();
+  }catch(x){$('staffLoginError').textContent=x.message}
+  finally{$('staffLoginBtn').disabled=false}
+};
+$('staffLogoutBtn').onclick=async()=>{try{await spost('staffLogout')}catch(e){}staffLogoutLocal()};
+document.querySelectorAll('#staffNav [data-staff-view]').forEach(btn=>{
+  btn.onclick=()=>{staffView=btn.dataset.staffView;staffDetailId=null;renderStaffView()};
+});
+$('staffSectionFilter').onchange=()=>{staffFilters.section=$('staffSectionFilter').value;staffDetailId=null;renderStaffView()};
+$('staffPeriodFilter').onchange=()=>{staffFilters.period=$('staffPeriodFilter').value;renderStaffView()};
+let staffSearchDebounce=null;
+$('staffSearch').oninput=()=>{clearTimeout(staffSearchDebounce);staffSearchDebounce=setTimeout(()=>{staffFilters.search=$('staffSearch').value.trim();renderStaffView()},250)};
+
 (async function init(){
+  if(isStaffMode()){
+    $('authGate').classList.add('hidden');
+    if(staffSession){try{await staffBoot();return}catch(e){staffLogoutLocal()}}
+    staffShowLogin();
+    return;
+  }
   if(session?.demo&&!isDemo()){localStorage.removeItem('clickSession');session=null}
   if(session){
     try{

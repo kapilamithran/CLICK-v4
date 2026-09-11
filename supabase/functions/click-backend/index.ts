@@ -1081,6 +1081,454 @@ async function completePractice(b: any) {
   };
 }
 
+// ---------------- staff monitoring ----------------
+//
+// Staff identity is a fully separate table family from `users` (see the
+// staff_monitoring migration). Every staff-only action below re-validates
+// the staff session itself -- there is no shared "role" flag on the student
+// session to trust. This project does not use Supabase Auth / Postgres RLS
+// as the real enforcement boundary (see the migration's header comment);
+// this file, running under the service-role key, IS the boundary.
+//
+// "Today" is defined in India Standard Time (this is a single-institution
+// deployment), not UTC and not the browser's local time, so a student's
+// late-evening IST activity is never split across two calendar days.
+
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+function istRangeUtc(daysAgo: number): { startUtc: string; endUtc: string } {
+  const now = new Date();
+  const ist = new Date(now.getTime() + IST_OFFSET_MS);
+  const istMidnightUtcMs = Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth(), ist.getUTCDate() - daysAgo);
+  const startUtc = new Date(istMidnightUtcMs - IST_OFFSET_MS);
+  const endUtc = new Date(startUtc.getTime() + 24 * 60 * 60 * 1000);
+  return { startUtc: startUtc.toISOString(), endUtc: endUtc.toISOString() };
+}
+
+// Supports the dashboard's date filter (today / yesterday / last 7 days /
+// custom). Today is the only period wired into the UI so far; the others
+// are implemented now so no backend change is needed to add them later.
+function resolveDateRangeUtc(period: string, customStart?: string, customEnd?: string): { startUtc: string; endUtc: string } {
+  const p = String(period || "today").toLowerCase();
+  if (p === "yesterday") return istRangeUtc(1);
+  if (p === "last7days") return { startUtc: istRangeUtc(6).startUtc, endUtc: istRangeUtc(0).endUtc };
+  if (p === "custom" && customStart && customEnd) {
+    const s = new Date(customStart), e = new Date(customEnd);
+    if (!isNaN(s.getTime()) && !isNaN(e.getTime())) return { startUtc: s.toISOString(), endUtc: e.toISOString() };
+  }
+  return istRangeUtc(0);
+}
+
+function safeStaff(s: any) {
+  if (!s) return null;
+  return { staff_id: s.staff_id, name: s.name, email: s.email, role: s.role || "STAFF", active: truthy(s.active) };
+}
+
+async function createStaffSession(staff: any, device: string) {
+  const row = {
+    session_id: newId("SS"),
+    session_token: crypto.randomUUID() + crypto.randomUUID(),
+    staff_id: staff.staff_id,
+    login_time: new Date().toISOString(),
+    last_seen: new Date().toISOString(),
+    device,
+    active: true,
+  };
+  const { error } = await supabase.from("staff_sessions").insert(row);
+  if (error) throw new Error(error.message);
+  return row;
+}
+
+async function requireStaffSession(token: string) {
+  required({ staff_session_token: token }, ["staff_session_token"]);
+  const { data: s } = await supabase.from("staff_sessions").select("*").eq("session_token", token).eq("active", true).maybeSingle();
+  if (!s) throw new Error("Staff session expired. Please log in again.");
+  const hours = 168; // same 7-day idle lifetime as student sessions
+  const last = new Date(s.last_seen || s.login_time).getTime();
+  if (isNaN(last) || Date.now() - last > hours * 3600000) {
+    await supabase.from("staff_sessions").update({ active: false }).eq("session_id", s.session_id);
+    throw new Error("Staff session expired. Please log in again.");
+  }
+  const { data: staff } = await supabase.from("staff_users").select("*").eq("staff_id", s.staff_id).maybeSingle();
+  if (!staff || !truthy(staff.active)) {
+    await supabase.from("staff_sessions").update({ active: false }).eq("session_id", s.session_id);
+    throw new Error("This staff account is no longer active.");
+  }
+  if (Date.now() - last > 15 * 60 * 1000) {
+    await supabase.from("staff_sessions").update({ last_seen: new Date().toISOString() }).eq("session_id", s.session_id);
+  }
+  return staff;
+}
+
+async function staffLogin(b: any) {
+  required(b, ["email", "password"]);
+  const email = String(b.email).trim().toLowerCase();
+  const { data: staff } = await supabase.from("staff_users").select("*").ilike("email", email).maybeSingle();
+  // Deliberately identical error for "no such account", "wrong password" and
+  // "account deactivated" -- never reveal which one it was.
+  if (!staff || !truthy(staff.active)) throw new Error("Incorrect email or password.");
+  const hash = await passwordHash(String(b.password), String(staff.password_salt));
+  if (hash !== String(staff.password_hash)) throw new Error("Incorrect email or password.");
+  await supabase.from("staff_users").update({ last_login_at: new Date().toISOString() }).eq("staff_id", staff.staff_id);
+  const session = await createStaffSession(staff, "web");
+  return { ok: true, staff: safeStaff(staff), staff_session_token: session.session_token };
+}
+
+async function staffSessionInfo(b: any) {
+  required(b, ["staff_session_token"]);
+  const staff = await requireStaffSession(b.staff_session_token);
+  return { ok: true, staff: safeStaff(staff) };
+}
+
+async function staffLogout(b: any) {
+  required(b, ["staff_session_token"]);
+  const staff = await requireStaffSession(b.staff_session_token);
+  const now = new Date().toISOString();
+  await supabase.from("staff_sessions").update({ active: false, logout_time: now, last_seen: now }).eq("session_token", b.staff_session_token);
+  await supabase.from("staff_users").update({ last_logout_at: now }).eq("staff_id", staff.staff_id);
+  return { ok: true };
+}
+
+// Creates or resets one staff account. Gated by the same ADMIN_RESET_KEY
+// environment secret already used by adminResetPassword / adminGetMaxIds --
+// never stored in the database, never shipped to the frontend. This is the
+// documented manual setup procedure for the first staff account (see the
+// final report / admin-tools for the exact one-off command).
+async function adminUpsertStaff(b: any) {
+  required(b, ["admin_key", "name", "email", "password"]);
+  const expectedKey = Deno.env.get("ADMIN_RESET_KEY");
+  if (!expectedKey || String(b.admin_key) !== expectedKey) throw new Error("Not authorized.");
+  if (String(b.password).length < 8) throw new Error("Password must be at least 8 characters.");
+
+  const email = String(b.email).trim().toLowerCase();
+  const salt = crypto.randomUUID().replace(/-/g, "");
+  const hash = await passwordHash(String(b.password), salt);
+  const { data: existing } = await supabase.from("staff_users").select("staff_id").ilike("email", email).maybeSingle();
+  if (existing) {
+    const { error } = await supabase.from("staff_users")
+      .update({ name: String(b.name).trim(), password_hash: hash, password_salt: salt, active: true })
+      .eq("staff_id", existing.staff_id);
+    if (error) throw new Error(error.message);
+    await supabase.from("staff_sessions").update({ active: false }).eq("staff_id", existing.staff_id).eq("active", true);
+    return { ok: true, staff_id: existing.staff_id, created: false };
+  }
+  const staff_id = newId("STAFF");
+  const { error } = await supabase.from("staff_users").insert({
+    staff_id, name: String(b.name).trim(), email, password_hash: hash, password_salt: salt, role: "STAFF", active: true,
+  });
+  if (error) throw new Error(error.message);
+  return { ok: true, staff_id, created: true };
+}
+
+// One pass over every timestamped activity table for a date range, grouped
+// by student. Reused by the dashboard summary, section cards and student
+// list so a dashboard load is a handful of date-bounded queries -- never
+// one query per student (this is the "avoid N+1 queries at 450 students"
+// requirement).
+interface StudentDailyFacts {
+  active: boolean;
+  questionsAttempted: number;
+  questionsCorrect: number;
+  xpEarned: number;
+  testsAttempted: number;
+  testsCompleted: number;
+  learnActive: boolean;
+  practiceActive: boolean;
+  loginActive: boolean;
+}
+async function staffFactsForRange(startUtc: string, endUtc: string): Promise<Map<string, StudentDailyFacts>> {
+  const [attemptsR, testRunsR, learnR, practiceR, sessionsR] = await Promise.all([
+    supabase.from("attempts").select("user_id,correct,xp_earned").gte("attempted_at", startUtc).lt("attempted_at", endUtc),
+    supabase.from("test_runs").select("user_id,status").gte("started_at", startUtc).lt("started_at", endUtc),
+    supabase.from("learn_progress").select("user_id").gte("updated_at", startUtc).lt("updated_at", endUtc),
+    supabase.from("practice_progress").select("user_id").gte("updated_at", startUtc).lt("updated_at", endUtc),
+    supabase.from("sessions").select("user_id").gte("last_seen", startUtc).lt("last_seen", endUtc),
+  ]);
+  const perUser = new Map<string, StudentDailyFacts>();
+  const ensure = (uid: string) => {
+    if (!perUser.has(uid)) {
+      perUser.set(uid, { active: false, questionsAttempted: 0, questionsCorrect: 0, xpEarned: 0, testsAttempted: 0, testsCompleted: 0, learnActive: false, practiceActive: false, loginActive: false });
+    }
+    return perUser.get(uid)!;
+  };
+  for (const a of attemptsR.data || []) { const u = ensure(normalizeId(a.user_id)); u.active = true; u.questionsAttempted++; if (truthy(a.correct)) u.questionsCorrect++; u.xpEarned += Number(a.xp_earned || 0); }
+  for (const t of testRunsR.data || []) { const u = ensure(normalizeId(t.user_id)); u.active = true; u.testsAttempted++; if (String(t.status).toLowerCase() === "completed") u.testsCompleted++; }
+  for (const l of learnR.data || []) { const u = ensure(normalizeId(l.user_id)); u.active = true; u.learnActive = true; }
+  for (const p of practiceR.data || []) { const u = ensure(normalizeId(p.user_id)); u.active = true; u.practiceActive = true; }
+  for (const s of sessionsR.data || []) { const u = ensure(normalizeId(s.user_id)); u.active = true; u.loginActive = true; }
+  return perUser;
+}
+
+// Status rules (kept deliberately simple and named here so they are easy to
+// find and adjust):
+//   No Activity Today   -- no qualifying record in any activity table today.
+//   Started Today       -- at least one qualifying record today, but no
+//                           completed chapter test today.
+//   Completed Today's Work -- at least one *completed* test_runs row today.
+function studentStatusToday(f: StudentDailyFacts | undefined): string {
+  if (!f || !f.active) return "No Activity Today";
+  if (f.testsCompleted > 0) return "Completed Today's Work";
+  return "Started Today";
+}
+
+async function activeStudentIds(): Promise<{ ids: string[]; byId: Map<string, any> }> {
+  const { data } = await supabase.from("users").select("user_id,name,roll_no,username,email,status,current_stage,current_chapter,total_xp,accuracy_percent,questions_attempted,correct_answers,last_login,tests_completed,stages_completed,hearts,streak,joined_at,department").eq("status", "active");
+  const rows = data || [];
+  return { ids: rows.map((u: any) => normalizeId(u.user_id)), byId: new Map(rows.map((u: any) => [normalizeId(u.user_id), u])) };
+}
+
+async function activeSectionAssignments(): Promise<Map<string, string>> {
+  const { data } = await supabase.from("student_section_assignments").select("student_id,section_id").eq("active", true);
+  return new Map((data || []).map((a: any) => [normalizeId(a.student_id), normalizeId(a.section_id)]));
+}
+
+function filterBySection(ids: string[], bySection: Map<string, string>, sectionId: string | null): string[] {
+  if (!sectionId) return ids;
+  if (sectionId === "UNASSIGNED") return ids.filter((id) => !bySection.has(id));
+  return ids.filter((id) => bySection.get(id) === sectionId);
+}
+
+async function staffDashboardSummary(b: any) {
+  required(b, ["staff_session_token"]);
+  await requireStaffSession(b.staff_session_token);
+  const sectionId = b.section_id ? normalizeId(String(b.section_id)) : null;
+  const { startUtc, endUtc } = resolveDateRangeUtc(b.period, b.date_start, b.date_end);
+
+  const [{ ids, byId }, bySection, facts] = await Promise.all([activeStudentIds(), activeSectionAssignments(), staffFactsForRange(startUtc, endUtc)]);
+  // "All Sections" (no filter) means the monitored cohort as a whole -- every
+  // student who has actually been assigned to one of the 7 sections -- not
+  // every row in `users` (which also holds pre-existing dev/QA/test accounts
+  // that were never part of the 450-student rollout). "Unassigned" is its
+  // own explicit filter choice for staff who want to see who still needs
+  // sectioning; it is deliberately not folded into the "All Sections" total.
+  const studentIds = sectionId ? filterBySection(ids, bySection, sectionId) : ids.filter((id) => bySection.has(id));
+
+  const activeToday = studentIds.filter((id) => facts.get(id)?.active).length;
+  const completedToday = studentIds.filter((id) => (facts.get(id)?.testsCompleted || 0) > 0).length;
+  const testsAttemptedToday = studentIds.reduce((n, id) => n + (facts.get(id)?.testsAttempted || 0), 0);
+  const submissionsToday = studentIds.reduce((n, id) => n + (facts.get(id)?.questionsAttempted || 0), 0);
+  const accuracies = studentIds.map((id) => Number(byId.get(id)?.accuracy_percent || 0));
+  const avgAccuracy = accuracies.length ? accuracies.reduce((a, b2) => a + b2, 0) / accuracies.length : 0;
+
+  return {
+    ok: true, total_students: studentIds.length, active_today: activeToday, inactive_today: studentIds.length - activeToday,
+    completed_today: completedToday, tests_attempted_today: testsAttemptedToday, submissions_today: submissionsToday,
+    average_accuracy: Math.round(avgAccuracy * 10) / 10,
+  };
+}
+
+async function staffSections(b: any) {
+  required(b, ["staff_session_token"]);
+  await requireStaffSession(b.staff_session_token);
+  const { startUtc, endUtc } = resolveDateRangeUtc(b.period, b.date_start, b.date_end);
+
+  const [sectionsR, { ids, byId }, bySection, facts] = await Promise.all([
+    supabase.from("sections").select("*").eq("active", true).order("order"),
+    activeStudentIds(), activeSectionAssignments(), staffFactsForRange(startUtc, endUtc),
+  ]);
+
+  const studentsBySection = new Map<string, string[]>();
+  for (const id of ids) {
+    const sid = bySection.get(id);
+    if (!sid) continue;
+    if (!studentsBySection.has(sid)) studentsBySection.set(sid, []);
+    studentsBySection.get(sid)!.push(id);
+  }
+
+  const sections = (sectionsR.data || []).map((s: any) => {
+    const sid = normalizeId(s.section_id);
+    const studentIds = studentsBySection.get(sid) || [];
+    const activeToday = studentIds.filter((id) => facts.get(id)?.active).length;
+    const accuracies = studentIds.map((id) => Number(byId.get(id)?.accuracy_percent || 0));
+    const avgAccuracy = accuracies.length ? accuracies.reduce((a, b2) => a + b2, 0) / accuracies.length : 0;
+    const testsToday = studentIds.reduce((n, id) => n + (facts.get(id)?.testsAttempted || 0), 0);
+    return {
+      section_id: s.section_id, section_code: s.section_code, section_name: s.section_name,
+      capacity: Number(s.capacity || 0), student_count: studentIds.length,
+      available_seats: Math.max(0, Number(s.capacity || 0) - studentIds.length),
+      active_today: activeToday, inactive_today: studentIds.length - activeToday,
+      average_accuracy: Math.round(avgAccuracy * 10) / 10, tests_attempted_today: testsToday,
+    };
+  });
+  const unassignedCount = ids.filter((id) => !bySection.has(id)).length;
+  return { ok: true, sections, unassigned_count: unassignedCount };
+}
+
+async function staffStudents(b: any) {
+  required(b, ["staff_session_token"]);
+  await requireStaffSession(b.staff_session_token);
+  const sectionId = b.section_id ? normalizeId(String(b.section_id)) : null;
+  const search = String(b.search || "").trim().toLowerCase();
+  const page = Math.max(1, Number(b.page || 1));
+  const pageSize = Math.min(100, Math.max(1, Number(b.page_size || 50)));
+
+  const [{ ids, byId }, bySection, sectionsR, facts] = await Promise.all([
+    activeStudentIds(), activeSectionAssignments(), supabase.from("sections").select("section_id,section_code,section_name"), staffFactsForRange(istRangeUtc(0).startUtc, istRangeUtc(0).endUtc),
+  ]);
+  const sectionById = new Map((sectionsR.data || []).map((s: any) => [normalizeId(s.section_id), s]));
+
+  let studentIds = filterBySection(ids, bySection, sectionId);
+  let rows = studentIds.map((uid) => {
+    const u = byId.get(uid);
+    const sid = bySection.get(uid) || null;
+    const sec = sid ? sectionById.get(sid) : null;
+    const f = facts.get(uid);
+    return {
+      student_id: uid, name: u.name, roll_no: u.roll_no, username: u.username || "", email: u.email,
+      section_id: sid, section_code: sec?.section_code || "", section_name: sec?.section_name || "Unassigned",
+      last_active: u.last_login, current_stage: u.current_stage, current_chapter: u.current_chapter,
+      total_xp: Number(u.total_xp || 0), accuracy_percent: Number(u.accuracy_percent || 0),
+      questions_attempted_total: Number(u.questions_attempted || 0), correct_answers_total: Number(u.correct_answers || 0),
+      questions_attempted_today: f?.questionsAttempted || 0, questions_correct_today: f?.questionsCorrect || 0,
+      tests_attempted_today: f?.testsAttempted || 0, tests_completed_today: f?.testsCompleted || 0,
+      xp_earned_today: f?.xpEarned || 0, status_today: studentStatusToday(f),
+    };
+  });
+
+  if (search) {
+    rows = rows.filter((r) =>
+      String(r.name || "").toLowerCase().includes(search) ||
+      String(r.roll_no || "").toLowerCase().includes(search) ||
+      String(r.username || "").toLowerCase().includes(search) ||
+      String(r.email || "").toLowerCase().includes(search)
+    );
+  }
+  rows.sort((a, b2) => String(a.name || "").localeCompare(String(b2.name || "")));
+  const total = rows.length;
+  const start = (page - 1) * pageSize;
+  return { ok: true, students: rows.slice(start, start + pageSize), total, page, page_size: pageSize };
+}
+
+async function staffStudentDetail(b: any) {
+  required(b, ["staff_session_token", "student_id"]);
+  await requireStaffSession(b.staff_session_token);
+  const uid = normalizeId(b.student_id);
+  const { data: user } = await supabase.from("users").select("*").eq("user_id", uid).maybeSingle();
+  if (!user) throw new Error("Student not found.");
+
+  const { data: assignment } = await supabase.from("student_section_assignments").select("section_id").eq("student_id", uid).eq("active", true).maybeSingle();
+  const section = assignment ? (await supabase.from("sections").select("*").eq("section_id", assignment.section_id).maybeSingle()).data : null;
+
+  const { startUtc, endUtc } = istRangeUtc(0);
+  const [attemptsToday, testsToday, learnToday, practiceToday, recentAttempts, recentTests, recentLearn, practiceRows, pairing] = await Promise.all([
+    supabase.from("attempts").select("*").eq("user_id", uid).gte("attempted_at", startUtc).lt("attempted_at", endUtc).order("attempted_at"),
+    supabase.from("test_runs").select("*").eq("user_id", uid).gte("started_at", startUtc).lt("started_at", endUtc).order("started_at"),
+    supabase.from("learn_progress").select("*").eq("user_id", uid).gte("updated_at", startUtc).lt("updated_at", endUtc).order("updated_at"),
+    supabase.from("practice_progress").select("*").eq("user_id", uid).gte("updated_at", startUtc).lt("updated_at", endUtc).order("updated_at"),
+    supabase.from("attempts").select("*").eq("user_id", uid).order("attempted_at", { ascending: false }).limit(20),
+    supabase.from("test_runs").select("*").eq("user_id", uid).order("started_at", { ascending: false }).limit(10),
+    supabase.from("learn_progress").select("*").eq("user_id", uid).order("updated_at", { ascending: false }).limit(10),
+    supabase.from("practice_progress").select("*").eq("user_id", uid),
+    supabase.from("practice_pairings").select("status,device_name,connected_at,last_seen").eq("user_id", uid).order("last_seen", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+
+  // Chronological "today" timeline built only from real timestamped rows --
+  // each entry cites the exact source table it came from, nothing invented.
+  const timeline: any[] = [];
+  for (const l of learnToday.data || []) timeline.push({ at: l.updated_at, type: "LEARN", label: `Chapter ${l.chapter_id}${truthy(l.completed) ? " completed" : " — progress saved"}`, source: "learn_progress" });
+  for (const t of testsToday.data || []) {
+    timeline.push({ at: t.started_at, type: "TEST_START", label: `Started chapter test — ${t.chapter_id}`, source: "test_runs" });
+    if (t.finished_at) timeline.push({ at: t.finished_at, type: "TEST_FINISH", label: `Finished chapter test — ${t.chapter_id} (${t.correct_count}/${t.question_count} correct)`, source: "test_runs" });
+  }
+  for (const a of attemptsToday.data || []) timeline.push({ at: a.attempted_at, type: "QUESTION_ATTEMPT", label: `Question ${a.question_id}: ${truthy(a.correct) ? "correct" : "incorrect"}`, source: "attempts" });
+  for (const p of practiceToday.data || []) timeline.push({ at: p.updated_at, type: "PRACTICE", label: `${/^E\d/.test(String(p.practice_id)) ? "Experiment" : "Practice"} ${p.practice_id}: ${p.status}`, source: "practice_progress" });
+  timeline.sort((a, b2) => new Date(a.at).getTime() - new Date(b2.at).getTime());
+
+  const practiceRowsAll = practiceRows.data || [];
+  return {
+    ok: true,
+    student: {
+      student_id: uid, name: user.name, username: user.username || "", roll_no: user.roll_no, email: user.email,
+      department: user.department, status: user.status, joined_at: user.joined_at,
+      section_id: section?.section_id || null, section_code: section?.section_code || null, section_name: section?.section_name || "Unassigned",
+    },
+    progress: {
+      current_stage: user.current_stage, current_chapter: user.current_chapter, stages_completed: Number(user.stages_completed || 0),
+      total_xp: Number(user.total_xp || 0), accuracy_percent: Number(user.accuracy_percent || 0), tests_completed: Number(user.tests_completed || 0),
+      questions_attempted: Number(user.questions_attempted || 0), correct_answers: Number(user.correct_answers || 0),
+      hearts: Number(user.hearts || 0), streak: Number(user.streak || 0),
+    },
+    today: { timeline },
+    recent_activity: { attempts: recentAttempts.data || [], test_runs: recentTests.data || [], learn_progress: recentLearn.data || [] },
+    practice: practiceRowsAll.filter((p: any) => /^S\d/.test(String(p.practice_id))),
+    experiments: practiceRowsAll.filter((p: any) => /^E\d/.test(String(p.practice_id))),
+    coding: { vscode_connected: pairing.data?.status === "connected", device_name: pairing.data?.device_name || null, last_seen: pairing.data?.last_seen || null },
+  };
+}
+
+// Any active staff account may assign/reassign a student's section -- there
+// is currently only one staff role (STAFF), so there is no basis yet to
+// restrict this to a subset of staff. See final report.
+async function staffAssignSection(b: any) {
+  required(b, ["staff_session_token", "student_id", "section_id"]);
+  const staff = await requireStaffSession(b.staff_session_token);
+  const uid = normalizeId(b.student_id);
+  const sectionId = normalizeId(String(b.section_id));
+
+  const { data: user } = await supabase.from("users").select("user_id").eq("user_id", uid).maybeSingle();
+  if (!user) throw new Error("Student not found.");
+  const { data: section } = await supabase.from("sections").select("*").eq("section_id", sectionId).eq("active", true).maybeSingle();
+  if (!section) throw new Error("Section not found.");
+
+  const { data: existingForStudent } = await supabase.from("student_section_assignments").select("*").eq("student_id", uid).eq("active", true).maybeSingle();
+  const alreadyInThisSection = !!existingForStudent && normalizeId(existingForStudent.section_id) === sectionId;
+  if (alreadyInThisSection) return { ok: true, unchanged: true, section_id: sectionId };
+
+  const { count } = await supabase.from("student_section_assignments").select("assignment_id", { count: "exact", head: true }).eq("section_id", sectionId).eq("active", true);
+  if (Number(count || 0) >= Number(section.capacity || 0)) {
+    throw new Error(`${section.section_name} is already at capacity (${section.capacity}/${section.capacity}).`);
+  }
+
+  if (existingForStudent) {
+    await supabase.from("student_section_assignments").update({ active: false }).eq("assignment_id", existingForStudent.assignment_id);
+  }
+  const { error } = await supabase.from("student_section_assignments").insert({
+    assignment_id: newId("ASG"), student_id: uid, section_id: sectionId, assigned_by: staff.staff_id, active: true,
+  });
+  if (error) throw new Error(error.message);
+  return { ok: true, unchanged: false, section_id: sectionId };
+}
+
+// Most recent question-answer submissions (from `attempts`, the only table
+// that records individual answer submissions), newest first, optionally
+// scoped to one section. Capped at 100 rows -- this is a recent-activity
+// feed, not a full export.
+async function staffRecentSubmissions(b: any) {
+  required(b, ["staff_session_token"]);
+  await requireStaffSession(b.staff_session_token);
+  const sectionId = b.section_id ? normalizeId(String(b.section_id)) : null;
+
+  const [{ byId }, bySection, sectionsR, attemptsR] = await Promise.all([
+    activeStudentIds(), activeSectionAssignments(), supabase.from("sections").select("section_id,section_code,section_name"),
+    supabase.from("attempts").select("attempt_id,user_id,question_id,correct,xp_earned,attempted_at").order("attempted_at", { ascending: false }).limit(200),
+  ]);
+  const sectionById = new Map((sectionsR.data || []).map((s: any) => [normalizeId(s.section_id), s]));
+  let rows = (attemptsR.data || []).map((a: any) => normalizeId(a.user_id));
+  const questionIds = [...new Set((attemptsR.data || []).map((a: any) => String(a.question_id)))];
+  const { data: qRows } = questionIds.length ? await supabase.from("questions").select("question_id,type,prompt").in("question_id", questionIds) : { data: [] };
+  const qById = new Map((qRows || []).map((q: any) => [String(q.question_id), q]));
+
+  let submissions = (attemptsR.data || [])
+    .map((a: any) => {
+      const uid = normalizeId(a.user_id);
+      const u = byId.get(uid);
+      if (!u) return null; // skip attempts from inactive/removed accounts
+      const sid = bySection.get(uid) || null;
+      const sec = sid ? sectionById.get(sid) : null;
+      const q = qById.get(String(a.question_id));
+      return {
+        student_id: uid, name: u.name, roll_no: u.roll_no,
+        section_id: sid, section_code: sec?.section_code || "", section_name: sec?.section_name || "Unassigned",
+        question_id: a.question_id, question_type: q?.type || "", question_prompt: (q?.prompt || "").slice(0, 80),
+        submitted_at: a.attempted_at, result: truthy(a.correct) ? "Correct" : "Incorrect", score: Number(a.xp_earned || 0),
+      };
+    })
+    .filter(Boolean) as any[];
+
+  if (sectionId) submissions = submissions.filter((s) => (sectionId === "UNASSIGNED" ? !s.section_id : s.section_id === sectionId));
+  return { ok: true, submissions: submissions.slice(0, 100) };
+}
+
 // ---------------- dispatch ----------------
 
 Deno.serve(async (req: Request) => {
@@ -1109,6 +1557,16 @@ Deno.serve(async (req: Request) => {
       case "claimPracticePairing": return json(await claimPracticePairing(b));
       case "practiceExtensionSync": return json(await practiceExtensionSync(b));
       case "completePractice": return json(await completePractice(b));
+      case "adminUpsertStaff": return json(await adminUpsertStaff(b));
+      case "staffLogin": return json(await staffLogin(b));
+      case "staffSession": return json(await staffSessionInfo(b));
+      case "staffLogout": return json(await staffLogout(b));
+      case "staffDashboardSummary": return json(await staffDashboardSummary(b));
+      case "staffSections": return json(await staffSections(b));
+      case "staffStudents": return json(await staffStudents(b));
+      case "staffStudentDetail": return json(await staffStudentDetail(b));
+      case "staffAssignSection": return json(await staffAssignSection(b));
+      case "staffRecentSubmissions": return json(await staffRecentSubmissions(b));
       default: throw new Error("Unknown action: " + b.action);
     }
   } catch (err) {
