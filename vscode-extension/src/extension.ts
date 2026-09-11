@@ -6,6 +6,7 @@ import { exec, execFile, ExecFileException } from "child_process";
 import { CheckSummary, MistakeRule, PracticeQuestion, PracticeTest, TestOutcome, TestResultLine } from "./types";
 import { PracticeTreeProvider } from "./practiceTreeProvider";
 import { QuestionViewProvider, QuestionViewMessage } from "./questionViewProvider";
+import { activateGuard, recoverFromCrashIfNeeded, restoreGuard } from "./assistanceGuard";
 
 const SECRET_DEVICE_TOKEN = "click.deviceToken";
 
@@ -16,6 +17,10 @@ let lastQuestions: PracticeQuestion[] = [];
 let workDir: string | null = null;
 let treeProvider: PracticeTreeProvider;
 let questionProvider: QuestionViewProvider;
+// Captured once in activate() purely so deactivate() - which VS Code calls
+// with no arguments - can still ask assistanceGuard to restore the
+// student's settings on a normal shutdown/disable.
+let extensionContext: vscode.ExtensionContext | null = null;
 
 function cfg<T>(key: string): T {
   return vscode.workspace.getConfiguration().get(key) as T;
@@ -109,6 +114,11 @@ async function openChallenge(context: vscode.ExtensionContext, q: PracticeQuesti
   if (!fs.existsSync(file)) {
     fs.writeFileSync(file, starterFileContents(q), "utf8");
   }
+
+  // Every CLICK coding question - Practice Bank, Experiments 0-16, Stage
+  // 0-5 - opens through this one function, so this is the single place
+  // that needs to turn anti-assistance mode on to cover all of them.
+  await activateGuard(context);
 
   const doc = await vscode.workspace.openTextDocument(file);
   await vscode.window.showTextDocument(doc, { preview: false });
@@ -593,9 +603,15 @@ function handleQuestionViewMessage(context: vscode.ExtensionContext, message: Qu
 }
 
 export function activate(context: vscode.ExtensionContext) {
+  extensionContext = context;
   output = vscode.window.createOutputChannel("CLICK Practice");
   statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
   context.subscriptions.push(output, statusBar);
+
+  // If VS Code was closed/crashed while a CLICK question had anti-assistance
+  // mode on, deactivate() never got to restore the student's settings.
+  // Fix that immediately on the next startup, before anything else runs.
+  recoverFromCrashIfNeeded(context);
 
   treeProvider = new PracticeTreeProvider();
   questionProvider = new QuestionViewProvider(context.extensionUri, (msg) => handleQuestionViewMessage(context, msg));
@@ -684,6 +700,7 @@ export function activate(context: vscode.ExtensionContext) {
       await vscode.commands.executeCommand("setContext", "click.paired", false);
       updateStatusBar(false, null);
       statusBar.show();
+      await restoreGuard(context);
       vscode.window.showInformationMessage("CLICK: disconnected from this device.");
     })
   );
@@ -700,4 +717,11 @@ export function activate(context: vscode.ExtensionContext) {
   });
 }
 
-export function deactivate() {}
+// VS Code awaits a returned thenable here (with a short timeout) before
+// finishing deactivation, which is the documented way to do best-effort
+// cleanup on a normal shutdown/disable. This cannot run at all if the VS
+// Code process is killed outright - recoverFromCrashIfNeeded() in
+// activate() is the safety net for that case.
+export function deactivate(): Thenable<void> | undefined {
+  return extensionContext ? restoreGuard(extensionContext) : undefined;
+}
