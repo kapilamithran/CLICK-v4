@@ -250,6 +250,9 @@ async function signup(b: any) {
   if (String(b.password).length < minLen) throw new Error(`Password must be at least ${minLen} characters.`);
 
   const email = String(b.email).trim().toLowerCase();
+  if (!email.endsWith(".aids@rajalakshmi.edu.in")) {
+    throw new Error("Signups are currently limited to AI&DS department students -- use your official .aids@rajalakshmi.edu.in email.");
+  }
   const roll = String(b.roll_no).trim();
 
   const { data: existingEmail } = await supabase.from("users").select("user_id").ilike("email", email).maybeSingle();
