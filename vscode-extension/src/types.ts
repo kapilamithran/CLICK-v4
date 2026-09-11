@@ -1,4 +1,5 @@
 export interface PracticeTest {
+  test_id?: string;
   name: string;
   input: string;
   expected_output: string;

@@ -477,45 +477,82 @@ async function checkCode(context: vscode.ExtensionContext) {
   output.appendLine("  ✓ Successful\n");
   output.appendLine("Tests");
 
+  // Visible tests are graded locally, exactly as before - their
+  // expected_output is not secret. Hidden tests are a separate phase below:
+  // the extension only knows what the program printed for each hidden
+  // input, never the correct answer, so it cannot judge pass/fail itself.
+  // That verdict comes back from completePractice, which holds the real
+  // expected_output and is the one place a hidden test is ever compared.
   const visible = q.visible_tests || [];
-  const allTests = [...visible, ...(q.hidden_tests || [])];
-  const { resultLines, passCount, firstFailure } = await runTestSet(exePath, allTests, visible.length);
+  const { resultLines: visibleLines, passCount: visiblePassCount, firstFailure: visibleFailure } = await runTestSet(exePath, visible, visible.length);
 
-  output.appendLine("");
-  output.appendLine(`Overall: ${passCount}/${allTests.length} passed`);
-
-  const summary: CheckSummary = {
-    practiceTitle: q.title,
-    compileOk: true,
-    results: resultLines,
-    passCount,
-    totalCount: allTests.length,
-    allPassed: passCount === allTests.length,
-  };
-  questionProvider.setResult(summary);
-
-  if (firstFailure) {
+  if (visibleFailure) {
+    output.appendLine("");
+    output.appendLine(`Overall: ${visiblePassCount}/${visible.length} passed`);
+    questionProvider.setResult({
+      practiceTitle: q.title, compileOk: true, results: visibleLines,
+      passCount: visiblePassCount, totalCount: visible.length, allPassed: false,
+    });
     const mistakeHit = matchMistake(q.mistake_rules, "source_regex", source);
     if (mistakeHit) {
       vscode.window.showWarningMessage(mistakeHit);
-    } else if (!firstFailure.hidden) {
-      vscode.window.showWarningMessage(
-        `"${firstFailure.test.name || "A visible test"}" failed. Expected "${firstFailure.test.expected_output}", got "${firstFailure.got}".`
-      );
     } else {
-      vscode.window.showWarningMessage(`${passCount}/${allTests.length} tests passed — a hidden test still fails.`);
+      vscode.window.showWarningMessage(
+        `"${visibleFailure.test.name || "A visible test"}" failed. Expected "${visibleFailure.test.expected_output}", got "${visibleFailure.got}".`
+      );
     }
     return;
   }
 
-  // all tests passed
+  const hidden = q.hidden_tests || [];
+  const hiddenOutputs: { test_id: string; output: string; crashed: boolean; timed_out: boolean }[] = [];
+  for (const t of hidden) {
+    const { stdout, timedOut, crashed } = await runOne(exePath, t.input, t.timeout_ms);
+    const got = stdout.replace(/\r\n/g, "\n").trim();
+    hiddenOutputs.push({ test_id: t.test_id || "", output: got, crashed, timed_out: timedOut });
+  }
+
   try {
     const token = await getDeviceToken(context);
-    await api(context, "completePractice", {
+    const result = await api(context, "completePractice", {
       device_token: token,
       practice_id: q.practice_id,
-      result_summary: `${passCount}/${allTests.length} tests passed in VS Code.`,
+      visible_all_passed: true,
+      hidden_outputs: hiddenOutputs,
+    }) as unknown as { completed: boolean; hidden_passed?: number; hidden_total?: number };
+
+    const hiddenTotal = Number(result.hidden_total || 0);
+    const hiddenPassed = Number(result.hidden_passed || 0);
+    // Synthesize hidden result lines purely from the server's aggregate
+    // counts (never which specific test failed) so the existing hidden
+    // summary line in the Question Panel and output channel keeps working
+    // unchanged - it only ever reads pass-vs-total, never individual lines.
+    const hiddenLines: TestResultLine[] = [
+      ...Array.from({ length: hiddenPassed }, (): TestResultLine => ({ name: "", outcome: "pass", hidden: true })),
+      ...Array.from({ length: hiddenTotal - hiddenPassed }, (): TestResultLine => ({ name: "", outcome: "fail", hidden: true })),
+    ];
+    const resultLines = [...visibleLines, ...hiddenLines];
+    const totalCount = visible.length + hiddenTotal;
+    const passCount = visiblePassCount + hiddenPassed;
+
+    output.appendLine("");
+    if (hiddenTotal) output.appendLine(`  ${hiddenPassed === hiddenTotal ? "✓" : "✗"} Hidden tests: ${hiddenPassed}/${hiddenTotal} passed`);
+    output.appendLine(`Overall: ${passCount}/${totalCount} passed`);
+    questionProvider.setResult({
+      practiceTitle: q.title, compileOk: true, results: resultLines,
+      passCount, totalCount, allPassed: result.completed,
     });
+
+    if (!result.completed) {
+      const mistakeHit = matchMistake(q.mistake_rules, "source_regex", source);
+      if (mistakeHit) {
+        vscode.window.showWarningMessage(mistakeHit);
+      } else {
+        vscode.window.showWarningMessage(`${passCount}/${totalCount} tests passed — a hidden test still fails.`);
+      }
+      return;
+    }
+
     vscode.window.showInformationMessage(q.success_message || "All tests passed! Nice work.");
     if (q.technique_after_success) {
       output.appendLine(`\nTechnique: ${q.technique_after_success}`);

@@ -973,8 +973,13 @@ function parsePracticeJson(v: any) {
 function normalizePracticeQuestion(r: any, index: number, practiceTests: any[], practiceMistakes: any[], stages: any[]) {
   const pid = String(r.practice_id || r.id || `PRACTICE-${index + 1}`);
   const ownTests = (practiceTests || []).filter((t: any) => normalizeId(t.practice_id) === normalizeId(pid)).sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0));
-  const visible = ownTests.filter((t: any) => !truthy(t.hidden)).map((t: any) => ({ name: String(t.name || ""), input: String(t.input || ""), expected_output: String(t.expected_output || ""), timeout_ms: Number(t.timeout_ms || 5000) }));
-  const hidden = ownTests.filter((t: any) => truthy(t.hidden)).map((t: any) => ({ name: String(t.name || ""), input: String(t.input || ""), expected_output: String(t.expected_output || ""), timeout_ms: Number(t.timeout_ms || 5000) }));
+  const visible = ownTests.filter((t: any) => !truthy(t.hidden)).map((t: any) => ({ test_id: String(t.test_id || ""), name: String(t.name || ""), input: String(t.input || ""), expected_output: String(t.expected_output || ""), timeout_ms: Number(t.timeout_ms || 5000) }));
+  // hidden keeps its real expected_output here -- this is the shared, full
+  // representation used internally by completePractice() for authoritative
+  // server-side grading. It must NEVER be returned to a client as-is; every
+  // response that reaches the VS Code extension or the browser goes through
+  // redactHiddenTestsForClient() first (see practiceExtensionSync).
+  const hidden = ownTests.filter((t: any) => truthy(t.hidden)).map((t: any) => ({ test_id: String(t.test_id || ""), name: String(t.name || ""), input: String(t.input || ""), expected_output: String(t.expected_output || ""), timeout_ms: Number(t.timeout_ms || 5000) }));
   const ownMistakes = (practiceMistakes || []).filter((x: any) => normalizeId(x.practice_id) === normalizeId(pid)).sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0))
     .map((x: any) => ({ rule_type: String(x.rule_type || "source_regex"), pattern: String(x.pattern || ""), message: String(x.message || "") }));
   const stage = (stages || []).find((st: any) => normalizeId(st.stage_id) === normalizeId(r.stage_id));
@@ -1007,6 +1012,18 @@ function normalizePracticeQuestion(r: any, index: number, practiceTests: any[], 
   };
 }
 
+// Hidden tests carry their real expected_output internally (needed by
+// completePractice's own server-side verification) but must never leave
+// the server that way. A student's solution is only supposed to be
+// checkable by actually running correct code against the hidden input --
+// not by reading the expected string out of the extension's own memory or
+// the network response. Only test_id/input/timeout_ms cross the wire; the
+// extension runs the hidden test locally and reports back what it printed,
+// and this server is the only place that ever compares it to the answer.
+function redactHiddenTestsForClient(q: any) {
+  return { ...q, hidden_tests: (q.hidden_tests || []).map((t: any) => ({ test_id: t.test_id, name: "", input: t.input, expected_output: "", timeout_ms: t.timeout_ms })) };
+}
+
 async function practiceExtensionSync(b: any) {
   required(b, ["device_token"]);
   const device = await requirePracticeDevice(b.device_token);
@@ -1024,7 +1041,7 @@ async function practiceExtensionSync(b: any) {
     }).sort((a: any, b: any) => normalizeId(a.stage_id).localeCompare(normalizeId(b.stage_id)) || a.order - b.order);
 
   const visibleStages = new Set(all.filter((q: any) => q.available || q.completed).map((q: any) => normalizeId(q.stage_id)));
-  const questions = all.filter((q: any) => visibleStages.has(normalizeId(q.stage_id)));
+  const questions = all.filter((q: any) => visibleStages.has(normalizeId(q.stage_id))).map(redactHiddenTestsForClient);
 
   const { data: user } = await supabase.from("users").select("name").eq("user_id", uid).maybeSingle();
   return { ok: true, user: { name: user ? String(user.name || "Student") : "Student" }, questions, progress };
@@ -1046,6 +1063,36 @@ async function practiceWebSync(b: any) {
   return { ok: true, practice: practiceRows, practice_progress: practiceProgress, connection: await practiceConnectionState({ session_token: b.session_token }) };
 }
 
+// Authoritative, server-side comparison for a single hidden test. Mirrors
+// the extension's own normalization exactly (see runTestSet in
+// vscode-extension/src/extension.ts) so a genuinely correct solution can
+// never be marked wrong here just because the two sides trimmed
+// differently: CRLF -> LF, then trim() on both sides.
+function normalizeProgramOutput(s: string): string {
+  return String(s ?? "").replace(/\r\n/g, "\n").trim();
+}
+
+// Verifies every hidden practice_tests row for `q` against what the
+// extension says the student's compiled program actually printed for that
+// test's input. `q.hidden_tests` here is the full, un-redacted list (real
+// expected_output) built by normalizePracticeQuestion -- this function is
+// the only place that ever reads that value. `submitted` is the client's
+// { test_id, output, crashed, timed_out } array; the client never sees the
+// verdict for an individual test, only the aggregate pass count returned
+// to the caller of completePractice.
+function verifyHiddenTests(hiddenTests: any[], submitted: any[]): { passed: number; total: number; allPassed: boolean } {
+  const total = hiddenTests.length;
+  if (total === 0) return { passed: 0, total: 0, allPassed: true };
+  const byId = new Map((Array.isArray(submitted) ? submitted : []).map((r: any) => [String(r?.test_id || ""), r]));
+  let passed = 0;
+  for (const t of hiddenTests) {
+    const r = byId.get(String(t.test_id || ""));
+    if (!r || r.crashed || r.timed_out) continue;
+    if (normalizeProgramOutput(r.output) === normalizeProgramOutput(t.expected_output)) passed++;
+  }
+  return { passed, total, allPassed: passed === total };
+}
+
 async function completePractice(b: any) {
   required(b, ["device_token", "practice_id"]);
   const device = await requirePracticeDevice(b.device_token);
@@ -1060,10 +1107,27 @@ async function completePractice(b: any) {
   const gate = prerequisiteStatus("PRACTICE", q.stage_id, q.practice_id, content, facts);
   if (!gate.unlocked) throw new Error(gate.lock_reason || "This practice challenge is still locked.");
 
+  // The extension only calls this action after every VISIBLE test passed
+  // locally (visible expected_output is not secret, so that half of the
+  // verdict can stay client-computed). Hidden tests are re-checked here,
+  // authoritatively, against the server's own copy of expected_output --
+  // this is the one and only place a "completed" decision is made.
+  const visibleAllPassed = b.visible_all_passed !== false;
+  const hidden = verifyHiddenTests(q.hidden_tests || [], Array.isArray(b.hidden_outputs) ? b.hidden_outputs : []);
+
+  if (!visibleAllPassed || !hidden.allPassed) {
+    return {
+      ok: true, completed: false, practice_id: q.practice_id, stage_id: q.stage_id,
+      hidden_passed: hidden.passed, hidden_total: hidden.total,
+    };
+  }
+
   const stageQs = all.filter((x: any) => normalizeId(x.stage_id) === normalizeId(q.stage_id)).sort((a: any, b: any) => a.order - b.order);
   const now = new Date().toISOString();
   const { data: existing } = await supabase.from("practice_progress").select("*").eq("user_id", uid).eq("practice_id", pid).maybeSingle();
-  const summary = String(b.result_summary || "All configured tests passed.").slice(0, 1000);
+  const summary = hidden.total > 0
+    ? `All visible tests passed; ${hidden.passed}/${hidden.total} hidden tests passed.`
+    : "All configured tests passed.";
   if (existing) {
     await supabase.from("practice_progress").update({ stage_id: q.stage_id, status: "completed", attempt_count: Number(existing.attempt_count || 0) + 1, last_result: summary, completed_at: existing.completed_at || now, updated_at: now }).eq("user_id", uid).eq("practice_id", pid);
   } else {
@@ -1078,6 +1142,7 @@ async function completePractice(b: any) {
     ok: true, completed: true, practice_id: q.practice_id, stage_id: q.stage_id, progress_saved: true,
     progress_id: String(persisted.progress_id || ""), completed_at: String(persisted.completed_at || now),
     stage_practice_completed: stageComplete, success_message: q.success_message, technique_after_success: q.technique_after_success,
+    hidden_passed: hidden.passed, hidden_total: hidden.total,
   };
 }
 
