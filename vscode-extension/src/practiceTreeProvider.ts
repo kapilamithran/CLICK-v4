@@ -5,16 +5,14 @@ export class PracticeTreeItem extends vscode.TreeItem {
   constructor(public readonly question: PracticeQuestion, isCurrent: boolean) {
     super(question.title, vscode.TreeItemCollapsibleState.None);
 
-    const expLabel =
-      typeof question.experiment_number === "number"
-        ? `Experiment ${question.experiment_number}`
-        : typeof question.stage_no === "number"
+    const stageLabel =
+      typeof question.stage_no === "number"
         ? `Stage ${question.stage_no}`
         : question.stage_id
         ? `Stage ${question.stage_id}`
         : "";
     const statusLabel = question.completed ? "Completed" : !question.available ? "Locked" : isCurrent ? "In progress" : "Available";
-    this.description = expLabel ? `${expLabel} · ${statusLabel}` : statusLabel;
+    this.description = stageLabel ? `${stageLabel} · ${statusLabel}` : statusLabel;
 
     if (question.completed) {
       this.iconPath = new vscode.ThemeIcon("pass-filled", new vscode.ThemeColor("testing.iconPassed"));

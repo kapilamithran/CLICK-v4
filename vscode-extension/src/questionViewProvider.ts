@@ -203,12 +203,10 @@ ${body}
 
     const questionText = [q.objective, q.problem_statement].filter((v) => v && v.trim()).map((v) => `<p>${mdInline(v!)}</p>`).join("");
 
-    const isExperiment = typeof q.experiment_number === "number";
-    const eyebrow = isExperiment
-      ? `<div class="eyebrow">Experiment ${q.experiment_number}</div>`
-      : q.stage_title && q.stage_title.trim()
-      ? `<div class="eyebrow">Stage ${typeof q.stage_no === "number" ? q.stage_no : 0} · ${escapeHtml(q.stage_title)}</div>`
-      : "";
+    const eyebrow =
+      q.stage_title && q.stage_title.trim()
+        ? `<div class="eyebrow">Stage ${typeof q.stage_no === "number" ? q.stage_no : 0} · ${escapeHtml(q.stage_title)}</div>`
+        : "";
 
     const timeLimitSeconds = q.time_limit_seconds ?? Math.round((q.visible_tests?.[0]?.timeout_ms ?? q.hidden_tests?.[0]?.timeout_ms ?? 0) / 1000);
     const timeLimitBadge = timeLimitSeconds ? `<span class="badge">${timeLimitSeconds}s limit</span>` : "";

@@ -62,11 +62,12 @@ function safeFileName(s: string): string {
 }
 
 /**
- * Experiment questions get the richer Programming-C/Experiment-NN/<slug>/
- * folder structure the web question page describes, instead of the flat
- * click-practice/ naming used for regular Practice Bank challenges.
+ * Questions with a `workspace_folder` (the Stage 0-5 curriculum questions)
+ * get the richer Programming-C/<workspace_folder>/ folder structure the web
+ * question page describes, instead of the flat click-practice/ naming used
+ * for regular Practice Bank challenges that don't set one.
  */
-function ensureExperimentDir(workspaceFolder: string): string {
+function ensureWorkspaceFolderDir(workspaceFolder: string): string {
   const folders = vscode.workspace.workspaceFolders;
   const base = folders && folders.length ? folders[0].uri.fsPath : path.join(os.homedir(), "CLICK-Practice");
   const dir = path.join(base, "Programming-C", ...workspaceFolder.split("/"));
@@ -76,9 +77,9 @@ function ensureExperimentDir(workspaceFolder: string): string {
 
 function questionFilePath(q: PracticeQuestion): string {
   if (q.workspace_folder) {
-    // Every Experiment question's authored source file is named solution.c
+    // Every such question's authored source file is named solution.c
     // (there is no per-question filename field to read this from).
-    return path.join(ensureExperimentDir(q.workspace_folder), "solution.c");
+    return path.join(ensureWorkspaceFolderDir(q.workspace_folder), "solution.c");
   }
   const dir = ensureWorkDir();
   return path.join(dir, `${safeFileName(q.practice_id)}_${safeFileName(q.title)}.c`);
@@ -115,9 +116,9 @@ async function openChallenge(context: vscode.ExtensionContext, q: PracticeQuesti
     fs.writeFileSync(file, starterFileContents(q), "utf8");
   }
 
-  // Every CLICK coding question - Practice Bank, Experiments 0-16, Stage
-  // 0-5 - opens through this one function, so this is the single place
-  // that needs to turn anti-assistance mode on to cover all of them.
+  // Every CLICK coding question - Practice Bank and Stage 0-5 - opens
+  // through this one function, so this is the single place that needs to
+  // turn anti-assistance mode on to cover all of them.
   await activateGuard(context);
 
   const doc = await vscode.workspace.openTextDocument(file);
@@ -209,12 +210,12 @@ async function syncQuestions(
       return;
     }
 
-    // Experiment questions, and the new Stage 0-5 curriculum coding questions,
-    // are both deliberately excluded from the auto "next" pick - they're
-    // separately-browsed collections (no fixed sequence), opened by explicit
-    // selection (web deep-link or the tree view) only, never surprising a
-    // student who just wants their next (as-yet-unbuilt) sequential Stage practice.
-    const next = lastQuestions.find((q) => q.available && !q.completed && q.experiment_number == null && !q.stage_id);
+    // Stage 0-5 curriculum coding questions are deliberately excluded from
+    // the auto "next" pick - they're a separately-browsed collection (no
+    // fixed sequence), opened by explicit selection (web deep-link or the
+    // tree view) only, never surprising a student who just wants their next
+    // (as-yet-unbuilt) sequential Stage practice.
+    const next = lastQuestions.find((q) => q.available && !q.completed && !q.stage_id);
     if (next) {
       await openChallenge(context, next);
       if (opts.announce) vscode.window.showInformationMessage(`CLICK: opened "${next.title}"`);
@@ -234,11 +235,10 @@ async function syncQuestions(
 }
 
 /**
- * Opens one specific challenge by practice_id (e.g. an Experiment question
- * id like "E00-Q1"), regardless of queue position - triggered by the web's
- * "Open in VS Code" deep link (see the uriHandler in activate()). Reuses the
- * exact same sync/open machinery as everything else; this does not add a
- * second question-resolution path.
+ * Opens one specific challenge by practice_id, regardless of queue position -
+ * triggered by the web's "Open in VS Code" deep link (see the uriHandler in
+ * activate()). Reuses the exact same sync/open machinery as everything else;
+ * this does not add a second question-resolution path.
  */
 async function openSpecificChallenge(context: vscode.ExtensionContext, practiceId: string): Promise<void> {
   const token = await getDeviceToken(context);

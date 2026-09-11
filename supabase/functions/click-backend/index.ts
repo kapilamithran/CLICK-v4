@@ -998,15 +998,15 @@ function normalizePracticeQuestion(r: any, index: number, practiceTests: any[], 
     success_message: String(r.success_message || "All tests passed. Nice work!"),
     technique_after_success: String(r.technique_after_success || ""),
     order: Number(r.order || index + 1),
-    // Experiment 0-16 fields. Null/undefined for every pre-existing practice_bank
-    // row (these columns are additive-only), so this is purely additive for the
-    // web/extension too - existing questions simply carry these as null.
+    // Additive optional fields (originally added for the now-removed Experiments
+    // feature; difficulty/marks/time+memory limits/workspace_folder/input+output
+    // format are also used by Stage 0-5 practice questions, so they stay).
+    // Null/undefined for any practice_bank row that doesn't set them.
     difficulty: r.difficulty ? String(r.difficulty) : null,
     marks: r.marks === null || r.marks === undefined ? null : Number(r.marks),
     time_limit_seconds: r.time_limit_seconds === null || r.time_limit_seconds === undefined ? null : Number(r.time_limit_seconds),
     memory_limit_mb: r.memory_limit_mb === null || r.memory_limit_mb === undefined ? null : Number(r.memory_limit_mb),
     workspace_folder: r.workspace_folder ? String(r.workspace_folder) : null,
-    experiment_number: r.experiment_number === null || r.experiment_number === undefined ? null : Number(r.experiment_number),
     input_format: r.input_format ? String(r.input_format) : null,
     output_format: r.output_format ? String(r.output_format) : null,
   };
@@ -1496,7 +1496,7 @@ async function staffStudentDetail(b: any) {
     if (t.finished_at) timeline.push({ at: t.finished_at, type: "TEST_FINISH", label: `Finished chapter test — ${t.chapter_id} (${t.correct_count}/${t.question_count} correct)`, source: "test_runs" });
   }
   for (const a of attemptsToday.data || []) timeline.push({ at: a.attempted_at, type: "QUESTION_ATTEMPT", label: `Question ${a.question_id}: ${truthy(a.correct) ? "correct" : "incorrect"}`, source: "attempts" });
-  for (const p of practiceToday.data || []) timeline.push({ at: p.updated_at, type: "PRACTICE", label: `${/^E\d/.test(String(p.practice_id)) ? "Experiment" : "Practice"} ${p.practice_id}: ${p.status}`, source: "practice_progress" });
+  for (const p of practiceToday.data || []) timeline.push({ at: p.updated_at, type: "PRACTICE", label: `Practice ${p.practice_id}: ${p.status}`, source: "practice_progress" });
   timeline.sort((a, b2) => new Date(a.at).getTime() - new Date(b2.at).getTime());
 
   const practiceRowsAll = practiceRows.data || [];
@@ -1516,7 +1516,6 @@ async function staffStudentDetail(b: any) {
     today: { timeline },
     recent_activity: { attempts: recentAttempts.data || [], test_runs: recentTests.data || [], learn_progress: recentLearn.data || [] },
     practice: practiceRowsAll.filter((p: any) => /^S\d/.test(String(p.practice_id))),
-    experiments: practiceRowsAll.filter((p: any) => /^E\d/.test(String(p.practice_id))),
     coding: { vscode_connected: pairing.data?.status === "connected", device_name: pairing.data?.device_name || null, last_seen: pairing.data?.last_seen || null },
   };
 }
