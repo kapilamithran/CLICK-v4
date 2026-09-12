@@ -14,12 +14,15 @@ $AnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI
 $KeyFile = Join-Path $PSScriptRoot ".admin-key"
 
 if (Test-Path $KeyFile) {
-    $AdminKey = (Get-Content $KeyFile -Raw).Trim()
+    # Trim a UTF-8 BOM too -- Windows PowerShell's -Encoding utf8 writes one,
+    # and .Trim() alone doesn't strip it, which silently breaks the key compare.
+    $AdminKey = (Get-Content $KeyFile -Raw).Trim().TrimStart([char]0xFEFF)
 } else {
     $AdminKey = Read-Host "Enter the ADMIN_RESET_KEY (ask whoever set this up if you don't have it)"
     $save = Read-Host "Save it locally so you don't have to re-enter it each time? (y/n)"
     if ($save -eq "y") {
-        Set-Content -Path $KeyFile -Value $AdminKey -NoNewline -Encoding utf8
+        # ASCII, not utf8 -- the key is base64url (plain ASCII) and ASCII never adds a BOM.
+        Set-Content -Path $KeyFile -Value $AdminKey -NoNewline -Encoding ascii
         Write-Host "Saved to $KeyFile (this file is gitignored, never commit it)."
     }
 }
