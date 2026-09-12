@@ -2541,7 +2541,12 @@ function renderTest(){
 
   if(q.type==="ORDER"){
     $("testExercise").innerHTML=renderTestOrder(q);
-    document.querySelectorAll(".test-v11-token").forEach(btn=>btn.onclick=()=>selectTestToken(btn))
+    // Capture phase: a token's own text can contain a glossary/hint term
+    // (e.g. "int", "printf", "="), which testHintHTML wraps in its own
+    // clickable span. That span's click handler (bound in bindTestHints)
+    // calls stopPropagation, which would otherwise swallow the click before
+    // it ever reaches this handler in the bubble phase.
+    document.querySelectorAll(".test-v11-token").forEach(btn=>btn.addEventListener("click",()=>selectTestToken(btn),true))
   }else if(q.type==="CODE_FILL"){
     $("testExercise").innerHTML=renderTestCodeFill(q);
     document.querySelectorAll("#testExercise .test-code-fill-box").forEach(box=>{
