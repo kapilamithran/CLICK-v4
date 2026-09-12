@@ -85,6 +85,80 @@ function questionFilePath(q: PracticeQuestion): string {
   return path.join(dir, `${safeFileName(q.practice_id)}_${safeFileName(q.title)}.c`);
 }
 
+function samePath(a: string, b: string): boolean {
+  const ra = path.resolve(a);
+  const rb = path.resolve(b);
+  return process.platform === "win32" ? ra.toLowerCase() === rb.toLowerCase() : ra === rb;
+}
+
+/**
+ * Blocks paste ONLY inside the exact file of the CLICK question currently
+ * open (currentQuestion / questionFilePath(currentQuestion)) - never
+ * globally, never in any other .c file or project. Built entirely on VS
+ * Code's official, stable `vscode.languages.registerDocumentPasteEditProvider`
+ * API (finalized in VS Code - see microsoft/vscode PR #237443, merged
+ * 2025-01-08 - well after this extension's declared minimum engine version
+ * of 1.85). There is no supported way to intercept the built-in Ctrl+V
+ * keybinding or the Paste context-menu/Command-Palette entry directly
+ * (extensions cannot re-register or veto a command VS Code core already
+ * owns), but this provider hooks in at the document-paste-application layer
+ * itself, which is what ALL paste triggers (keyboard, Edit menu, right-click
+ * context menu) funnel through before content is inserted - so unlike a
+ * keybinding-only approach, it is not limited to just the Ctrl+V/Cmd+V
+ * vector. Deliberately NOT using a keybinding override, a global keyboard
+ * hook, or any proposed/unstable API.
+ *
+ * Registration is broad (`language: "c"`) because VS Code selectors are
+ * static and can't dynamically track "whichever question happens to be open
+ * right now" - so the actual identity check happens per-invocation inside
+ * the callback below, against the live currentQuestion. Pasting into any
+ * other .c file (a different CLICK question already completed, an unrelated
+ * project, etc.) always falls through untouched, because the callback
+ * returns undefined for it and VS Code performs its normal default paste.
+ *
+ * On a VS Code version older than the one that finalized this API,
+ * `registerDocumentPasteEditProvider` won't exist; this is feature-detected
+ * so the rest of the extension (pairing, Practice, Check Code, hidden
+ * grading, Question Panel, anti-assistance) is completely unaffected -
+ * engines.vscode is deliberately NOT bumped, so older installations keep
+ * working, just without this one extra guard.
+ */
+function registerPasteGuard(context: vscode.ExtensionContext): void {
+  const languagesApi = vscode.languages as unknown as {
+    registerDocumentPasteEditProvider?: (
+      selector: vscode.DocumentSelector,
+      provider: vscode.DocumentPasteEditProvider,
+      metadata: vscode.DocumentPasteProviderMetadata
+    ) => vscode.Disposable;
+  };
+  if (typeof languagesApi.registerDocumentPasteEditProvider !== "function") {
+    output.appendLine(
+      "CLICK: paste restriction not available - this VS Code version predates the documentPaste API. Every other CLICK feature is unaffected."
+    );
+    return;
+  }
+  const kind = vscode.DocumentDropOrPasteEditKind.Text.append("click", "blockedWhileAnswering");
+  const provider: vscode.DocumentPasteEditProvider = {
+    provideDocumentPasteEdits(document: vscode.TextDocument) {
+      if (!currentQuestion || document.uri.scheme !== "file") return undefined;
+      if (!samePath(document.uri.fsPath, questionFilePath(currentQuestion))) return undefined;
+      vscode.window.setStatusBarMessage(
+        "CLICK: paste is disabled while you're solving this question - type it out yourself. 💪",
+        4000
+      );
+      return [new vscode.DocumentPasteEdit("", "CLICK: paste blocked for this question", kind)];
+    },
+  };
+  context.subscriptions.push(
+    languagesApi.registerDocumentPasteEditProvider(
+      { language: "c", scheme: "file" },
+      provider,
+      { pasteMimeTypes: ["text/plain"], providedPasteEditKinds: [kind] }
+    )
+  );
+  output.appendLine("CLICK: paste restriction active for the currently open CLICK question's source file.");
+}
+
 /**
  * Clean starter code plus a one-line signpost — the problem statement, constraints,
  * input/output and examples live in the CLICK Practice sidebar, not in the source file.
@@ -618,6 +692,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(vscode.window.registerWebviewViewProvider(QuestionViewProvider.viewId, questionProvider));
   context.subscriptions.push(vscode.window.registerTreeDataProvider("click.practiceTree", treeProvider));
+  registerPasteGuard(context);
 
   context.subscriptions.push(
     vscode.window.registerUriHandler({
