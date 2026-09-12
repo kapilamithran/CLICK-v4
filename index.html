@@ -2146,6 +2146,18 @@ function testEscape(s){
   return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;")
     .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")
 }
+// A term/hint key only "occupies" a lexical word, not any substring of one -
+// so "int" must never light up inside "point", "print", "hint" or "integer".
+// A word-forming character (letter/digit/underscore) at either edge of the
+// key requires a non-word-forming (or absent) character on that side of the
+// match; an edge that is itself punctuation/symbol (e.g. the ")" in "main()",
+// or "%d", "==", "#include <stdio.h>") has no such requirement, since those
+// don't create the "substring inside a longer identifier" ambiguity at all.
+function isWordChar(ch){return ch!==undefined&&/[A-Za-z0-9_]/.test(ch)}
+function keyBoundaryOk(raw,i,k){
+  const before=raw[i-1],after=raw[i+k.length];
+  return (!isWordChar(k[0])||!isWordChar(before))&&(!isWordChar(k[k.length-1])||!isWordChar(after))
+}
 function testHintHTML(text,isCode=false,terms=[]){
   const codeSpans=[];
   const raw=String(text??"").replace(/`([^`\n]+)`/g,(_,c)=>`@@ICODE${codeSpans.push(c)-1}@@`);
@@ -2159,7 +2171,7 @@ function testHintHTML(text,isCode=false,terms=[]){
   while(i<raw.length){
     let found=null;
     for(const k of keys){
-      if(raw.startsWith(k,i)){found=k;break}
+      if(raw.startsWith(k,i)&&keyBoundaryOk(raw,i,k)){found=k;break}
     }
     if(found){
       const g=glossaryMap[found];
