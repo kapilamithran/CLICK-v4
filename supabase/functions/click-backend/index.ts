@@ -625,21 +625,44 @@ async function completeLearn(b: any) {
   }
 
   const { data: user } = await supabase.from("users").select("*").eq("user_id", uid).single();
-  const isRecoveryChapter = String(user.heart_recovery_chapter_id || "") === cid && Number(user.hearts || 0) < defaultHearts(settings);
+
+  // A heart loss is attributed to the chapter whose test produced it (each
+  // `attempts` row already carries chapter_id + hearts_before/hearts_after).
+  // "Outstanding" means lost since the last time THIS chapter's Learn was
+  // completed (or ever, on a first completion) -- so completing chapter B
+  // can only ever resolve losses caused by chapter B, never one caused by a
+  // different chapter, and re-completing the same chapter with no new test
+  // attempts in between finds nothing new to restore.
+  const sinceIso = existing?.last_completed_at || null;
+  let lossQuery = supabase.from("attempts").select("hearts_before,hearts_after").eq("user_id", uid).eq("chapter_id", cid);
+  if (sinceIso) lossQuery = lossQuery.gt("attempted_at", sinceIso);
+  const { data: chapterAttempts } = await lossQuery;
+  const outstandingLossCount = (chapterAttempts || []).filter((a: any) => Number(a.hearts_after) < Number(a.hearts_before)).length;
+
+  const maxHearts = defaultHearts(settings);
+  const heartsBefore = Number(user.hearts || 0);
+  const restoreCount = Math.max(0, Math.min(outstandingLossCount, maxHearts - heartsBefore));
+  const refilled = restoreCount > 0;
+  const heartsAfter = heartsBefore + restoreCount;
 
   const userPatch: any = { last_learn_stage: sid, last_learn_chapter: cid, current_stage: sid, current_chapter: cid };
-  if (isRecoveryChapter) {
-    userPatch.hearts = defaultHearts(settings);
-    userPatch.heart_recovery_stage_id = "";
-    userPatch.heart_recovery_chapter_id = "";
+  if (refilled) {
+    userPatch.hearts = heartsAfter;
+    // heart_recovery_chapter_id only ever names the single most-recent
+    // loss (used for the "no hearts left" message), so only clear it when
+    // it was pointing at the chapter this completion just resolved.
+    if (String(user.heart_recovery_chapter_id || "") === cid) {
+      userPatch.heart_recovery_stage_id = "";
+      userPatch.heart_recovery_chapter_id = "";
+    }
   }
   await supabase.from("users").update(userPatch).eq("user_id", uid);
 
   const appState = await bootstrap({ session_token: b.session_token });
   return {
-    ok: true, chapter_id: cid, times_completed: times, refilled: isRecoveryChapter,
-    hearts: isRecoveryChapter ? defaultHearts(settings) : Number(user.hearts || defaultHearts(settings)),
-    message: isRecoveryChapter ? "Chapter review complete. Your hearts were refilled." : "Chapter Learn complete. Take its test when you are ready.",
+    ok: true, chapter_id: cid, times_completed: times, refilled,
+    hearts: heartsAfter,
+    message: refilled ? "Chapter review complete. Your hearts were refilled." : "Chapter Learn complete. Take its test when you are ready.",
     app_state: appState,
   };
 }
@@ -788,7 +811,7 @@ async function finishTest(b: any) {
   if (String(run.status) === "failed") {
     return { ok: true, completed: false, failed: true, committed_xp: 0, chapter_id: run.chapter_id, message: "Test not completed. Pending XP was discarded. Review the chapter where your hearts were lost." };
   }
-  if (String(run.status) === "completed") {
+  if (String(run.status) === "completed" || String(run.status) === "completed_repeat") {
     return { ok: true, completed: true, committed_xp: Number(run.committed_xp || 0), chapter_id: run.chapter_id };
   }
 
@@ -808,16 +831,35 @@ async function finishTest(b: any) {
     : false;
 
   const xp = Number(run.pending_xp || 0);
-  await supabase.from("test_runs").update({ status: "completed", finished_at: new Date().toISOString(), committed_xp: xp }).eq("test_run_id", run.test_run_id);
+  const finishedAt = new Date().toISOString();
+
+  // Chapter-completion XP is awarded at most once per (user, chapter). A
+  // partial unique index on test_runs(user_id, chapter_id) WHERE status =
+  // 'completed' (see 20260919120000_test_runs_one_completion_per_chapter.sql)
+  // makes claiming that status atomic: the first test_run to reach here for
+  // a given chapter wins it, and Postgres itself rejects any other test_run
+  // for the same chapter ever being set to 'completed' afterwards -- even
+  // under a race between two concurrent finishTest calls -- so this cannot
+  // be bypassed by retrying or duplicating the request client-side.
+  let isFirstCompletion = true;
+  const { error: claimError } = await supabase.from("test_runs")
+    .update({ status: "completed", finished_at: finishedAt, committed_xp: xp })
+    .eq("test_run_id", run.test_run_id);
+  if (claimError) {
+    if (claimError.code !== "23505") throw new Error(claimError.message);
+    isFirstCompletion = false;
+    await supabase.from("test_runs").update({ status: "completed_repeat", finished_at: finishedAt, committed_xp: 0 }).eq("test_run_id", run.test_run_id);
+  }
+  const xpAwarded = isFirstCompletion ? xp : 0;
 
   const { data: runAttempts } = await supabase.from("attempts").select("attempt_id,question_xp").eq("test_run_id", run.test_run_id);
   for (const a of runAttempts || []) {
-    await supabase.from("attempts").update({ xp_earned: a.question_xp, xp_committed: true }).eq("attempt_id", a.attempt_id);
+    await supabase.from("attempts").update({ xp_earned: isFirstCompletion ? a.question_xp : 0, xp_committed: true }).eq("attempt_id", a.attempt_id);
   }
 
   const { data: allChapters } = await supabase.from("chapters").select("chapter_id,stage_id").eq("active", true);
   const { data: allRunsFresh } = await supabase.from("test_runs").select("chapter_id,status,test_run_id").eq("user_id", uid);
-  const completedIds = new Set((allRunsFresh || []).filter((r: any) => r.status === "completed" || r.test_run_id === run.test_run_id).map((r: any) => String(r.chapter_id || "")));
+  const completedIds = new Set((allRunsFresh || []).filter((r: any) => r.status === "completed" || r.status === "completed_repeat" || r.test_run_id === run.test_run_id).map((r: any) => String(r.chapter_id || "")));
   const { data: stages } = await supabase.from("stages").select("stage_id").eq("active", true);
 
   const completedStageIds = (stages || []).filter((st: any) => {
@@ -827,7 +869,7 @@ async function finishTest(b: any) {
 
   const { data: user } = await supabase.from("users").select("*").eq("user_id", uid).single();
   await supabase.from("users").update({
-    total_xp: Number(user.total_xp || 0) + xp,
+    total_xp: Number(user.total_xp || 0) + xpAwarded,
     tests_completed: Number(user.tests_completed || 0) + 1,
     stages_completed: completedStageIds.length,
     last_completed_stage: completedStageIds.includes(String(run.stage_id)) ? run.stage_id : (user.last_completed_stage || ""),
@@ -837,10 +879,10 @@ async function finishTest(b: any) {
   const appState = await bootstrap({ session_token: b.session_token });
 
   return {
-    ok: true, completed: true, committed_xp: xp, stage_id: run.stage_id, chapter_id: run.chapter_id,
+    ok: true, completed: true, committed_xp: xpAwarded, stage_id: run.stage_id, chapter_id: run.chapter_id,
     stage_completed: completedStageIds.includes(String(run.stage_id)),
     practice_just_unlocked: !practiceWasUnlockedBefore && (appState.practice || []).some((r: any) => normalizeId(r.stage_id) === normalizeId(run.stage_id) && r.unlocked !== false),
-    message: `Chapter test complete. ${xp} XP added. Hearts are unchanged.`,
+    message: isFirstCompletion ? `Chapter test complete. ${xpAwarded} XP added. Hearts are unchanged.` : `Chapter already completed earlier. No additional XP was added. Hearts are unchanged.`,
     app_state: appState,
   };
 }
@@ -1320,7 +1362,7 @@ async function staffFactsForRange(startUtc: string, endUtc: string): Promise<Map
     return perUser.get(uid)!;
   };
   for (const a of attemptsR.data || []) { const u = ensure(normalizeId(a.user_id)); u.active = true; u.questionsAttempted++; if (truthy(a.correct)) u.questionsCorrect++; u.xpEarned += Number(a.xp_earned || 0); }
-  for (const t of testRunsR.data || []) { const u = ensure(normalizeId(t.user_id)); u.active = true; u.testsAttempted++; if (String(t.status).toLowerCase() === "completed") u.testsCompleted++; }
+  for (const t of testRunsR.data || []) { const u = ensure(normalizeId(t.user_id)); u.active = true; u.testsAttempted++; if (["completed", "completed_repeat"].includes(String(t.status).toLowerCase())) u.testsCompleted++; }
   for (const l of learnR.data || []) { const u = ensure(normalizeId(l.user_id)); u.active = true; u.learnActive = true; }
   for (const p of practiceR.data || []) { const u = ensure(normalizeId(p.user_id)); u.active = true; u.practiceActive = true; }
   for (const s of sessionsR.data || []) { const u = ensure(normalizeId(s.user_id)); u.active = true; u.loginActive = true; }

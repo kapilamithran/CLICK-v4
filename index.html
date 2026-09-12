@@ -173,7 +173,7 @@
 }
 .test-v11-tokens{display:flex;gap:8px;flex-wrap:wrap}
 .test-v11-token,.test-v11-selected{
-  border:2px solid rgba(28,35,64,.16);border-bottom-width:4px;background:var(--bg);
+  border:2px solid rgba(28,35,64,.16);border-bottom-width:4px;background:#fff;color:#000;
   border-radius:12px;padding:10px 12px;font:750 13px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;
   cursor:pointer
 }
@@ -902,6 +902,13 @@ pre,.test-v11-code,.learn-page-body pre{
   .tour-card.tour-video-step{grid-template-columns:1fr!important}
   .tour-card.tour-video-step .tour-kabi-wrap{display:none!important}
 }
+/* JetBrains Mono (var(--font-mono)) ships automatic "calt" programming
+   ligatures, so a literal == / >= / <= in a code block can render as one
+   merged glyph instead of two separate characters. Beginners need to see
+   the actual keystrokes, so ligatures are switched off wherever C code is
+   displayed -- this is presentation-only and never touches the underlying
+   text/code content. */
+pre,.test-code,.test-v11-code,.test-code-fill-editor,.pair-code,.learn-page-body pre,.test-v11-token,.test-v11-selected,.learn-page-body code{font-variant-ligatures:none}
 </style>
 <style>
 /* Practice question list/detail styling (Practice tab; shared by Stage 0-5 practice questions) */
@@ -2686,7 +2693,7 @@ async function checkTestAnswer(){
 
   f.className="feedback show bad";
   const shownAnswer=q.type==='CODE_FILL'?codeFillDisplayAnswer(q.answer):q.answer;
-  f.innerHTML=`✗ Three attempts used.<div style="font-weight:600;margin-top:4px">${testHintHTML((shownAnswer?'Correct answer: '+shownAnswer+'. ':'')+(q.explanation||'Review this idea before continuing.'),false,q.terms)}</div>${heartLost?`<div class="heart-note">❤️ One heart was lost. It will not refill after this test. Complete Learn for this chapter to restore hearts.</div>`:''}<img class="professor-feedback" src="${DADA_HALF.encourage||KABI.sad}" alt="DADA encouraging review">`;
+  f.innerHTML=`✗ Three attempts used.<div style="font-weight:600;margin-top:4px">${testHintHTML((shownAnswer?'Correct answer: '+shownAnswer+'. ':'')+(q.explanation||'Review this idea before continuing.'),false,q.terms)}</div>${heartLost?`<div class="heart-note">❤️ Hearts do not refill after a test.<br>You lost a heart while testing ${testEscape(testState.test.chapter_title||testState.test.title||"this chapter")}. Only completing that chapter in Learn will refill your hearts.</div>`:''}<img class="professor-feedback" src="${DADA_HALF.encourage||KABI.sad}" alt="DADA encouraging review">`;
   bindTestHints();
 
   if(failed){

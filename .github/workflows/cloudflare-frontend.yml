@@ -1,0 +1,42 @@
+name: Deploy Cloudflare Frontend
+
+# Runs only when the deployable static-asset surface changes (assets.directory
+# is "." in wrangler.jsonc, so almost everything at the repo root is served --
+# this excludes only the backend/dev-tool directories that are never part of
+# that surface, mirroring how the Supabase workflows scope themselves to
+# supabase/**). This keeps a backend-only push from ever touching Cloudflare,
+# and a frontend-only push from ever touching Supabase.
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "supabase/**"
+      - "admin-tools/**"
+      - "vscode-extension/**"
+      - "desktop-app/**"
+      - "CSVs/**"
+      - "CLICK - Google Play package/**"
+      - "appscript-code.txt"
+      - ".github/workflows/supabase-*.yml"
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # No root package.json/lockfile exists for this static frontend (no
+      # build step -- index.html/service-worker.js/assets/* are deployed as
+      # authored), so there's nothing for `npm ci` to install here; the
+      # official wrangler-action bundles its own pinned Wrangler CLI instead.
+      # Version pinned to the one already validated (dry-run + real deploy)
+      # against this exact wrangler.jsonc, rather than tracking "latest".
+      - name: Deploy to Cloudflare Workers (puc-v2)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.131.1"
+          command: deploy
