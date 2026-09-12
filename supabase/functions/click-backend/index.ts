@@ -244,7 +244,7 @@ async function setUsername(b: any) {
 // ---------------- accounts ----------------
 
 async function signup(b: any) {
-  required(b, ["name", "roll_no", "department", "email", "phone", "password"]);
+  required(b, ["name", "roll_no", "department", "email", "phone", "password", "section_code"]);
   const settings = await settingsMap();
   const minLen = Number(settings.MIN_PASSWORD_LENGTH || 6);
   if (String(b.password).length < minLen) throw new Error(`Password must be at least ${minLen} characters.`);
@@ -254,6 +254,19 @@ async function signup(b: any) {
     throw new Error("Signups are currently limited to AI&DS department students -- use your official .aids@rajalakshmi.edu.in email.");
   }
   const roll = String(b.roll_no).trim();
+
+  // Section is never trusted from the client beyond which one was requested --
+  // it's resolved against the real `sections` table (the same source of
+  // truth staffAssignSection uses), and capacity is enforced with the exact
+  // same check, before any account is created.
+  const sectionCode = String(b.section_code || "").trim().toUpperCase();
+  if (!sectionCode) throw new Error("Please select your section.");
+  const { data: section } = await supabase.from("sections").select("*").eq("section_code", sectionCode).eq("active", true).maybeSingle();
+  if (!section) throw new Error("Please select a valid section.");
+  const { count: sectionCount } = await supabase.from("student_section_assignments").select("assignment_id", { count: "exact", head: true }).eq("section_id", section.section_id).eq("active", true);
+  if (Number(sectionCount || 0) >= Number(section.capacity || 0)) {
+    throw new Error(`${section.section_name} is currently full. Please choose a different section.`);
+  }
 
   const { data: existingEmail } = await supabase.from("users").select("user_id").ilike("email", email).maybeSingle();
   if (existingEmail) throw new Error("An account with this email already exists.");
@@ -279,6 +292,12 @@ async function signup(b: any) {
     if ((error as any).code === "23505") throw new Error("An account with this email or roll number already exists.");
     throw new Error(error.message);
   }
+
+  const { error: assignError } = await supabase.from("student_section_assignments").insert({
+    assignment_id: newId("ASG"), student_id: id, section_id: section.section_id, active: true,
+  });
+  if (assignError) throw new Error(assignError.message);
+
   const session = await createSession(inserted, "signup");
   return { ok: true, user: safeUser(inserted), session_token: session.session_token, new_user: true };
 }
