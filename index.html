@@ -1765,7 +1765,13 @@ function formatLearnPage(text){
   const heading=firstBreak>=0?raw.slice(0,firstBreak):'LEARN';
   let body=firstBreak>=0?raw.slice(firstBreak+1):raw;
   const codeBlocks=[];
-  body=body.replace(/```c?\s*([\s\S]*?)```/g,(_,code)=>`@@CODE${codeBlocks.push(code.trim())-1}@@`);
+  // Only the single newline right after the opening fence (and, symmetrically,
+  // one right before the closing fence) is stripped here -- not \s*/.trim(),
+  // which also ate meaningful LEADING SPACES on a code block's first line
+  // (e.g. a manually space-aligned comparison table's header row), shifting
+  // it out of alignment with the rows below while leaving those rows' own
+  // label-text-prefixed lines untouched.
+  body=body.replace(/```c?\r?\n?([\s\S]*?)\n?```/g,(_,code)=>`@@CODE${codeBlocks.push(code)-1}@@`);
   let safe=mdInline(body).replace(/\n/g,'<br>');
   safe=safe.replace(/@@CODE(\d+)@@/g,(_,i)=>`<pre>${esc(codeBlocks[Number(i)])}</pre>`);
   return `<div class="learn-page-body"><h3>${esc(heading)}</h3>${safe}</div>`
@@ -2479,7 +2485,7 @@ function cachedAnswerCorrect(q,answer){
   if(type==='TYPE_CODE')return canonicalCTest(expected)===canonicalCTest(actual);
   if(type==='CODE_FILL')return codeFillAnswerCorrect(expected,actual);
   if(type==='ORDER')return expected.replace(/\s+/g,'')===actual.replace(/\s+/g,'');
-  if(type==='BLANK')return expected.replace(/\s+/g,' ').trim()===actual.replace(/\s+/g,' ').trim();
+  if(type==='BLANK')return expected.replace(/\s+/g,' ').trim().toLowerCase()===actual.replace(/\s+/g,' ').trim().toLowerCase();
   if(type==='MATCH_FOLLOWING'){
     const parsePairs=raw=>new Set(String(raw||'').split(',').map(p=>p.trim()).filter(Boolean));
     const exp=parsePairs(expected),act=parsePairs(actual);

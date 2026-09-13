@@ -55,7 +55,8 @@ function normalizeId(v: any): string {
 }
 
 function normalizeBlank(s: any): string {
-  return String(s).trim().replace(/\s+/g, " ");
+  // Fill in the Blank tests recall of the right word/term, not capitalization.
+  return String(s).trim().replace(/\s+/g, " ").toLowerCase();
 }
 
 function shuffle<T>(arr: T[]): T[] {
