@@ -557,12 +557,21 @@ async function bootstrap(b: any) {
     return { ...r, unlocked: gate.unlocked, lock_reason: gate.lock_reason || "" };
   });
 
+  // Per-student targeted messages from staff (the "Notify" feature). Kept
+  // separate from the global `announcements` table -- see the staff_messages
+  // migration for why -- and merged into the Announcements tab client-side.
+  const { data: staffMsgRows } = await supabase.from("staff_messages").select("message_id,message,sent_at,delivered_at,read_at,reply,replied_at").eq("student_id", uid).is("dismissed_at", null).order("sent_at", { ascending: false }).limit(50);
+  const staffMessages = staffMsgRows || [];
+  const pendingMessageIds = staffMessages.filter((m: any) => !m.delivered_at).map((m: any) => m.message_id);
+
   return {
     ok: true, user: safeUser(user), stages: content.stages, chapters: content.chapters,
     learn_content: content.learn_content, practice: practiceRows,
     announcements: content.announcements, phrases: content.phrases, prerequisites: content.prerequisites,
     stage_progress: stageProgress, chapter_progress: chapterProgress, practice_progress: practiceProgress,
     leaderboard: await leaderboard(), settings: publicSettings(settings),
+    staff_messages: staffMessages, pending_message_ids: pendingMessageIds,
+    unread_message_count: staffMessages.filter((m: any) => !m.read_at).length,
   };
 }
 
@@ -1540,7 +1549,7 @@ async function staffStudentDetail(b: any) {
   const section = assignment ? (await supabase.from("sections").select("*").eq("section_id", assignment.section_id).maybeSingle()).data : null;
 
   const { startUtc, endUtc } = istRangeUtc(0);
-  const [attemptsToday, testsToday, learnToday, practiceToday, recentAttempts, recentTests, recentLearn, practiceRows, pairing] = await Promise.all([
+  const [attemptsToday, testsToday, learnToday, practiceToday, recentAttempts, recentTests, recentLearn, practiceRows, pairing, content] = await Promise.all([
     supabase.from("attempts").select("*").eq("user_id", uid).gte("attempted_at", startUtc).lt("attempted_at", endUtc).order("attempted_at"),
     supabase.from("test_runs").select("*").eq("user_id", uid).gte("started_at", startUtc).lt("started_at", endUtc).order("started_at"),
     supabase.from("learn_progress").select("*").eq("user_id", uid).gte("updated_at", startUtc).lt("updated_at", endUtc).order("updated_at"),
@@ -1550,7 +1559,33 @@ async function staffStudentDetail(b: any) {
     supabase.from("learn_progress").select("*").eq("user_id", uid).order("updated_at", { ascending: false }).limit(10),
     supabase.from("practice_progress").select("*").eq("user_id", uid),
     supabase.from("practice_pairings").select("status,device_name,connected_at,last_seen").eq("user_id", uid).order("last_seen", { ascending: false }).limit(1).maybeSingle(),
+    publicContent(),
   ]);
+
+  // Completion + accuracy summary against the full curriculum -- same
+  // stage/chapter completion logic bootstrap() uses for the student's own
+  // view, computed here on the student's behalf so staff see real percentages
+  // (X of Y), not just raw counts.
+  const facts = await prerequisiteFacts(uid, content);
+  const chapterTestCompleted = new Set(facts.completedRuns.map((r: any) => normalizeId(r.chapter_id)));
+  const totalChapters = content.chapters.length;
+  const chaptersLearned = content.chapters.filter((c: any) => facts.learnedChapterIds.has(normalizeId(c.chapter_id))).length;
+  const testsCompletedCount = content.chapters.filter((c: any) => chapterTestCompleted.has(normalizeId(c.chapter_id))).length;
+  const totalStages = content.stages.length;
+  const stagesCompletedCount = content.stages.filter((st: any) => {
+    const cs = content.chapters.filter((c: any) => String(c.stage_id) === String(st.stage_id));
+    return cs.length > 0 && cs.every((c: any) => chapterTestCompleted.has(normalizeId(c.chapter_id)));
+  }).length;
+  const totalPractice = content.practice.length;
+  const practiceCompletedCount = (practiceRows.data || []).filter((p: any) => String(p.status) === "completed").length;
+  const pct = (n: number, total: number) => (total ? Math.round((n * 100) / total) : 0);
+  const summary = {
+    stages_completed: stagesCompletedCount, stages_total: totalStages, stages_percent: pct(stagesCompletedCount, totalStages),
+    chapters_learned: chaptersLearned, chapters_total: totalChapters, chapters_percent: pct(chaptersLearned, totalChapters),
+    tests_completed: testsCompletedCount, tests_total: totalChapters, tests_percent: pct(testsCompletedCount, totalChapters),
+    coding_completed: practiceCompletedCount, coding_total: totalPractice, coding_percent: pct(practiceCompletedCount, totalPractice),
+    accuracy_percent: Number(user.accuracy_percent || 0),
+  };
 
   // Chronological "today" timeline built only from real timestamped rows --
   // each entry cites the exact source table it came from, nothing invented.
@@ -1578,6 +1613,7 @@ async function staffStudentDetail(b: any) {
       questions_attempted: Number(user.questions_attempted || 0), correct_answers: Number(user.correct_answers || 0),
       hearts: Number(user.hearts || 0), streak: Number(user.streak || 0),
     },
+    summary,
     today: { timeline },
     recent_activity: { attempts: recentAttempts.data || [], test_runs: recentTests.data || [], learn_progress: recentLearn.data || [] },
     practice: practiceRowsAll.filter((p: any) => /^S\d/.test(String(p.practice_id))),
@@ -1618,44 +1654,101 @@ async function staffAssignSection(b: any) {
   return { ok: true, unchanged: false, section_id: sectionId };
 }
 
-// Most recent question-answer submissions (from `attempts`, the only table
-// that records individual answer submissions), newest first, optionally
-// scoped to one section. Capped at 100 rows -- this is a recent-activity
-// feed, not a full export.
-async function staffRecentSubmissions(b: any) {
+// ---------------- staff -> student messaging ("Notify") ----------------
+
+async function staffSendMessage(b: any) {
+  required(b, ["staff_session_token", "student_id", "message"]);
+  const staff = await requireStaffSession(b.staff_session_token);
+  const uid = normalizeId(b.student_id);
+  const text = String(b.message).trim();
+  if (!text) throw new Error("Message can't be empty.");
+  if (text.length > 2000) throw new Error("Message is too long (2000 characters max).");
+
+  const { data: user } = await supabase.from("users").select("user_id").eq("user_id", uid).maybeSingle();
+  if (!user) throw new Error("Student not found.");
+
+  const message_id = newId("MSG");
+  const { error } = await supabase.from("staff_messages").insert({
+    message_id, student_id: uid, staff_id: staff.staff_id, message: text,
+  });
+  if (error) throw new Error(error.message);
+  return { ok: true, message_id };
+}
+
+// Full message history (including dismissed ones) for one student, shown in
+// the staff detail view so staff can see the student's replies. Opening this
+// view is also what clears the "unseen reply" badge (both the per-student row
+// badge and, once every student with an unseen reply has been opened, the
+// Students tab badge) -- any reply not yet seen gets stamped here.
+async function staffStudentMessages(b: any) {
+  required(b, ["staff_session_token", "student_id"]);
+  await requireStaffSession(b.staff_session_token);
+  const uid = normalizeId(b.student_id);
+  const { data } = await supabase.from("staff_messages").select("*").eq("student_id", uid).order("sent_at", { ascending: false }).limit(50);
+  const messages = data || [];
+  const unseenIds = messages.filter((m: any) => m.replied_at && !m.staff_seen_at).map((m: any) => m.message_id);
+  if (unseenIds.length) {
+    const seenAt = new Date().toISOString();
+    await supabase.from("staff_messages").update({ staff_seen_at: seenAt }).in("message_id", unseenIds);
+    for (const m of messages) if (unseenIds.includes(m.message_id)) m.staff_seen_at = seenAt;
+  }
+  return { ok: true, messages };
+}
+
+// Which students currently have a reply staff hasn't opened yet -- powers the
+// Students tab badge (lit while this list is non-empty) and the per-row
+// badge in the students table.
+async function staffUnseenReplies(b: any) {
   required(b, ["staff_session_token"]);
   await requireStaffSession(b.staff_session_token);
-  const sectionId = b.section_id ? normalizeId(String(b.section_id)) : null;
+  const { data } = await supabase.from("staff_messages").select("student_id").not("replied_at", "is", null).is("staff_seen_at", null);
+  const studentIds = [...new Set((data || []).map((r: any) => normalizeId(r.student_id)))];
+  return { ok: true, student_ids: studentIds };
+}
 
-  const [{ byId }, bySection, sectionsR, attemptsR] = await Promise.all([
-    activeStudentIds(), activeSectionAssignments(), supabase.from("sections").select("section_id,section_code,section_name"),
-    supabase.from("attempts").select("attempt_id,user_id,question_id,correct,xp_earned,attempted_at").order("attempted_at", { ascending: false }).limit(200),
-  ]);
-  const sectionById = new Map((sectionsR.data || []).map((s: any) => [normalizeId(s.section_id), s]));
-  let rows = (attemptsR.data || []).map((a: any) => normalizeId(a.user_id));
-  const questionIds = [...new Set((attemptsR.data || []).map((a: any) => String(a.question_id)))];
-  const { data: qRows } = questionIds.length ? await supabase.from("questions").select("question_id,type,prompt").in("question_id", questionIds) : { data: [] };
-  const qById = new Map((qRows || []).map((q: any) => [String(q.question_id), q]));
+async function markMessagesDelivered(b: any) {
+  required(b, ["session_token", "message_ids"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const ids = (Array.isArray(b.message_ids) ? b.message_ids : []).map((x: any) => String(x));
+  if (!ids.length) return { ok: true };
+  await supabase.from("staff_messages").update({ delivered_at: new Date().toISOString() }).eq("student_id", s.user_id).in("message_id", ids).is("delivered_at", null);
+  return { ok: true };
+}
 
-  let submissions = (attemptsR.data || [])
-    .map((a: any) => {
-      const uid = normalizeId(a.user_id);
-      const u = byId.get(uid);
-      if (!u) return null; // skip attempts from inactive/removed accounts
-      const sid = bySection.get(uid) || null;
-      const sec = sid ? sectionById.get(sid) : null;
-      const q = qById.get(String(a.question_id));
-      return {
-        student_id: uid, name: u.name, roll_no: u.roll_no,
-        section_id: sid, section_code: sec?.section_code || "", section_name: sec?.section_name || "Unassigned",
-        question_id: a.question_id, question_type: q?.type || "", question_prompt: (q?.prompt || "").slice(0, 80),
-        submitted_at: a.attempted_at, result: truthy(a.correct) ? "Correct" : "Incorrect", score: Number(a.xp_earned || 0),
-      };
-    })
-    .filter(Boolean) as any[];
+async function markMessagesRead(b: any) {
+  required(b, ["session_token"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  await supabase.from("staff_messages").update({ read_at: new Date().toISOString() }).eq("student_id", s.user_id).is("read_at", null);
+  return { ok: true };
+}
 
-  if (sectionId) submissions = submissions.filter((s) => (sectionId === "UNASSIGNED" ? !s.section_id : s.section_id === sectionId));
-  return { ok: true, submissions: submissions.slice(0, 100) };
+async function studentReplyToMessage(b: any) {
+  required(b, ["session_token", "message_id", "reply"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const text = String(b.reply).trim();
+  if (!text) throw new Error("Reply can't be empty.");
+  if (text.length > 1000) throw new Error("Reply is too long (1000 characters max).");
+  const { data: msg } = await supabase.from("staff_messages").select("message_id").eq("message_id", String(b.message_id)).eq("student_id", s.user_id).maybeSingle();
+  if (!msg) throw new Error("Message not found.");
+  await supabase.from("staff_messages").update({ reply: text, replied_at: new Date().toISOString() }).eq("message_id", msg.message_id);
+  return { ok: true };
+}
+
+// A staff-sent message can only be dismissed once the student has replied to
+// it -- enforced here, not just hidden in the UI, so it can't be bypassed by
+// calling the action directly.
+async function studentDismissMessage(b: any) {
+  required(b, ["session_token", "message_id"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const { data: msg } = await supabase.from("staff_messages").select("message_id,replied_at").eq("message_id", String(b.message_id)).eq("student_id", s.user_id).maybeSingle();
+  if (!msg) throw new Error("Message not found.");
+  if (!msg.replied_at) throw new Error("Reply to this message before dismissing it.");
+  await supabase.from("staff_messages").update({ dismissed_at: new Date().toISOString() }).eq("message_id", msg.message_id);
+  return { ok: true };
 }
 
 // ---------------- dispatch ----------------
@@ -1669,6 +1762,10 @@ Deno.serve(async (req: Request) => {
       case "login": return json(await login(b));
       case "session": return json(await sessionInfo(b));
       case "logout": return json(await logout(b));
+      case "markMessagesDelivered": return json(await markMessagesDelivered(b));
+      case "markMessagesRead": return json(await markMessagesRead(b));
+      case "studentReplyToMessage": return json(await studentReplyToMessage(b));
+      case "studentDismissMessage": return json(await studentDismissMessage(b));
       case "adminResetPassword": return json(await adminResetPassword(b));
       case "adminGetMaxIds": return json(await adminGetMaxIds(b));
       case "completeOnboarding": return json(await completeOnboarding(b));
@@ -1695,7 +1792,9 @@ Deno.serve(async (req: Request) => {
       case "staffStudents": return json(await staffStudents(b));
       case "staffStudentDetail": return json(await staffStudentDetail(b));
       case "staffAssignSection": return json(await staffAssignSection(b));
-      case "staffRecentSubmissions": return json(await staffRecentSubmissions(b));
+      case "staffSendMessage": return json(await staffSendMessage(b));
+      case "staffStudentMessages": return json(await staffStudentMessages(b));
+      case "staffUnseenReplies": return json(await staffUnseenReplies(b));
       default: throw new Error("Unknown action: " + b.action);
     }
   } catch (err) {
