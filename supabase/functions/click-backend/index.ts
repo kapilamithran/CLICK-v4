@@ -500,6 +500,36 @@ async function recoveryChapterTitle(user: any) {
   return c ? String(c.title) : cid;
 }
 
+// Every chapter where the student currently owes heart recovery -- a
+// heart-losing test attempt in that chapter that hasn't yet been resolved by
+// completing that same chapter's Learn content since. A student can lose
+// hearts in more than one chapter before recovering any of them (e.g. one in
+// chapter A, then another in chapter B); each chapter's debt is independent,
+// so this returns all of them, not just the most recent. `completeLearn`
+// already restores exactly this per-chapter amount -- this helper exists so
+// the UI can tell the student every chapter they still need to revisit,
+// instead of only the single most-recent one (see `heart_recovery_chapter_id`,
+// which only ever remembers one and is kept only for the legacy "no hearts
+// left" error message below).
+async function outstandingHeartRecoveryChapters(uid: string): Promise<{ stage_id: string; chapter_id: string }[]> {
+  const { data: lossRows } = await supabase.from("attempts").select("stage_id,chapter_id,attempted_at,hearts_before,hearts_after").eq("user_id", uid);
+  const losses = (lossRows || []).filter((a: any) => Number(a.hearts_after) < Number(a.hearts_before));
+  if (!losses.length) return [];
+  const chapterIds = [...new Set(losses.map((l: any) => normalizeId(l.chapter_id)))];
+  const { data: lpRows } = await supabase.from("learn_progress").select("chapter_id,last_completed_at").eq("user_id", uid).in("chapter_id", chapterIds);
+  const lastCompletedByChapter = new Map((lpRows || []).map((r: any) => [normalizeId(r.chapter_id), r.last_completed_at]));
+  const outstanding: { stage_id: string; chapter_id: string }[] = [];
+  for (const cid of chapterIds) {
+    const sinceMs = lastCompletedByChapter.get(cid) ? new Date(lastCompletedByChapter.get(cid)).getTime() : null;
+    const hasOutstanding = losses.some((l: any) => normalizeId(l.chapter_id) === cid && (sinceMs === null || new Date(l.attempted_at).getTime() > sinceMs));
+    if (hasOutstanding) {
+      const stageId = losses.find((l: any) => normalizeId(l.chapter_id) === cid)?.stage_id || "";
+      outstanding.push({ stage_id: String(stageId), chapter_id: cid });
+    }
+  }
+  return outstanding;
+}
+
 // ---------------- bootstrap / progress ----------------
 
 async function bootstrap(b: any) {
@@ -564,6 +594,11 @@ async function bootstrap(b: any) {
   const staffMessages = staffMsgRows || [];
   const pendingMessageIds = staffMessages.filter((m: any) => !m.delivered_at).map((m: any) => m.message_id);
 
+  const chapterTitleById = new Map(content.chapters.map((c: any) => [normalizeId(c.chapter_id), c.title]));
+  const heartRecoveryChapters = (await outstandingHeartRecoveryChapters(uid)).map((o) => ({
+    stage_id: o.stage_id, chapter_id: o.chapter_id, title: chapterTitleById.get(o.chapter_id) || o.chapter_id,
+  }));
+
   return {
     ok: true, user: safeUser(user), stages: content.stages, chapters: content.chapters,
     learn_content: content.learn_content, practice: practiceRows,
@@ -572,6 +607,7 @@ async function bootstrap(b: any) {
     leaderboard: await leaderboard(), settings: publicSettings(settings),
     staff_messages: staffMessages, pending_message_ids: pendingMessageIds,
     unread_message_count: staffMessages.filter((m: any) => !m.read_at).length,
+    heart_recovery_chapters: heartRecoveryChapters,
   };
 }
 
@@ -708,7 +744,12 @@ async function startTest(b: any) {
   const { data: user } = await supabase.from("users").select("*").eq("user_id", uid).single();
   if (!user) throw new Error("User not found.");
   if (Number(user.hearts || 0) <= 0) {
-    throw new Error(`No hearts left. Review the chapter where the hearts were lost: ${await recoveryChapterTitle(user)}.`);
+    const owed = await outstandingHeartRecoveryChapters(uid);
+    const content = await publicContent();
+    const chapterTitleById = new Map(content.chapters.map((c: any) => [normalizeId(c.chapter_id), c.title]));
+    const titles = owed.map((o) => chapterTitleById.get(o.chapter_id) || o.chapter_id);
+    const where = titles.length ? titles.join(", ") : await recoveryChapterTitle(user);
+    throw new Error(`No hearts left. Review ${titles.length > 1 ? "these chapters" : "the chapter"} where the hearts were lost: ${where}.`);
   }
 
   const { data: chapter } = await supabase.from("chapters").select("*").eq("stage_id", sid).eq("chapter_id", cid).eq("active", true).maybeSingle();

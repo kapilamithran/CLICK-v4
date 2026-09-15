@@ -911,7 +911,7 @@ pre,.test-v11-code,.learn-page-body pre{
    the actual keystrokes, so ligatures are switched off wherever C code is
    displayed -- this is presentation-only and never touches the underlying
    text/code content. */
-pre,.test-code,.test-v11-code,.test-code-fill-editor,.pair-code,.learn-page-body pre,.test-v11-token,.test-v11-selected,.learn-page-body code{font-variant-ligatures:none}
+pre,.test-code,.test-v11-code,.test-code-fill-editor,.test-code-fill-box,.pair-code,.learn-page-body pre,.test-v11-token,.test-v11-selected,.learn-page-body code{font-variant-ligatures:none}
 </style>
 <style>
 /* Practice question list/detail styling (Practice tab; shared by Stage 0-5 practice questions) */
@@ -1117,7 +1117,7 @@ document.addEventListener('paste',function(e){
   <div class="card practice-setup">
     <div class="practice-setup-head" id="practiceSetupToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="practiceSetupBody"><div><div class="meta">FIRST-TIME SETUP</div><h3>CLICK HERE To Get VS Code ready for C <span class="setup-chevron" id="practiceSetupChevron">▾</span></h3><p>Follow DADA one small step at a time. You only need to do this once on your computer.</p></div><img class="practice-kabi" id="practiceSetupKabi" alt="DADA teaching"></div>
     <div class="practice-setup-body hidden" id="practiceSetupBody">
-    <div class="pair-actions"><a class="btn" id="downloadVscodeExtension" href="assets/downloads/CLICK-Practice.vsix" download="CLICK-Practice.vsix">⬇ Download CLICK Practice for VS Code</a><span class="pair-status">Save this file, then in VS Code use Extensions → … → Install from VSIX…</span></div>
+    <div class="pair-actions"><a class="btn" id="downloadVscodeExtension" href="assets/downloads/CLICK-Practice.vsix" download="CLICK-Practice.vsix">⬇ Download CLICK Practice for VS Code</a><span class="pair-status">Save this file, then in VS Code use Extensions → … → Install from VSIX… · Or get it straight from <a href="https://github.com/Andryandurai/VSIX_File" target="_blank" rel="noopener">github.com/Andryandurai/VSIX_File</a></span></div>
     <div class="os-toggle" role="group" aria-label="Choose your computer"><button id="practiceWindows" class="os-choice active" type="button">Windows</button><button id="practiceMac" class="os-choice" type="button">macOS</button></div>
     <div id="practiceGuide"></div>
     </div>
@@ -1741,6 +1741,9 @@ function nextChapterForStage(sid){
   return cs.find(c=>!chapterProg(c.chapter_id).test_completed)||cs[cs.length-1]
 }
 function recoveryChapter(){return chapterById(app?.user?.heart_recovery_chapter_id||'')}
+// Every chapter the student currently owes heart recovery in (not just the
+// single most recent one) -- see `heart_recovery_chapters` in bootstrap().
+function outstandingHeartChapters(){return app?.heart_recovery_chapters||[]}
 // Chapter intro/outro videos only play the first time a student ever opens
 // (intro) or finishes (outro) that specific chapter. Scoped per user_id, not
 // just per browser, since classroom computers get shared between students.
@@ -1773,9 +1776,9 @@ function goHomeToChapter(sid,cid){
 }
 function renderHome(){
   const host=$('stageGrid');host.innerHTML='';
-  const rec=recoveryChapter();
-  $('homeRecovery').innerHTML=app.user.hearts<3&&rec?`<div class="recovery-notice"><b>❤️ Hearts do not refill after a test.</b><br>You lost a heart while testing <b>${esc(rec.title)}</b>. Only completing that chapter in Learn will refill your hearts.<br><button class="btn ghost" id="homeRecoverBtn" type="button">Review ${esc(rec.title)}</button></div>`:'';
-  if($('homeRecoverBtn'))$('homeRecoverBtn').onclick=()=>openLearn(rec.stage_id,rec.chapter_id);
+  const owedHome=outstandingHeartChapters();
+  $('homeRecovery').innerHTML=owedHome.length?`<div class="recovery-notice"><b>❤️ Hearts do not refill after a test.</b><br>You lost hearts while testing: <b>${owedHome.map(o=>esc(o.title)).join(', ')}</b>. Completing Learn for each of those chapters refills the hearts lost there.<div class="btnrow" style="margin-top:8px">${owedHome.map(o=>`<button class="btn ghost" data-recover="${esc(o.chapter_id)}" data-recover-stage="${esc(o.stage_id)}" type="button">Review ${esc(o.title)}</button>`).join('')}</div></div>`:'';
+  $('homeRecovery').querySelectorAll('[data-recover]').forEach(b=>b.onclick=()=>openLearn(b.dataset.recoverStage,b.dataset.recover));
 
   app.stages.forEach((s,stageIndex)=>{
     const p=prog(s.stage_id),chapters=stageChapters(s.stage_id),pct=Number(p.progress_percent||0),next=nextChapterForStage(s.stage_id),stageUnlocked=p.unlocked!==false;
@@ -1803,7 +1806,7 @@ function renderHome(){
 function renderStageSelectors(){
   const stageOption=s=>{const p=prog(s.stage_id);return `<option value="${s.stage_id}" ${p.unlocked===false?'disabled':''}>${p.unlocked===false?'🔒 ':''}Stage ${s.stage_no}: ${esc(s.title)}</option>`};
   $('learnStage').innerHTML=app.stages.map(stageOption).join('');
-  const rec=recoveryChapter();
+  const rec=outstandingHeartChapters()[0];
   if(rec)$('learnStage').value=rec.stage_id;
   $('learnStage').onchange=()=>{learnPage=0;renderLearnChapterSelector();renderLearn()};
   $('learnChapter').onchange=()=>{learnPage=0;renderLearn()};
@@ -1853,17 +1856,22 @@ function renderLearn(){
   const n=app.learn_content.find(x=>x.chapter_id===cid);
   const pages=String(n?.pages_text||'No Learn content yet.').split('//.//');
   const cp=chapterProg(cid);
-  const rec=recoveryChapter();
   if(cp.unlocked===false){$('learnNotice').innerHTML=`<div class="recovery-notice"><b>🔒 Chapter locked</b><br>${esc(cp.lock_reason||'Complete prerequisite content first.')}</div>`;$('walk').innerHTML='';return}
   learnPage=Math.max(0,Math.min(learnPage,pages.length-1));
 
+  const owed=outstandingHeartChapters();
+  const mineOwed=owed.some(o=>o.chapter_id===cid);
+  const otherOwed=owed.filter(o=>o.chapter_id!==cid);
   let notice='';
-  if(app.user.hearts<3&&rec){
-    if(rec.chapter_id===cid)notice=`<div class="recovery-notice"><b>❤️ This is your heart-recovery chapter.</b><br>Complete every page here and your hearts will refill to 3. Passing a test never refills hearts.</div>`;
-    else notice=`<div class="recovery-notice"><b>Hearts are currently ${app.user.hearts}/3.</b><br>They can only be refilled by completing Learn for <b>${esc(rec.title)}</b>.<br><button class="btn ghost" id="jumpRecovery" type="button">Go to recovery chapter</button></div>`
+  if(mineOwed&&otherOwed.length){
+    notice=`<div class="recovery-notice"><b>❤️ Hearts lost here too.</b><br>Completing every page here restores the hearts lost in this chapter. You still also owe recovery in: <b>${otherOwed.map(o=>esc(o.title)).join(', ')}</b>.</div>`;
+  }else if(mineOwed){
+    notice=`<div class="recovery-notice"><b>❤️ This is a heart-recovery chapter.</b><br>Complete every page here and the hearts lost in this chapter will be restored. Passing a test never refills hearts.</div>`;
+  }else if(otherOwed.length){
+    notice=`<div class="recovery-notice"><b>Hearts are currently ${app.user.hearts}/3.</b><br>They can only be refilled by completing Learn for the chapter${otherOwed.length>1?'s':''} where they were lost: <b>${otherOwed.map(o=>esc(o.title)).join(', ')}</b>.<div class="btnrow" style="margin-top:8px">${otherOwed.map(o=>`<button class="btn ghost" data-recover="${esc(o.chapter_id)}" data-recover-stage="${esc(o.stage_id)}" type="button">Go to ${esc(o.title)}</button>`).join('')}</div></div>`;
   }
   $('learnNotice').innerHTML=notice;
-  if($('jumpRecovery'))$('jumpRecovery').onclick=()=>openLearn(rec.stage_id,rec.chapter_id);
+  $('learnNotice').querySelectorAll('[data-recover]').forEach(b=>b.onclick=()=>openLearn(b.dataset.recoverStage,b.dataset.recover));
 
   $('walk').innerHTML=`<div class="card walk-card"><div><div class="meta">Stage ${app.stages.find(s=>s.stage_id===sid)?.stage_no} · ${esc(n?.title||'Learn')} · page ${learnPage+1} of ${pages.length}</div><h2>${learnPage===0?'DADA’s walkthrough':learnPage===pages.length-1?'Ready to prove it?':'Keep going'}</h2>${formatLearnPage(pages[learnPage])}<div class="phrase" style="background:#f3f0ff;color:var(--purple);border:0">${esc(phrase('learn')||'Predict the example before moving on.')}</div></div><img class="kabi" src="${learnPage===pages.length-1?KABI.thinking:KABI.teaching}" alt="DADA teaching"></div><div class="pager"><button class="btn ghost" id="learnBack" ${learnPage===0?'disabled':''}>Back</button><div class="dots">${pages.map((_,i)=>`<i class="dot ${i===learnPage?'on':''}"></i>`).join('')}</div><button class="btn" id="learnNext">${learnPage===pages.length-1?'TAKE TEST':'Next'}</button></div>`;
 
@@ -2334,7 +2342,12 @@ function testWrongFeedback(){
 ["pointerdown","touchstart","keydown"].forEach(ev=>document.addEventListener(ev,getTestAudio,{once:true,passive:true}));
 
 const TEST_HINTS={
-  "main":"main is the function where normal C program execution begins.",
+  // Bare "main" is deliberately NOT a key here -- every question in this
+  // bank that uses the word "main" outside of "main()" means it as an
+  // ordinary English adjective ("What is the main purpose of...?"), never
+  // the C function, so auto-highlighting it as a glossary term was wrong
+  // every time it fired. "main()" (always written with parens in real code)
+  // has no such ambiguity and stays.
   "main()":"main() is the entry function in these beginner C programs.",
   "printf":"printf displays text or formatted values.",
   "printf()":"printf() displays text or formatted values.",
@@ -2664,7 +2677,10 @@ async function startTest(sid,cid){
     openLearn(sid,cid);toast("Complete this chapter in Learn before taking its test.");return
   }
   if(app.user.hearts<=0){
-    const rec=recoveryChapter();if(rec)openLearn(rec.stage_id,rec.chapter_id);toast("No hearts left. Complete Learn for the chapter where your hearts were lost to refill them.",'error');return
+    const owedNow=outstandingHeartChapters();const recNow=owedNow[0];
+    if(recNow)openLearn(recNow.stage_id,recNow.chapter_id);
+    toast(owedNow.length>1?`No hearts left. Complete Learn for these chapters to refill them: ${owedNow.map(o=>o.title).join(', ')}.`:"No hearts left. Complete Learn for the chapter where your hearts were lost to refill them.",'error');
+    return
   }
   try{
     // Usually already warm because preload starts as soon as the profile opens.

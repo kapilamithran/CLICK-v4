@@ -12,3 +12,4 @@ vscode-extension/**
 click-pwa/**
 CLICK - Google Play package/**
 admin-tools/**
+.scratch-*/**
