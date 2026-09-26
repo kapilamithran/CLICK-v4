@@ -81,6 +81,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
+    "test": "npm run compile && node --test test/sampleCases.test.js",
     "package": "vsce package"
   },
   "devDependencies": {

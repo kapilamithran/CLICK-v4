@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { CheckSummary, PracticeQuestion } from "./types";
+import { splitSampleCases } from "./sampleCases";
 
 export type QuestionViewMessage =
   | { type: "checkCode" }
@@ -146,6 +147,8 @@ export class QuestionViewProvider implements vscode.WebviewViewProvider {
   .result-line.pass { color: var(--vscode-testing-iconPassed, #3fb950); }
   .result-line.fail, .result-line.timeout, .result-line.crash { color: var(--vscode-testing-iconFailed, #f14c4c); }
   .empty { color: var(--vscode-descriptionForeground); font-style: italic; }
+  .sample-case { margin: 8px 0 12px; padding-left: 10px; border-left: 2px solid var(--vscode-panel-border); }
+  .sample-case-title { font-weight: 600; margin: 0 0 4px; }
 </style>
 </head>
 <body>
@@ -187,12 +190,24 @@ ${body}
       return `<h3>${escapeHtml(label)}</h3>${content}`;
     };
 
+    const exampleBlock = (input: string, output: string, showEmptyInput = false): string =>
+      `${
+        input || showEmptyInput ? `<p><strong>Input</strong></p><pre><code>${escapeHtml(input || "(none)")}</code></pre>` : ""
+      }${output ? `<p><strong>Output</strong></p><pre><code>${escapeHtml(output)}</code></pre>` : ""}`;
+    const sampleCases = splitSampleCases(q.sample_input, q.sample_output);
+    // One sample keeps the original single "Example" layout exactly. Several samples
+    // ("//.//"-separated in the data) each get a numbered, self-contained Input/Output pair.
     const examples =
-      q.sample_input || q.sample_output
-        ? `<h3>Example</h3>${
-            q.sample_input ? `<p><strong>Input</strong></p><pre><code>${escapeHtml(q.sample_input)}</code></pre>` : ""
-          }${q.sample_output ? `<p><strong>Output</strong></p><pre><code>${escapeHtml(q.sample_output)}</code></pre>` : ""}`
-        : "";
+      sampleCases.length === 0
+        ? ""
+        : sampleCases.length === 1
+        ? `<h3>Example</h3>${exampleBlock(sampleCases[0].input, sampleCases[0].output)}`
+        : `<h3>Examples</h3>${sampleCases
+            .map(
+              (c, i) =>
+                `<div class="sample-case" data-sample-case="${i + 1}"><p class="sample-case-title">Example ${i + 1}</p>${exampleBlock(c.input, c.output, true)}</div>`
+            )
+            .join("")}`;
 
     const hints =
       q.hints && q.hints.length
