@@ -946,6 +946,11 @@ pre,.test-code,.test-v11-code,.test-code-fill-editor,.test-code-fill-box,.pair-c
 @media (max-width:640px){.exp-io-grid{grid-template-columns:1fr}}
 .exp-pre{background:var(--card-bg);border:var(--card-border);border-radius:var(--r-md);padding:10px 12px;white-space:pre;overflow-x:auto;font-family:monospace;font-size:13px;line-height:1.5;margin:0}
 .exp-pre::before{content:none}
+/* Learn spoiler gate (page 5 of the four challenge chapters). Lives here, not in assets/learn/activities.css, so it never appears unstyled while the activity files load. */
+.la-spoiler-gate{margin:14px 0;padding:14px;border:2px dashed var(--accent);border-radius:var(--r-md,16px);background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--ink)}
+.la-spoiler-gate p{margin:0 0 10px;line-height:1.5}
+.la-spoiler-gate button:focus-visible{outline:3px solid #f5d000;outline-offset:2px}
+.la-spoiler[hidden]{display:none}
 .exp-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 </style>
 <style>
@@ -1697,7 +1702,7 @@ document.querySelectorAll('[data-user-menu]').forEach(btn=>btn.onclick=e=>{
   else if(action==='reset-password')toast("Password reset isn't available in the app yet. Please ask an administrator to reset your password for now.")
   else if(action==='logout')$('logoutBtn').click()
 });
-document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='practice'){$('practiceSetupBody')?.classList.add('hidden');$('practiceSetupToggle')?.setAttribute('aria-expanded','false');if($('practiceSetupChevron'))$('practiceSetupChevron').textContent='▾';renderPractice()}if(id==='progress')renderProgress();if(id==='leadership')renderLeaderboard();if(id==='announcements'){renderAnnouncements();markAnnouncementsSeen()}if(id==='about')renderAbout()}
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='learn'&&window.__learnPendingMount){const f=window.__learnPendingMount;window.__learnPendingMount=null;f()}if(id==='practice'){$('practiceSetupBody')?.classList.add('hidden');$('practiceSetupToggle')?.setAttribute('aria-expanded','false');if($('practiceSetupChevron'))$('practiceSetupChevron').textContent='▾';renderPractice()}if(id==='progress')renderProgress();if(id==='leadership')renderLeaderboard();if(id==='announcements'){renderAnnouncements();markAnnouncementsSeen()}if(id==='about')renderAbout()}
 function applyAppState(r){app=r;session.user=r.user;localStorage.setItem('clickSession',JSON.stringify(session));renderHeader();renderStageSelectors();renderHome();renderProgress();renderLeaderboard();renderAnnouncements();renderLearn();renderPractice()}
 async function preloadTestData(forceRefresh=false){
   if(!session?.token)return null;
@@ -1778,7 +1783,7 @@ async function openLearn(sid,cid){
     await showVideoOverlay('chapter-intro.mp4');
     hideVideoOverlay();
   }
-  showPage('learn');
+  window.__learnPendingMount=null;showPage('learn');
   $('learnStage').value=sid;
   renderLearnChapterSelector(cid);
   learnPage=0;
@@ -1865,6 +1870,46 @@ function scrollLearnToTop(){
     window.scrollTo({top:0,behavior:reduced?'auto':'smooth'})
   })
 }
+// ---- Learn activity layer (assets/learn/). Interactivity is configuration drawn UNDER the page
+// text: the Learn content is never edited, and activities never touch XP, hearts, Take Test,
+// chapter completion or Next/Back. Nothing loads unless the current page has activities.
+const LEARN_ACTIVITY_LOADER='assets/learn/loader.js?v=1';
+let learnLoaderPromise=null;
+function learnLoadActivityLoader(){
+  if(window.ClickLearnLoader)return Promise.resolve();
+  if(!learnLoaderPromise)learnLoaderPromise=new Promise((res,rej)=>{const s=document.createElement('script');s.src=LEARN_ACTIVITY_LOADER;s.onload=res;s.onerror=()=>{learnLoaderPromise=null;rej(new Error('activity loader unavailable'))};document.head.appendChild(s)});
+  return learnLoaderPromise
+}
+function mountLearnActivities(sid,cid,pageNo,heading){
+  const box=$('learnActivities');if(!box)return;
+  const go=()=>{const b=$('learnActivities');if(b)learnLoadActivityLoader().then(()=>window.ClickLearnLoader.mount({container:b,stage:sid,chapter:cid,page:pageNo,heading,userId:app?.user?.user_id})).catch(e=>console.warn('Learn activities unavailable:',e&&e.message))};
+  // Learn is re-rendered in the background on app updates; only fetch activities once Learn is actually on screen.
+  if($('learn')?.classList.contains('active')){window.__learnPendingMount=null;go()}else window.__learnPendingMount=go
+}
+// Four challenge pages print the full solution under the "try it" prompt. The activity layer keeps that
+// text on the page but tucks it away until the student has attempted the challenge or asks for it.
+const LEARN_SPOILERS={CH0056:{5:['Complete Program','What You Learned']},CH0059:{5:['Try It Yourself','Remember']},CH0060:{5:['Solution','Quick Reminder']},CH0061:{5:['Complete Program','Key Formula']}};
+const learnRevealed=new Set();
+function learnApplySpoilerGate(cid,pageNo){
+  const spec=LEARN_SPOILERS[cid]&&LEARN_SPOILERS[cid][pageNo],key=cid+':'+pageNo;
+  if(!spec||learnRevealed.has(key))return;
+  const body=document.querySelector('#walk .learn-page-body');if(!body)return;
+  const strongs=[...body.querySelectorAll('strong')];
+  const start=strongs.find(s=>s.textContent.trim().startsWith(spec[0]));if(!start)return;
+  const end=strongs.find(s=>s.textContent.trim().startsWith(spec[1])&&(start.compareDocumentPosition(s)&Node.DOCUMENT_POSITION_FOLLOWING));
+  const wrap=document.createElement('div');wrap.className='la-spoiler';wrap.hidden=true;wrap.dataset.spoiler=key;
+  start.parentNode.insertBefore(wrap,start);
+  let n=start;while(n&&n!==end){const nx=n.nextSibling;wrap.appendChild(n);n=nx}
+  const gate=document.createElement('div');gate.className='la-spoiler-gate';
+  gate.innerHTML='<p><b>Try it first.</b> The worked solution is tucked away so you get a real attempt. It opens on its own when you solve the challenge below, or you can open it yourself.</p>';
+  const btn=document.createElement('button');btn.type='button';btn.className='btn ghost';btn.textContent='Show the worked solution';btn.onclick=()=>window.learnRevealSpoiler(cid,pageNo);
+  gate.appendChild(btn);wrap.parentNode.insertBefore(gate,wrap)
+}
+window.learnRevealSpoiler=(cid,pageNo)=>{
+  learnRevealed.add(cid+':'+pageNo);
+  document.querySelectorAll('.la-spoiler[data-spoiler="'+cid+':'+pageNo+'"]').forEach(w=>{w.hidden=false});
+  document.querySelectorAll('.la-spoiler-gate').forEach(g=>{g.hidden=true})
+};
 function renderLearn(){
   if(!app)return;
   const sid=$('learnStage').value||app.stages[0].stage_id;
@@ -1890,8 +1935,10 @@ function renderLearn(){
   $('learnNotice').innerHTML=notice;
   $('learnNotice').querySelectorAll('[data-recover]').forEach(b=>b.onclick=()=>openLearn(b.dataset.recoverStage,b.dataset.recover));
 
-  $('walk').innerHTML=`<div class="card walk-card"><div><div class="meta">Stage ${app.stages.find(s=>s.stage_id===sid)?.stage_no} · ${esc(n?.title||'Learn')} · page ${learnPage+1} of ${pages.length}</div><h2>${learnPage===0?'DADA’s walkthrough':learnPage===pages.length-1?'Ready to prove it?':'Keep going'}</h2>${formatLearnPage(pages[learnPage])}<div class="phrase" style="background:#f3f0ff;color:var(--purple);border:0">${esc(phrase('learn')||'Predict the example before moving on.')}</div></div><img class="kabi" src="${learnPage===pages.length-1?KABI.thinking:KABI.teaching}" alt="DADA teaching"></div><div class="pager"><button class="btn ghost" id="learnBack" ${learnPage===0?'disabled':''}>Back</button><div class="dots">${pages.map((_,i)=>`<i class="dot ${i===learnPage?'on':''}"></i>`).join('')}</div><button class="btn" id="learnNext">${learnPage===pages.length-1?'TAKE TEST':'Next'}</button></div>`;
+  $('walk').innerHTML=`<div class="card walk-card"><div><div class="meta">Stage ${app.stages.find(s=>s.stage_id===sid)?.stage_no} · ${esc(n?.title||'Learn')} · page ${learnPage+1} of ${pages.length}</div><h2>${learnPage===0?'DADA’s walkthrough':learnPage===pages.length-1?'Ready to prove it?':'Keep going'}</h2>${formatLearnPage(pages[learnPage])}<div class="learn-activities" id="learnActivities" hidden></div><div class="phrase" style="background:#f3f0ff;color:var(--purple);border:0">${esc(phrase('learn')||'Predict the example before moving on.')}</div></div><img class="kabi" src="${learnPage===pages.length-1?KABI.thinking:KABI.teaching}" alt="DADA teaching"></div><div class="pager"><button class="btn ghost" id="learnBack" ${learnPage===0?'disabled':''}>Back</button><div class="dots">${pages.map((_,i)=>`<i class="dot ${i===learnPage?'on':''}"></i>`).join('')}</div><button class="btn" id="learnNext">${learnPage===pages.length-1?'TAKE TEST':'Next'}</button></div>`;
 
+  learnApplySpoilerGate(cid,learnPage+1);
+  mountLearnActivities(sid,cid,learnPage+1,String(pages[learnPage]).split('\n')[0]);
   $('learnBack').onclick=()=>{learnPage--;renderLearn();scrollLearnToTop()};
   $('learnNext').onclick=async()=>{
     if(learnPage<pages.length-1){

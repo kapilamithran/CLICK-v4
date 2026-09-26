@@ -1,0 +1,1136 @@
+{
+ "source": "Learn Content Interactivity Audit (26 Sep 2026)",
+ "total": 113,
+ "recommendations": [
+  {
+   "id": "CH0031.p1.ace",
+   "chapter": "CH0031",
+   "page": 1,
+   "component": "ACE",
+   "title": "Tap-to-explain Hello World",
+   "description": "Tap #include, main(), { }, printf() and return 0; in the real program to see what each does. Turns the recipe analogy into token-level understanding.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0031.p2.tr",
+   "chapter": "CH0031",
+   "page": 2,
+   "component": "TR",
+   "title": "Build pipeline animation",
+   "description": "Animate Edit, Compile, Link, Run with a Run button and a stage-specific message at each step. Also teaches the stages the test already asks about.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0031.p3.bug",
+   "chapter": "CH0031",
+   "page": 3,
+   "component": "BUG",
+   "title": "Missing-semicolon toggle",
+   "description": "Remove the ; and get an authored compiler-style message; put it back and the program works. Makes 'syntax error' concrete.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0031.p4.match",
+   "chapter": "CH0031",
+   "page": 4,
+   "component": "MATCH",
+   "title": "Header = toolbox",
+   "description": "Drag printf and scanf to the header that provides them (stdio.h now; string.h, math.h shown as 'coming later').",
+   "phase": 1,
+   "impact": "L"
+  },
+  {
+   "id": "CH0031.p5.run",
+   "chapter": "CH0031",
+   "page": 5,
+   "component": "RUN",
+   "title": "Change the greeting",
+   "description": "Edit the Hello World string and run it.",
+   "phase": 2,
+   "impact": "H"
+  },
+  {
+   "id": "CH0032.p1.bug",
+   "chapter": "CH0032",
+   "page": 1,
+   "component": "BUG",
+   "title": "Quotes matter",
+   "description": "Toggle the double quotes on printf(Hello World!) and see the authored error. The Wrong/Correct pair is already on the page.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0032.p3.lab",
+   "chapter": "CH0032",
+   "page": 3,
+   "component": "LAB",
+   "title": "Newline switch",
+   "description": "Add or remove \\n inside the string; the output pane re-flows live. Needs only an escape-sequence formatter.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0032.p4.pr",
+   "chapter": "CH0032",
+   "page": 4,
+   "component": "PR",
+   "title": "Predict the output",
+   "description": "For the page's examples (two printf calls with and without \\n), choose the output before revealing it.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0032.p2.run",
+   "chapter": "CH0032",
+   "page": 2,
+   "component": "RUN",
+   "title": "Type your own message",
+   "description": "Edit and run the first program.",
+   "phase": 2,
+   "impact": "H"
+  },
+  {
+   "id": "CH0032.p5.chk",
+   "chapter": "CH0032",
+   "page": 5,
+   "component": "CHK",
+   "title": "Recap check",
+   "description": "One or two ungraded questions.",
+   "phase": 1,
+   "impact": "L"
+  },
+  {
+   "id": "CH0033.p2.lab",
+   "chapter": "CH0033",
+   "page": 2,
+   "component": "LAB",
+   "title": "Comment it out",
+   "description": "Click a line to toggle //. The output pane shows which printf still runs.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0033.p3.bug",
+   "chapter": "CH0033",
+   "page": 3,
+   "component": "BUG",
+   "title": "Unclosed /* */",
+   "description": "Remove the closing */ and see the authored message; shows why comments must be closed.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0033.p4.match",
+   "chapter": "CH0033",
+   "page": 4,
+   "component": "MATCH",
+   "title": "Useful comment or noise",
+   "description": "Sort sample comments into 'explains something' and 'repeats the code'.",
+   "phase": 1,
+   "impact": "L"
+  },
+  {
+   "id": "CH0033.p5.chk",
+   "chapter": "CH0033",
+   "page": 5,
+   "component": "CHK",
+   "title": "Recap check",
+   "description": "One or two ungraded questions.",
+   "phase": 1,
+   "impact": "L"
+  },
+  {
+   "id": "CH0034.p1.mem",
+   "chapter": "CH0034",
+   "page": 1,
+   "component": "MEM",
+   "title": "Build the box",
+   "description": "Drag type, name and value into a labelled box to form int age = 18;. Assigning again overwrites the old value.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0034.p2.fil",
+   "chapter": "CH0034",
+   "page": 2,
+   "component": "FIL",
+   "title": "DATA TYPE + NAME",
+   "description": "Complete the formula for three declarations (int, float, char) with instant feedback.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0034.p4.pr",
+   "chapter": "CH0034",
+   "page": 4,
+   "component": "PR",
+   "title": "Predict printf(\"%d\", x)",
+   "description": "Change the variable's value and predict the printed line.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0034.p3.run",
+   "chapter": "CH0034",
+   "page": 3,
+   "component": "RUN",
+   "title": "Change and run",
+   "description": "Edit the stored value and run.",
+   "phase": 2,
+   "impact": "M"
+  },
+  {
+   "id": "CH0035.p1.match",
+   "chapter": "CH0035",
+   "page": 1,
+   "component": "MATCH",
+   "title": "Recap match",
+   "description": "Match comment, variable, printf() and data type to their jobs (Explain, Store, Display, Kind). Retrieval practice instead of re-reading.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0035.p2.ace",
+   "chapter": "CH0035",
+   "page": 2,
+   "component": "ACE",
+   "title": "Follow the journey",
+   "description": "Step through the combined program to see the comment, variable and printf roles.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0035.p4.mem",
+   "chapter": "CH0035",
+   "page": 4,
+   "component": "MEM",
+   "title": "Sort into type boxes",
+   "description": "Drag 25, 25.5 and 'A' into int, float and char boxes; a wrong drop explains why.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0035.p5.fil",
+   "chapter": "CH0035",
+   "page": 5,
+   "component": "FIL",
+   "title": "Type-the-line warm-up",
+   "description": "Type int age = 18;, float price = 25.5; and char grade = 'A'; with syntax-aware, ungraded feedback. A bridge to this chapter's typing questions (use different values from the test).",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0035.p5.run",
+   "chapter": "CH0035",
+   "page": 5,
+   "component": "RUN",
+   "title": "Write a three-line program",
+   "description": "Declare a variable and print it, then run. The direct rehearsal for the typing questions.",
+   "phase": 2,
+   "impact": "H"
+  },
+  {
+   "id": "CH0036.p1.mem",
+   "chapter": "CH0036",
+   "page": 1,
+   "component": "MEM",
+   "title": "int or not?",
+   "description": "Sort 10, 10.5, -5, 0 and 3.14 into 'fits an int' and 'does not'; a wrong pick explains why.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0036.p3.lab",
+   "chapter": "CH0036",
+   "page": 3,
+   "component": "LAB",
+   "title": "%d and %i",
+   "description": "Enter a value and a specifier; both print the same. Include a negative and zero.",
+   "phase": 1,
+   "impact": "L"
+  },
+  {
+   "id": "CH0036.p4.pr",
+   "chapter": "CH0036",
+   "page": 4,
+   "component": "PR",
+   "title": "Predict the message",
+   "description": "Predict 'My marks are %d' for different values of marks.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0036.p5.chk",
+   "chapter": "CH0036",
+   "page": 5,
+   "component": "CHK",
+   "title": "Recap check",
+   "description": "One or two ungraded questions.",
+   "phase": 1,
+   "impact": "L"
+  },
+  {
+   "id": "CH0037.p3.lab",
+   "chapter": "CH0037",
+   "page": 3,
+   "component": "LAB",
+   "title": "Precision lab",
+   "description": "A slider for digits (%.0f to %.10f) and a float/double toggle on the same value. Real float rounding makes the difference visible, for example 3.1415926535 at 10 places.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0037.p3.match",
+   "chapter": "CH0037",
+   "page": 3,
+   "component": "MATCH",
+   "title": "printf vs scanf specifiers",
+   "description": "Complete the specifier table by dragging %f and %lf into the printf and scanf columns for float and double.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0037.p4.pr",
+   "chapter": "CH0037",
+   "page": 4,
+   "component": "PR",
+   "title": "Predict Price: %f",
+   "description": "Predict 'Price: 99.990000' versus %.2f before revealing.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0037.p5.run",
+   "chapter": "CH0037",
+   "page": 5,
+   "component": "RUN",
+   "title": "Change the price",
+   "description": "Edit the price and the specifier and run.",
+   "phase": 2,
+   "impact": "M"
+  },
+  {
+   "id": "CH0038.p2.bug",
+   "chapter": "CH0038",
+   "page": 2,
+   "component": "BUG",
+   "title": "Single or double quotes",
+   "description": "Toggle 'A' and \"A\" and see the authored diagnostic.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0038.p3.lab",
+   "chapter": "CH0038",
+   "page": 3,
+   "component": "LAB",
+   "title": "What does bool print?",
+   "description": "Flip true and false, see 1 and 0, and pick the right specifier.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0038.p4.pr",
+   "chapter": "CH0038",
+   "page": 4,
+   "component": "PR",
+   "title": "Predict both lines",
+   "description": "Predict the two printf lines of the student-result program.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0039.p2.bug",
+   "chapter": "CH0039",
+   "page": 2,
+   "component": "BUG",
+   "title": "Try to change a const",
+   "description": "Edit PRICE = 100; and get the authored 'assignment of read-only variable' message; the ordinary-variable version works.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0039.p3.tr",
+   "chapter": "CH0039",
+   "page": 3,
+   "component": "TR",
+   "title": "Call the function",
+   "description": "Step into greet(), print, and return; contrast with int getNumber() handing a value back.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0039.p3.match",
+   "chapter": "CH0039",
+   "page": 3,
+   "component": "MATCH",
+   "title": "Returns a value?",
+   "description": "Sort function headers into 'returns a value' and 'void'.",
+   "phase": 1,
+   "impact": "L"
+  },
+  {
+   "id": "CH0040.p1.lab",
+   "chapter": "CH0040",
+   "page": 1,
+   "component": "LAB",
+   "title": "Cast toggle",
+   "description": "5 / 2 with a cast switch: 2 versus 2.500000.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0040.p2.mem",
+   "chapter": "CH0040",
+   "page": 2,
+   "component": "MEM",
+   "title": "Whole versus decimal",
+   "description": "Watch 9.8 lose its .8 when stored in an int, and 5 become 5.0 in a float.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0040.p3.match",
+   "chapter": "CH0040",
+   "page": 3,
+   "component": "MATCH",
+   "title": "Implicit or explicit?",
+   "description": "Classify each line.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0040.p4.pr",
+   "chapter": "CH0040",
+   "page": 4,
+   "component": "PR",
+   "title": "Predict (float)5/2 and (int)9.99",
+   "description": "Predict before revealing.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0041.p2.lab",
+   "chapter": "CH0041",
+   "page": 2,
+   "component": "LAB",
+   "title": "Operator calculator",
+   "description": "Pick x, y and an operator; see the result and, for / and %, the 'how many times / what is left' breakdown.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0041.p3.pr",
+   "chapter": "CH0041",
+   "page": 3,
+   "component": "PR",
+   "title": "Integer division",
+   "description": "Predict 10 / 3 and 10 % 3 before revealing.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0041.p4.tr",
+   "chapter": "CH0041",
+   "page": 4,
+   "component": "TR",
+   "title": "Pre versus post stepper",
+   "description": "Step --a and b-- inside printf: the value that is used versus the value that is stored after each step.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0041.p5.chk",
+   "chapter": "CH0041",
+   "page": 5,
+   "component": "CHK",
+   "title": "Recap check",
+   "description": "One or two ungraded questions.",
+   "phase": 1,
+   "impact": "L"
+  },
+  {
+   "id": "CH0042.p2.lab",
+   "chapter": "CH0042",
+   "page": 2,
+   "component": "LAB",
+   "title": "Expand the shorthand",
+   "description": "Toggle x += 3 and x = x + 3 with live values, for all ten operators.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0042.p3.bug",
+   "chapter": "CH0042",
+   "page": 3,
+   "component": "BUG",
+   "title": "10 = x;",
+   "description": "Try the invalid assignment and read the authored error; contrast with x = 10;.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0042.p3.tr",
+   "chapter": "CH0042",
+   "page": 3,
+   "component": "TR",
+   "title": "a = b = c = 20",
+   "description": "Animate the value moving right to left.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0042.p4.pr",
+   "chapter": "CH0042",
+   "page": 4,
+   "component": "PR",
+   "title": "Bitwise assignments",
+   "description": "Predict a &= b, a |= b, a ^= b for a = 60, b = 13.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0043.p2.lab",
+   "chapter": "CH0043",
+   "page": 2,
+   "component": "LAB",
+   "title": "Truth lab",
+   "description": "Toggle two conditions to see &&, || and ! results; enter two numbers to see all six relational operators answer 1 or 0.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0043.p3.pr",
+   "chapter": "CH0043",
+   "page": 3,
+   "component": "PR",
+   "title": "Which lines print?",
+   "description": "Use the a = 10, b = 4 example with sliders for a and b.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0043.p4.flow",
+   "chapter": "CH0043",
+   "page": 4,
+   "component": "FLOW",
+   "title": "Decision path",
+   "description": "A real flowchart whose TRUE/FALSE path lights up as a and b change.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0044.p1.lab",
+   "chapter": "CH0044",
+   "page": 1,
+   "component": "LAB",
+   "title": "Bit flipper",
+   "description": "Eight toggles per operand; choose &, | or ^; the result bits and decimal update live.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0044.p3.lab",
+   "chapter": "CH0044",
+   "page": 3,
+   "component": "LAB",
+   "title": "Truth tables, live",
+   "description": "The AND, OR, XOR and NOT tables become clickable.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0044.p4.lab",
+   "chapter": "CH0044",
+   "page": 4,
+   "component": "LAB",
+   "title": "Shift slider",
+   "description": "Slide the shift count and watch the bits move; shows the times-2 and divide-by-2 relationship.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0044.p5.lab",
+   "chapter": "CH0044",
+   "page": 5,
+   "component": "LAB",
+   "title": "Even or odd with n & 1",
+   "description": "Enter n and highlight the last bit.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0045.p3.ord",
+   "chapter": "CH0045",
+   "page": 3,
+   "component": "ORD",
+   "title": "Rank the operators",
+   "description": "Drag the operator groups into precedence order, matching the page's list.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0045.p4.lab",
+   "chapter": "CH0045",
+   "page": 4,
+   "component": "LAB",
+   "title": "Evaluate step by step",
+   "description": "Click which operator runs first in 2 + 3 * 4; the lab reveals the order and intermediate values. Add parentheses and re-run.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0045.p5.pr",
+   "chapter": "CH0045",
+   "page": 5,
+   "component": "PR",
+   "title": "Associativity",
+   "description": "Predict 10 - 5 + 2 and a = b = 5.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0046.p1.match",
+   "chapter": "CH0046",
+   "page": 1,
+   "component": "MATCH",
+   "title": "Type to specifier",
+   "description": "Drag %d, %f, %lf, %c and %s to the matching data types.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0046.p3.bug",
+   "chapter": "CH0046",
+   "page": 3,
+   "component": "BUG",
+   "title": "Wrong specifier",
+   "description": "Show authored compiler warnings (not simulated garbage output) for mismatches such as %d with a float.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0046.p4.inp",
+   "chapter": "CH0046",
+   "page": 4,
+   "component": "INP",
+   "title": "printf versus scanf",
+   "description": "Read versus display, with the & shown where it belongs.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0047.p2.inp",
+   "chapter": "CH0047",
+   "page": 2,
+   "component": "INP",
+   "title": "Keyboard, scanf, variable",
+   "description": "Type 85 and watch it flow into marks; hover &marks to see the location box.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0047.p3.bug",
+   "chapter": "CH0047",
+   "page": 3,
+   "component": "BUG",
+   "title": "Remove the &",
+   "description": "Toggle &age; authored warning plus a picture of why scanf needs the location.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0047.p4.inp",
+   "chapter": "CH0047",
+   "page": 4,
+   "component": "INP",
+   "title": "Two values at once",
+   "description": "Type '18 5.8' or '10 20' and see age/height or a/b fill; try other separators.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0048.p3.lab",
+   "chapter": "CH0048",
+   "page": 3,
+   "component": "LAB",
+   "title": "Range-check lights",
+   "description": "Enter marks; each half of marks >= 0 && marks <= 100 lights up.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0048.p4.inp",
+   "chapter": "CH0048",
+   "page": 4,
+   "component": "INP",
+   "title": "scanf's return value",
+   "description": "Enter 20 versus hello; show scanf returning 1 versus 0 and the variable left unchanged.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0048.p5.chk",
+   "chapter": "CH0048",
+   "page": 5,
+   "component": "CHK",
+   "title": "Type check or range check?",
+   "description": "Classify sample failures.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0049.p2.inp",
+   "chapter": "CH0049",
+   "page": 2,
+   "component": "INP",
+   "title": "Skip the whitespace",
+   "description": "Toggle the space in \" %c\" against a leftover newline.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0049.p3.mem",
+   "chapter": "CH0049",
+   "page": 3,
+   "component": "MEM",
+   "title": "char name[20]",
+   "description": "Show 20 cells holding 'Arun' plus the end-of-string marker, and why the format is %19s.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0049.p4.inp",
+   "chapter": "CH0049",
+   "page": 4,
+   "component": "INP",
+   "title": "scanf %s versus fgets",
+   "description": "Type 'Arun Kumar' and see 'Arun' versus the whole line.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0050.p1.inp",
+   "chapter": "CH0050",
+   "page": 1,
+   "component": "INP",
+   "title": "Buffer theatre",
+   "description": "Type 18, Enter, then A; the characters queue up as chips and are consumed by each read.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0050.p2.inp",
+   "chapter": "CH0050",
+   "page": 2,
+   "component": "INP",
+   "title": "The famous newline problem",
+   "description": "Step scanf(\"%d\") then scanf(\"%c\"): the second read takes the leftover newline and 'skips' the input. The bug becomes visible.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0050.p3.inp",
+   "chapter": "CH0050",
+   "page": 3,
+   "component": "INP",
+   "title": "Apply the fix",
+   "description": "Toggle \" %c\" and watch the whitespace get skipped.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0050.p4.mem",
+   "chapter": "CH0050",
+   "page": 4,
+   "component": "MEM",
+   "title": "fgets and the newline",
+   "description": "Show the cells A r u n, K u m a r, newline, end marker. The page raises the problem but does not show how to remove the newline; that is a content decision for the authors.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0051.p1.flow",
+   "chapter": "CH0051",
+   "page": 1,
+   "component": "FLOW",
+   "title": "Age gate",
+   "description": "A slider for age; the TRUE/FALSE path lights up; edit the threshold.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0051.p3.bug",
+   "chapter": "CH0051",
+   "page": 3,
+   "component": "BUG",
+   "title": "= versus ==",
+   "description": "Toggle age == 18 and age = 18 in a condition; authored explanation; predict the branch.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0051.p4.match",
+   "chapter": "CH0051",
+   "page": 4,
+   "component": "MATCH",
+   "title": "Scenario to condition",
+   "description": "Match banking, shopping, games and login scenarios to conditions.",
+   "phase": 1,
+   "impact": "L"
+  },
+  {
+   "id": "CH0052.p2.flow",
+   "chapter": "CH0052",
+   "page": 2,
+   "component": "FLOW",
+   "title": "Two paths",
+   "description": "A marks slider; exactly one block runs.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0052.p3.lab",
+   "chapter": "CH0052",
+   "page": 3,
+   "component": "LAB",
+   "title": "With and without else",
+   "description": "Toggle the else block to compare page 3's two versions.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0052.p5.pr",
+   "chapter": "CH0052",
+   "page": 5,
+   "component": "PR",
+   "title": "Even or odd",
+   "description": "Predict the output for number % 2 == 0 with different numbers.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0115.p3.ord",
+   "chapter": "CH0115",
+   "page": 3,
+   "component": "ORD",
+   "title": "Order matters",
+   "description": "Reorder the grade ladder. With the wrong order, marks = 85 prints 'Grade C'. Shows why the page says to put conditions in the correct order.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0115.p2.flow",
+   "chapter": "CH0115",
+   "page": 2,
+   "component": "FLOW",
+   "title": "Ladder trace",
+   "description": "An age slider through Child, Teenager and Adult; the first true condition wins.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0115.p4.pr",
+   "chapter": "CH0115",
+   "page": 4,
+   "component": "PR",
+   "title": "Positive, negative or zero",
+   "description": "Predict for several values of n.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0053.p2.lab",
+   "chapter": "CH0053",
+   "page": 2,
+   "component": "LAB",
+   "title": "Match the case",
+   "description": "Change choice; the matching case lights up; default runs when nothing matches.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0053.p3.tr",
+   "chapter": "CH0053",
+   "page": 3,
+   "component": "TR",
+   "title": "Fall-through",
+   "description": "Toggle break and watch execution run into the next case.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0053.p5.match",
+   "chapter": "CH0053",
+   "page": 5,
+   "component": "MATCH",
+   "title": "Which statement fits?",
+   "description": "Match if, if-else, switch and ternary to scenarios (uses the comparison table already on the page).",
+   "phase": 1,
+   "impact": "L"
+  },
+  {
+   "id": "CH0054.p1.fil",
+   "chapter": "CH0054",
+   "page": 1,
+   "component": "FIL",
+   "title": "Build the ternary",
+   "description": "Fill the condition, TRUE value and FALSE value slots.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0054.p2.ord",
+   "chapter": "CH0054",
+   "page": 2,
+   "component": "ORD",
+   "title": "if-else to ternary and back",
+   "description": "Convert one form to the other.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0054.p4.flow",
+   "chapter": "CH0054",
+   "page": 4,
+   "component": "FLOW",
+   "title": "Temperature check",
+   "description": "A slider through the 25 degree threshold.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0055.p2.flow",
+   "chapter": "CH0055",
+   "page": 2,
+   "component": "FLOW",
+   "title": "Two-gate walk",
+   "description": "Inputs for age and marks; the path through the outer and inner checks highlights.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0055.p3.pr",
+   "chapter": "CH0055",
+   "page": 3,
+   "component": "PR",
+   "title": "Which message prints?",
+   "description": "Marks 40, 60 and 80 through the nested example.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0055.p5.chk",
+   "chapter": "CH0055",
+   "page": 5,
+   "component": "CHK",
+   "title": "Too much nesting?",
+   "description": "Recognise when to flatten.",
+   "phase": 1,
+   "impact": "L"
+  },
+  {
+   "id": "CH0056.p2.lab",
+   "chapter": "CH0056",
+   "page": 2,
+   "component": "LAB",
+   "title": "for-loop dissector",
+   "description": "Edit initialisation, condition and update; see the iteration count and output.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0056.p3.tt",
+   "chapter": "CH0056",
+   "page": 3,
+   "component": "TT",
+   "title": "Fill the trace table",
+   "description": "The static trace table becomes a fill-in table (i, i <= 3, output).",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0056.p1.run",
+   "chapter": "CH0056",
+   "page": 1,
+   "component": "RUN",
+   "title": "Change the count",
+   "description": "Edit the loop bound and run.",
+   "phase": 2,
+   "impact": "H"
+  },
+  {
+   "id": "CH0056.p5.chal",
+   "chapter": "CH0056",
+   "page": 5,
+   "component": "CHAL",
+   "title": "Print 1 to 10, for real",
+   "description": "Replace the instant spoiler with a real challenge: goal, hint ladder, check. The solution appears afterwards.",
+   "phase": 2,
+   "impact": "H"
+  },
+  {
+   "id": "CH0057.p3.tt",
+   "chapter": "CH0057",
+   "page": 3,
+   "component": "TT",
+   "title": "Fill the trace table",
+   "description": "Fill in the trace for the 1 2 3 example.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0057.p3.lab",
+   "chapter": "CH0057",
+   "page": 3,
+   "component": "LAB",
+   "title": "Forgot i++",
+   "description": "Toggle the update line; a capped counter shows i staying put and the condition staying true.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0057.p4.inp",
+   "chapter": "CH0057",
+   "page": 4,
+   "component": "INP",
+   "title": "Password loop",
+   "description": "Simulate the attempts with typed guesses until 1234.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0057.p5.lab",
+   "chapter": "CH0057",
+   "page": 5,
+   "component": "LAB",
+   "title": "while versus do-while",
+   "description": "Start with the condition false and count how many times the body runs.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0058.p5.lab",
+   "chapter": "CH0058",
+   "page": 5,
+   "component": "LAB",
+   "title": "Condition already false",
+   "description": "Change i; a counter shows the body ran once anyway.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0058.p3.tr",
+   "chapter": "CH0058",
+   "page": 3,
+   "component": "TR",
+   "title": "DO, CHECK, REPEAT",
+   "description": "Step through the flow.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0058.p2.inp",
+   "chapter": "CH0058",
+   "page": 2,
+   "component": "INP",
+   "title": "A menu that shows once",
+   "description": "Menu simulation with typed choices.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0059.p3.tt",
+   "chapter": "CH0059",
+   "page": 3,
+   "component": "TT",
+   "title": "Fill the trace table",
+   "description": "Fill in i, i == 4 and the action.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0059.p4.lab",
+   "chapter": "CH0059",
+   "page": 4,
+   "component": "LAB",
+   "title": "Find the red ball",
+   "description": "Boxes 1 to 5; the loop stops at the match; count the boxes checked.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0059.p5.chal",
+   "chapter": "CH0059",
+   "page": 5,
+   "component": "CHAL",
+   "title": "Stop at 6, for real",
+   "description": "A real challenge instead of an instant spoiler.",
+   "phase": 2,
+   "impact": "H"
+  },
+  {
+   "id": "CH0060.p3.tt",
+   "chapter": "CH0060",
+   "page": 3,
+   "component": "TT",
+   "title": "Fill the trace table",
+   "description": "The skipped iteration is highlighted.",
+   "phase": 1,
+   "impact": "M"
+  },
+  {
+   "id": "CH0060.p4.lab",
+   "chapter": "CH0060",
+   "page": 4,
+   "component": "LAB",
+   "title": "break and continue side by side",
+   "description": "The same loop with either keyword; the two outputs are shown together.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0060.p5.chal",
+   "chapter": "CH0060",
+   "page": 5,
+   "component": "CHAL",
+   "title": "Skip 6, for real",
+   "description": "A real challenge instead of an instant spoiler.",
+   "phase": 2,
+   "impact": "H"
+  },
+  {
+   "id": "CH0061.p1.grid",
+   "chapter": "CH0061",
+   "page": 1,
+   "component": "GRID",
+   "title": "Rows and columns",
+   "description": "Sliders for rows and columns; i and j highlight; the output builds row by row.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0061.p2.tr",
+   "chapter": "CH0061",
+   "page": 2,
+   "component": "TR",
+   "title": "Outer, inner, repeat",
+   "description": "Step the 11 12 13 / 21 22 23 example.",
+   "phase": 1,
+   "impact": "H"
+  },
+  {
+   "id": "CH0061.p5.chal",
+   "chapter": "CH0061",
+   "page": 5,
+   "component": "CHAL",
+   "title": "4 rows of 3 stars, for real",
+   "description": "A pattern challenge with a live preview.",
+   "phase": 2,
+   "impact": "H"
+  }
+ ]
+}

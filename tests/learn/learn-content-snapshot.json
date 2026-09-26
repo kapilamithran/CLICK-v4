@@ -1,0 +1,389 @@
+{
+ "source": "learn_content (active) exported 2026-09-26",
+ "chapters": {
+  "CH0031": {
+   "stage": "STG001",
+   "stage_no": 0,
+   "title": "Intro",
+   "headings": [
+    "Structure in C — First C Program",
+    "Compiler",
+    "Syntax",
+    "Header Files",
+    "Main Function in C — Quick Recap"
+   ]
+  },
+  "CH0032": {
+   "stage": "STG001",
+   "stage_no": 0,
+   "title": "printf",
+   "headings": [
+    "What's printf?",
+    "First printf() Program",
+    "New Line \\n",
+    "Code Examples",
+    "printf() Recap"
+   ]
+  },
+  "CH0033": {
+   "stage": "STG001",
+   "stage_no": 0,
+   "title": "Comments",
+   "headings": [
+    "What Are Comments?",
+    "Single-Line Comment",
+    "Multi-Line Comment",
+    "Why Do We Use Comments?",
+    "Comments Recap"
+   ]
+  },
+  "CH0034": {
+   "stage": "STG001",
+   "stage_no": 0,
+   "title": "Variables",
+   "headings": [
+    "What Is a Variable?",
+    "Creating a Variable",
+    "Storing a Value",
+    "Using a Variable",
+    "Variables Recap"
+   ]
+  },
+  "CH0035": {
+   "stage": "STG001",
+   "stage_no": 0,
+   "title": "Recap & Datatypes Intro",
+   "headings": [
+    "Let's Recap!",
+    "Put Everything Together!",
+    "What Is a Data Type?",
+    "Basic Data Types",
+    "Quick Recap + New Learning!"
+   ]
+  },
+  "CH0036": {
+   "stage": "STG002",
+   "stage_no": 1,
+   "title": "integer",
+   "headings": [
+    "What is an Integer?",
+    "Imagine a Number Box",
+    "3 Things You Should Know",
+    "Let's Make It Work!",
+    "Quick Recap — Integer (int)"
+   ]
+  },
+  "CH0037": {
+   "stage": "STG002",
+   "stage_no": 1,
+   "title": "float & double",
+   "headings": [
+    "Meet float & double",
+    "The Decimal Measuring Tape",
+    "float vs double",
+    "Let's Use Them!",
+    "Quick Recap — Float & Double in 30 Seconds"
+   ]
+  },
+  "CH0038": {
+   "stage": "STG002",
+   "stage_no": 1,
+   "title": "character & boolean",
+   "headings": [
+    "Meet char & bool",
+    "Analogy — Filling Out a Form",
+    "How Do We Display Them?",
+    "Let's Try It!",
+    "Quick Recap — Character & Boolean in 30 Seconds"
+   ]
+  },
+  "CH0039": {
+   "stage": "STG002",
+   "stage_no": 1,
+   "title": "constants, void",
+   "headings": [
+    "What is a Constant?",
+    "The Locked Price Tag",
+    "What is void?",
+    "Let's Use const & void!",
+    "Quick Recap — Constants & void"
+   ]
+  },
+  "CH0040": {
+   "stage": "STG002",
+   "stage_no": 1,
+   "title": "type casting",
+   "headings": [
+    "What is Type Casting?",
+    "Think of It Like Changing a Container",
+    "Two Ways C Can Convert",
+    "Let's See Why It Matters!",
+    "Quick Recap — Type Casting in 30 Seconds"
+   ]
+  },
+  "CH0041": {
+   "stage": "STG003",
+   "stage_no": 2,
+   "title": "arithmetic & unary operation",
+   "headings": [
+    "Arithmetic & Unary Operators",
+    "Arithmetic & Unary Operators — Reference",
+    "Tricks to Solve",
+    "Code Examples",
+    "Chapter Recap"
+   ]
+  },
+  "CH0042": {
+   "stage": "STG003",
+   "stage_no": 2,
+   "title": "assignment",
+   "headings": [
+    "What Are Assignment Operators?",
+    "Assignment Operators",
+    "Special Features",
+    "Code Examples",
+    "Assignment Operators Recap"
+   ]
+  },
+  "CH0043": {
+   "stage": "STG003",
+   "stage_no": 2,
+   "title": "relational & logical",
+   "headings": [
+    "Relational & Logical Operators",
+    "Types of Operators",
+    "Code Examples",
+    "Flowchart — How Does C Make a Decision?",
+    "The Grand Recap"
+   ]
+  },
+  "CH0044": {
+   "stage": "STG003",
+   "stage_no": 2,
+   "title": "Bitwise",
+   "headings": [
+    "What Are Bitwise Operators?",
+    "Common Bitwise Operators",
+    "How Do Bitwise Operators Work?",
+    "Shift Operators << and >>",
+    "Why Are Bitwise Operators Important?"
+   ]
+  },
+  "CH0045": {
+   "stage": "STG003",
+   "stage_no": 2,
+   "title": "Precedence",
+   "headings": [
+    "What Is Operator Precedence?",
+    "Why Is It Used?",
+    "Precedence Levels",
+    "How Does It Work?",
+    "The Operator Precedence Finale"
+   ]
+  },
+  "CH0046": {
+   "stage": "STG004",
+   "stage_no": 3,
+   "title": "format specifier",
+   "headings": [
+    "What is a Format Specifier?",
+    "Think of Format Specifiers as Different Boxes",
+    "Format Specifiers with printf()",
+    "Format Specifiers with scanf()",
+    "Quick Recap — Format Specifiers"
+   ]
+  },
+  "CH0047": {
+   "stage": "STG004",
+   "stage_no": 3,
+   "title": "scanf()",
+   "headings": [
+    "What is scanf()?",
+    "Understanding scanf()",
+    "Why Do We Use &?",
+    "Taking Multiple Inputs",
+    "Quick Recap — scanf()"
+   ]
+  },
+  "CH0048": {
+   "stage": "STG004",
+   "stage_no": 3,
+   "title": "Input validation",
+   "headings": [
+    "What is Input Validation?",
+    "Why Do We Need Validation?",
+    "Validation Using Conditions",
+    "scanf() Success Check",
+    "Quick Recap — Input Validation"
+   ]
+  },
+  "CH0049": {
+   "stage": "STG004",
+   "stage_no": 3,
+   "title": "Character & String Input",
+   "headings": [
+    "Reading a Character with scanf()",
+    "Why Is There a Space Before %c?",
+    "What is a String?",
+    "scanf(\"%s\") vs fgets()",
+    "Quick Recap — Character & String Input"
+   ]
+  },
+  "CH0050": {
+   "stage": "STG004",
+   "stage_no": 3,
+   "title": "Input Buffer & Newline Handling",
+   "headings": [
+    "What is the Input Buffer?",
+    "The Famous \\n Problem",
+    "The Simple Fix: Space Before %c",
+    "fgets() and the Newline",
+    "Quick Recap — Input Buffer & Newline"
+   ]
+  },
+  "CH0051": {
+   "stage": "STG005",
+   "stage_no": 4,
+   "title": "if Statement",
+   "headings": [
+    "What is if?",
+    "How Does if Work?",
+    "Conditions We Can Check",
+    "if in Real Programs",
+    "Recap — C Can Make Decisions!"
+   ]
+  },
+  "CH0052": {
+   "stage": "STG005",
+   "stage_no": 4,
+   "title": "if-else",
+   "headings": [
+    "What is if-else?",
+    "How Does if-else Work?",
+    "if vs if-else",
+    "if-else in Real Programs",
+    "Recap"
+   ]
+  },
+  "CH0053": {
+   "stage": "STG005",
+   "stage_no": 4,
+   "title": "Switch-Case",
+   "headings": [
+    "What is Switch-Case?",
+    "How Does Switch Work?",
+    "Case + Break + Default",
+    "Switch-Case in Real Programs",
+    "Recap — Switch-Case = Multiple Fixed Choices"
+   ]
+  },
+  "CH0054": {
+   "stage": "STG005",
+   "stage_no": 4,
+   "title": "Ternary Condition",
+   "headings": [
+    "What is Ternary?",
+    "From Basic to Professional",
+    "The Quick Decision Maker",
+    "Ternary Flow & Program Thinking",
+    "Recap — One-Line Decision"
+   ]
+  },
+  "CH0055": {
+   "stage": "STG005",
+   "stage_no": 4,
+   "title": "Nested if-else",
+   "headings": [
+    "What is Nested if-else?",
+    "How Does It Work?",
+    "Decision Level-Up",
+    "Nested if-else Flow",
+    "Recap — Nested if-else"
+   ]
+  },
+  "CH0115": {
+   "stage": "STG005",
+   "stage_no": 4,
+   "title": "else if",
+   "headings": [
+    "What is else if?",
+    "Structure of else if",
+    "Multiple Conditions",
+    "Real Program Usage",
+    "Recap"
+   ]
+  },
+  "CH0056": {
+   "stage": "STG006",
+   "stage_no": 5,
+   "title": "for loop",
+   "headings": [
+    "Meet the for Loop",
+    "How Does a for Loop Work?",
+    "Let's Trace the Loop",
+    "for Loop in Real Life",
+    "Your First for Loop"
+   ]
+  },
+  "CH0057": {
+   "stage": "STG006",
+   "stage_no": 5,
+   "title": "while loop",
+   "headings": [
+    "Meet the while Loop",
+    "How Does a while Loop Work?",
+    "Let's See It in Action",
+    "while Loop in Real Life",
+    "while vs do-while"
+   ]
+  },
+  "CH0058": {
+   "stage": "STG006",
+   "stage_no": 5,
+   "title": "do-while loop",
+   "headings": [
+    "Meet the do...while Loop",
+    "Why Do We Use do...while?",
+    "How Does do...while Work?",
+    "Simple C Example — Print Numbers 1 to 5",
+    "The Special Part"
+   ]
+  },
+  "CH0059": {
+   "stage": "STG006",
+   "stage_no": 5,
+   "title": "break",
+   "headings": [
+    "Meet the break Statement",
+    "How Does break Work?",
+    "Let's Trace the break",
+    "break in Real Life",
+    "Your break Challenge"
+   ]
+  },
+  "CH0060": {
+   "stage": "STG006",
+   "stage_no": 5,
+   "title": "continue",
+   "headings": [
+    "Meet the continue Statement",
+    "How Does continue Work?",
+    "Trace the continue",
+    "Why Use continue?",
+    "Your continue Challenge"
+   ]
+  },
+  "CH0061": {
+   "stage": "STG006",
+   "stage_no": 5,
+   "title": "nested loops",
+   "headings": [
+    "Meet the Nested Loop",
+    "How Does a Nested Loop Work?",
+    "Types of Nested Loops",
+    "Building a Nested Loop",
+    "Your First Nested Loop Challenge"
+   ]
+  }
+ }
+}
