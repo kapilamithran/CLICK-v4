@@ -5,9 +5,11 @@
  * A precision lab shows float and double side by side; a sorting task fills the printf/scanf specifier
  * table; a prediction covers %f versus %.2f; a run activity lets them change the price and specifier.
  *
- * NOTE for maintainers: page 4 of the Learn text says a float 99.99 prints 99.990000. Real gcc prints
- * 99.989998, because 99.99 has no exact float value. Every value used in these activities prints exactly
- * as shown (49.75, 25.5, 5.8 at six digits, pi at any digit count), so nothing here contradicts gcc.
+ * NOTE for maintainers: a float 99.99 prints 99.989998 with gcc (99.99 has no exact float value); page 4 of the
+ * Learn text now says so (supabase/migrations/20260926150000_learn_content_corrections.sql). The values used in
+ * these activities all print exactly as shown (49.75, 25.5, 5.8 at six digits, pi at any digit count).
+ * Specifier rule taught on page 3: float is %f; double is %lf; in printf() %f also prints a double identically;
+ * scanf() needs %f for float and %lf for double.
  */
 ClickLearn.define([
   {
@@ -32,12 +34,12 @@ ClickLearn.define([
     question: "Which specifier goes in each cell of the printf() and scanf() table?",
     buckets: [{ id: "f", label: "%f" }, { id: "lf", label: "%lf" }],
     items: [
-      { text: "float with printf()", bucket: "f", why: "printf() displays a float with %f." },
+      { text: "float with printf()", bucket: "f", why: "The table shows %f for a float." },
       { text: "float with scanf()", bucket: "f", why: "scanf() reads a float with %f too." },
-      { text: "double with printf()", bucket: "f", why: "The table above uses %f for printing a double. The special %lf is for scanf()." },
-      { text: "double with scanf()", bucket: "lf", why: "Reading a double with scanf() is the one place that needs %lf." },
+      { text: "double with printf()", bucket: "lf", why: "The table shows %lf for a double. (In printf(), %f prints a double in exactly the same way, so both work.)" },
+      { text: "double with scanf()", bucket: "lf", why: "scanf() must be told the variable is a double, so it needs %lf. Here the difference is not optional." },
     ],
-    explanation: "Three cells use %f. Only reading a double with scanf() needs %lf. You will use scanf() in the input chapter.",
+    explanation: "A float uses %f and a double uses %lf. In printf() the two print a double identically, but in scanf() the difference matters. You will use scanf() in the input chapter.",
   },
   {
     id: "CH0037.p4.predict-price", stage: "STG002", chapter: "CH0037", page: 4, heading: "Let's Use Them!",

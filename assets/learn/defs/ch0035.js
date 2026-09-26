@@ -79,12 +79,13 @@ ClickLearn.define([
   },
   {
     id: "CH0035.p4.print-each", stage: "STG001", chapter: "CH0035", page: 4, heading: "Basic Data Types",
-    kind: "reveal", title: "A quick preview: printing each type",
-    intro: "You will meet these fully in the next stage. Here is just enough to display each kind of variable.",
+    kind: "reveal", title: "Printing each type",
+    intro: "The page above shows how printf() displays each data type. Tap a card to see one in action.",
     cards: [
       { label: "int uses %d", body: "`int age = 18;`\n`printf(\"%d\", age);` prints `18`." },
       { label: "float uses %f", body: "`float price = 25.5;`\n`printf(\"%f\", price);` prints `25.500000`. %f shows six digits after the decimal point." },
       { label: "char uses %c", body: "`char grade = 'A';`\n`printf(\"%c\", grade);` prints `A`." },
+      { label: "one decimal: %.1f", body: "`float mark = 95.5;`\n`printf(\"%.1f\", mark);` prints `95.5`. The number after the dot says how many digits to show." },
     ],
   },
   {

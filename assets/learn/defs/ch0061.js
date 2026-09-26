@@ -26,7 +26,7 @@ ClickLearn.define([
     id: "CH0061.p2.step-nested", stage: "STG006", chapter: "CH0061", page: 2, heading: "How Does a Nested Loop Work?",
     kind: "trace", title: "Step through the nested loop",
     implements: ["CH0061.p2.tr"],
-    intro: "This trace adds one line, `printf(\"\\n\");`, after the inner loop. It ends each row, so the output looks like the one shown above.",
+    intro: "This is the same program as above. Watch `j` run all the way through for each `i`, and how `printf(\"\\n\");` ends each row.",
     code: [
       'for (int i = 1; i <= 2; i++)',
       '{',
