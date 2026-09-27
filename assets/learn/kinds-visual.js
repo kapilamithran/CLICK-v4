@@ -10,6 +10,9 @@
   var CL = root.ClickLearn;
   if (!CL) throw new Error("engine.js must load before kinds-visual.js");
   var h = function () { return CL.ui.h.apply(null, arguments); };
+  // Shared by every exploratory kind in this file (pipeline/buffer/bits/evalorder): marks the activity done after N interactions,
+  // not N *correct* interactions. That is intentional, matching assets/learn/README.md ("learning interactions, not assessments":
+  // a student can skip, get it wrong, and still continue) -- these kinds have no pass/fail concept, only "explored enough."
   var interactions = function (api, n) { var c = 0; return function () { c++; if (c >= (n || 3)) api.done(); }; };
 
   // ------------------------------------------------------------ pipeline
@@ -95,8 +98,9 @@
         else { ok = false; note = "No input left."; }
       } else if (fmt === "%d" || fmt === "%f" || fmt === "%lf") {
         skipWs();
+        var skippedWs = consumed.length > 0; // skipWs() above already recorded any skipped whitespace positions; nothing was added since
         var re = fmt === "%d" ? /^[+-]?\d+/ : /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/, m = re.exec(input.slice(p));
-        if (m) { for (var k = 0; k < m[0].length; k++) consumed.push(p + k); p += m[0].length; value = m[0]; note = fmt + " skipped leading whitespace, read \"" + m[0] + "\" and stopped at the next character."; }
+        if (m) { for (var k = 0; k < m[0].length; k++) consumed.push(p + k); p += m[0].length; value = m[0]; note = (skippedWs ? fmt + " skipped the leading whitespace, then read \"" : fmt + " read \"") + m[0] + "\" and stopped at the next character."; }
         else { ok = false; note = p >= input.length ? "No input left." : "\"" + input[p] + "\" is not a number, so " + fmt + " stops here and reads nothing."; }
       } else if (fmt === "%s") {
         skipWs(); var q = p; while (q < input.length && !isWs(input[q])) { consumed.push(q); q++; } value = input.slice(p, q); p = q; note = "%s reads one word: it stops at the first space or newline.";
@@ -288,10 +292,12 @@
           var oplen = (n.op || "").length;
           exprEl.appendChild(document.createTextNode(d.expr.slice(pos, n.opPos)));
           var done = results.has(n), ready = !done && isReady(n);
+          // `text: n.op` already sets the button's whole label; h() ALSO appends any trailing argument as a further child,
+          // so passing n.op a second time there doubled the glyph on screen ("+" rendered as "++", "*" as "**").
           exprEl.appendChild(h("button", { type: "button", class: "la-op" + (done ? " done" : ""), disabled: done, "aria-label": "Operator " + n.op + (done ? ", already worked out" : ""), text: n.op, onclick: function () {
             if (isReady(n)) { apply(n); api.clear(); paint(); tick(); if (results.size === ops.length) { api.say("good", "The result is " + fmtNum(results.get(ast)) + ".", api.md(d.explanation || "")); } else api.say("good", "Yes, that one is ready.", "Now pick the next operator."); }
             else { api.say("soft", "Not yet.", api.md(whyNot(n) || "Work out the parts inside first.")); }
-          } }, n.op));
+          } }));
           pos = n.opPos + oplen;
         });
         exprEl.appendChild(document.createTextNode(d.expr.slice(pos)));

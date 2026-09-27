@@ -591,6 +591,91 @@ async function main() {
     });
   }
 
+  // ================================================================ H. QA-fix regression: evalorder glyph, buffer wording; pipeline left unchanged
+  section("H. QA-fix regression: evalorder operator glyphs, buffer whitespace wording, pipeline unchanged");
+  {
+    const { ctx, page, errors } = await openChapter({}, "CH0045", { width: 390, height: 844 }, { mobile: true });
+    await t("evalorder (CH0045 'Which operator runs first?'): operator buttons show the real glyph exactly once, not doubled", async () => {
+      await L.passExplorer(page);
+      assert.equal((await L.slideKind(page)).activity, "CH0045.p4.order-multiply-first");
+      const glyphs = await page.locator("#testExercise .la-op").allTextContents();
+      assert.deepEqual(glyphs, ["+", "*"], "exactly the real operators, undoubled (this previously rendered as ++ / **)");
+      const labels = await page.locator("#testExercise .la-op").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")));
+      assert.deepEqual(labels, ["Operator +", "Operator *"], "aria-label was already correct and stays correct");
+    });
+    await t("evalorder: an out-of-order click is rejected without completing the activity", async () => {
+      await page.locator("#testExercise .la-op", { hasText: "+" }).click(); // + depends on * being resolved first -- not ready yet
+      await page.waitForFunction(() => /Not yet/.test(document.querySelector("#testExercise .la-feedback").textContent));
+      assert.equal(await page.evaluate(() => { const d = document.querySelector("#testExercise .la-done"); return d ? d.hidden : null; }), true, "not marked done from an unready click");
+    });
+    await t("evalorder: keyboard activation (Tab + Enter) still works, and the correct order completes the activity with the right result", async () => {
+      await page.locator("#testExercise .la-op", { hasText: "*" }).focus();
+      await page.keyboard.press("Enter");
+      await page.waitForFunction(() => /ready/.test(document.querySelector("#testExercise .la-feedback").textContent));
+      await page.locator("#testExercise .la-op", { hasText: "+" }).click();
+      await page.waitForFunction(() => /The result is 14/.test(document.querySelector("#testExercise .la-feedback").textContent));
+      assert.equal(await page.evaluate(() => !document.querySelector("#testExercise .la-done").hidden), true, "done tick shows once the value is fully worked out");
+    });
+    await t("no JS errors on the evalorder slide", async () => noErrors(errors));
+    await ctx.close();
+  }
+  {
+    const { ctx, page, errors } = await openChapter({}, "CH0047", { width: 390, height: 844 }, { mobile: true });
+    const note = () => page.locator("#testExercise .la-explain p").textContent();
+    const chips = () => page.locator("#testExercise .la-chip").evaluateAll((els) => els.map((e) => ({ ch: e.getAttribute("aria-label"), now: e.classList.contains("now") })));
+    const runNext = () => page.locator("#testExercise button", { hasText: "Run next input call" }).click();
+    await t("buffer (CH0047 'Watch a number flow in'): default input '85\\n' has no leading whitespace, so the note must not claim one was skipped", async () => {
+      await L.passExplorer(page);
+      assert.equal((await L.slideKind(page)).activity, "CH0047.p2.watch-marks-flow");
+      assert.equal(await page.locator("#testExercise .la-input").inputValue(), "85\n");
+      await runNext();
+      const n = await note();
+      assert.doesNotMatch(n, /skip/i, "no leading whitespace in \"85\\n\" -- must not claim one was skipped: " + n);
+      assert.match(n, /read "85"/, "still reports the value it read");
+      // the buffer visualization/consumed-character logic must be unaffected by the wording fix
+      assert.deepEqual(await chips(), [{ ch: "8", now: true }, { ch: "5", now: true }, { ch: "newline", now: false }], "scanf(\"%d\") stops before the trailing newline, unchanged");
+    });
+    await t("buffer: another no-whitespace input ('7\\n') also gets no false whitespace claim, and consumed characters stay correct", async () => {
+      await page.locator("#testExercise .la-input").fill("7\n");
+      await runNext();
+      const n = await note();
+      assert.doesNotMatch(n, /skip/i, n);
+      assert.match(n, /read "7"/);
+      assert.deepEqual(await chips(), [{ ch: "7", now: true }, { ch: "newline", now: false }]);
+    });
+    await t("buffer: real leading whitespace (' 42\\n') DOES get the whitespace-skip explanation, and consumed characters are still correct", async () => {
+      await page.locator("#testExercise .la-input").fill(" 42\n");
+      await runNext();
+      const n = await note();
+      assert.match(n, /skip/i, "real leading whitespace must still be explained: " + n);
+      assert.match(n, /read "42"/);
+      assert.deepEqual(await chips(), [{ ch: "space", now: true }, { ch: "4", now: true }, { ch: "2", now: true }, { ch: "newline", now: false }]);
+    });
+    await t("buffer: the activity still reaches completion after enough interactions, unrelated to the wording fix", async () => {
+      // 3 "Run next input call" clicks have now happened (85\n, 7\n, " 42\n"), matching this kind's interactions(api,3) rule
+      assert.equal(await page.evaluate(() => !document.querySelector("#testExercise .la-done").hidden), true);
+      assert.equal(await page.evaluate(() => !document.getElementById("testCheck").disabled), true, "the slide's own Continue also enables");
+    });
+    await t("no JS errors on the buffer slide", async () => noErrors(errors));
+    await ctx.close();
+  }
+  {
+    const { ctx, page, errors } = await openChapter({}, "CH0031", { width: 390, height: 844 }, { mobile: true });
+    await t("pipeline (CH0031 'Send code through the pipeline'): left unchanged -- a correct scenario still reaches real Run-stage output", async () => {
+      await L.passExplorer(page);
+      const q = (await L.slideKind(page)).qid;
+      await L.answerQuestion(page, q, true);
+      await page.waitForFunction(() => /Correct!/.test(document.getElementById("testFeedbackV11").textContent));
+      await page.locator("#testCheck").click();
+      assert.equal((await L.slideKind(page)).activity, "CH0031.p2.build-pipeline");
+      await page.locator("#testExercise button", { hasText: "Run everything" }).click();
+      await page.waitForFunction(() => /Program output/i.test(document.querySelector("#testExercise .la-explain")?.textContent || ""));
+      assert.match(await page.locator("#testExercise .la-explain").textContent(), /Hello World!/, "a correct scenario still reaches real Run-stage output");
+    });
+    await t("no JS errors on the pipeline slide", async () => noErrors(errors));
+    await ctx.close();
+  }
+
   await L.stop(S);
   L.finish();
 }
