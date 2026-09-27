@@ -1,0 +1,124 @@
+/* CLICK unified chapters: glossary, Code Explorer, slide chrome, reference links.
+ * Everything uses the app's theme tokens (--bg --ink --accent --muted --line --brutal ...), so light and dark both work. */
+
+/* ---------------------------------------------------------------- glossary terms and chips */
+.cg-term{
+  display:inline;padding:0 1px;margin:0;border:0;background:none;font:inherit;color:var(--accent);cursor:pointer;
+  text-decoration:underline dotted;text-decoration-thickness:2px;text-underline-offset:4px;-webkit-tap-highlight-color:transparent;
+}
+.cg-term:hover{background:color-mix(in srgb,var(--accent) 14%,transparent);border-radius:4px}
+.cg-chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 4px}
+.cg-chips-label{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.cg-chip{
+  min-height:36px;padding:6px 12px;border:2px solid var(--line);border-radius:999px;background:var(--bg);color:var(--ink);
+  font:inherit;font-size:13px;font-weight:750;cursor:pointer;
+  text-decoration:underline dotted;text-decoration-color:var(--accent);text-underline-offset:4px;
+}
+.cg-chip:hover{border-color:var(--accent)}
+.cg-term:focus-visible,.cg-chip:focus-visible,.ce-target:focus-visible,.cc-ref:focus-visible,.cc-skip:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:6px}
+
+/* ---------------------------------------------------------------- the sheet */
+.cg-sheet{
+  width:min(480px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:0;overflow:auto;
+  border:var(--card-border);border-radius:var(--r-xl);background:var(--bg);color:var(--ink);box-shadow:8px 8px 0 var(--brutal-yellow);
+}
+.cg-sheet::backdrop{background:rgba(16,20,35,.62)}
+.cg-sheet-in{padding:20px 20px 18px}
+.cg-kicker{margin:0;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.cg-sheet h3{margin:4px 0 10px;font-size:24px;line-height:1.2;overflow-wrap:anywhere}
+.cg-sheet h3 code{background:none;color:var(--accent);padding:0;font-family:var(--font-mono);font-size:inherit}
+.cg-sheet p{margin:0 0 10px;font-size:15px;line-height:1.55}
+.cg-sheet .cg-short{font-weight:750}
+.cg-sheet code{font-family:var(--font-mono);font-size:.92em;background:color-mix(in srgb,var(--accent) 16%,transparent);padding:1px 5px;border-radius:5px}
+.cg-block{margin:12px 0;padding:11px 13px;border-radius:14px;background:var(--card-bg);border:1px solid var(--line)}
+.cg-block>b{display:block;margin-bottom:5px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.cg-block p{margin:0}
+.cg-warn{border-color:#eab308}.cg-warn>b{color:#a16207}
+.cg-remember{border-color:var(--accent)}.cg-remember>b{color:var(--accent)}
+:root[data-theme="dark"] .cg-warn>b,:root:not([data-theme="light"]) .cg-warn>b{color:#fbbf24}
+.cg-code{margin:0;padding:12px 14px;border-radius:12px;background:#18151f;color:#efeaff;font-family:var(--font-mono);font-size:13.5px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.cg-code::before{display:none}
+.cg-code code{background:none;padding:0;font-size:inherit;color:inherit}
+.cg-related{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 4px}
+.cg-close{width:100%;min-height:48px;margin-top:12px}
+@media (max-width:800px){
+  .cg-sheet{margin:auto auto calc(10px + env(safe-area-inset-bottom));width:calc(100vw - 20px)}
+  .cg-sheet-in{padding:18px 16px 16px}
+  .cg-sheet h3{font-size:22px}
+}
+
+/* ---------------------------------------------------------------- Code Explorer */
+.ce-hint{margin:2px 0 10px;color:var(--muted);font-size:14px;line-height:1.45}
+.ce-code{
+  margin:0;padding:22px 14px 14px;border-radius:var(--r-md);background:#18151f;color:#efeaff;position:relative;
+  font-family:var(--font-mono);font-size:14px;line-height:2;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:3;box-shadow:var(--pressed-sm);
+}
+.ce-code::before{content:"";position:absolute;top:10px;left:14px;width:8px;height:8px;border-radius:50%;background:#ff5f57;box-shadow:14px 0 0 #febc2e,28px 0 0 #28c840}
+.ce-code code{font-family:inherit;font-size:inherit;background:none;padding:0;color:inherit}
+.ce-target{
+  display:inline;margin:-3px -2px;padding:3px 2px;border:0;border-radius:6px;background:none;color:#ffd54a;font:inherit;cursor:pointer;
+  text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px;-webkit-tap-highlight-color:transparent;
+}
+.ce-target:hover{background:rgba(255,213,74,.16)}
+.ce-target.was-opened{color:#c4b5fd}
+.ce-target.is-active{background:rgba(255,213,74,.3);box-shadow:0 0 0 2px #ffd54a}
+.ce-progress{margin:10px 2px 0;font-size:13px;font-weight:700;color:var(--muted)}
+.ce-progress.is-done{color:var(--accent)}
+@media (max-width:800px){.ce-code{font-size:13px;padding:22px 10px 12px}}
+
+/* ---------------------------------------------------------------- slide chrome (inside the existing test page) */
+/* the slide progress track was the same colour as the page, so it only appeared once it had started to fill */
+#testPage .lessonbar .progress{background:var(--line)}
+#testSlideMeta{margin:2px 0 4px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+#testSlideMeta:empty{display:none}
+.cc-kicker{font-size:13px;font-weight:800;color:var(--ink-soft)}
+.cc-goal{font-size:13px;color:var(--muted)}
+#testLead{margin:8px 0 2px;font-size:16px;line-height:1.55;padding-right:0}
+#testLead:empty,#testGlossary:empty{display:none}
+#testPage .cc-review-badge{display:none;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:var(--brutal-yellow);color:#000;border:2px solid var(--brutal);white-space:nowrap}
+#testPage.is-review .cc-review-badge{display:inline-block}
+#testPage.is-review .xp-mini{display:none}
+#testPage .actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.cc-skip{border:0;background:none;color:var(--muted);font:inherit;font-weight:700;font-size:14px;text-decoration:underline;text-underline-offset:4px;cursor:pointer;min-height:44px;padding:0 6px}
+.cc-skip:hover{color:var(--ink)}
+.cc-takeaway{margin-top:6px;font-weight:700}
+#testExercise .la{margin-top:6px}
+#testExercise .la-wraphead{display:none}
+
+/* ---------------------------------------------------------------- reference links: same place on every slide, never dominant */
+.cc-refs{max-width:760px;margin:18px auto 0;padding:14px 4px 0;border-top:1px solid var(--line)}
+.cc-refs-title{margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.cc-refs-title span{display:block;margin-top:2px;font-size:13px;font-weight:600;letter-spacing:0;text-transform:none}
+.cc-refs ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.cc-ref{
+  display:flex;align-items:center;gap:10px;min-height:48px;padding:8px 12px;border:2px solid var(--line);border-radius:14px;
+  color:var(--ink);text-decoration:none;font-weight:700;font-size:14px;line-height:1.3;background:var(--bg);
+}
+.cc-ref:hover{border-color:var(--accent)}
+.cc-ref svg{flex:none;width:22px;height:22px;color:#ff0033}
+.cc-ref-text{min-width:0;flex:1;overflow-wrap:anywhere}
+.cc-ref-text small{display:block;font-weight:600;color:var(--muted)}
+.cc-ref .cc-ext{flex:none;font-size:12px;color:var(--muted);font-weight:700;white-space:nowrap}
+
+/* ---------------------------------------------------------------- motion */
+@media (prefers-reduced-motion:reduce){
+  .cg-sheet,.ce-target,.cg-chip{transition:none!important;animation:none!important}
+}
+
+/* ---------------------------------------------------------------- readable text on the chapter card
+ * The app-wide card gradient runs up to a bright violet; dim text on it measured 1.3:1 at the light corner. The chapter card uses a calmer
+ * gradient (like the Home cards) and its secondary text a brighter tone, so everything reads at 4.5:1 or better in both themes. */
+:root{--cc-muted:#b9a8dc}
+:root[data-theme="light"]{--cc-muted:#6b5a8a}
+#testPage{--cc-card-bg:linear-gradient(155deg,#1f0a45 0%,#341670 100%)}
+:root[data-theme="light"] #testPage{--cc-card-bg:#fff}
+#testPage .lesson-card{background:var(--cc-card-bg)}
+.cg-kicker,.cg-block>b{color:var(--cc-muted)}
+.cg-warn>b{color:#fbbf24}
+:root[data-theme="light"] .cg-warn>b{color:#92580a}
+.cg-remember>b{color:var(--accent)}
+/* activity code must wrap on a phone rather than scroll sideways */
+#testExercise .la pre,#testExercise .la-code{white-space:pre-wrap;overflow-wrap:anywhere}
+#testPage .lesson-card .explain,.ce-hint,.ce-progress,.cc-goal,#testPage .lesson-card .meta{color:var(--cc-muted)}
+.ce-progress.is-done{color:var(--accent)}
+.cc-refs-title,.cc-ref-text small,.cc-ref .cc-ext,.cg-chips-label{color:var(--cc-muted)}

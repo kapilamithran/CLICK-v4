@@ -263,3 +263,59 @@ Two things follow from this:
 - [ ] Changes to `supabase/functions/**` or `supabase/config.toml` → Edge Function auto-deploys (covers §1)
 - [ ] Changes to `supabase/migrations/**` → migrations auto-apply (covers §2, §3, and any future migration)
 - [ ] §4 (Experiments) still needs a schema decision before it can become a migration at all
+
+---
+
+## Part C — Unified chapter run (Learn + chapter test in one)
+
+A chapter is now one run of 5–10 slides (see `assets/chapter/README.md`): a Code Explorer, hands-on activities and the chapter's real
+questions. The frontend needs **no schema change and no data migration**; the edge function got two small, backward-compatible changes. They
+deploy with the normal pipeline (changes under `supabase/functions/**`), and nothing runs until the new frontend sends `unified`.
+
+### What changed in `click-backend`
+
+| Action | Change | Callers that do not send `unified` |
+|---|---|---|
+| `startTest` | `unified: true` skips the "complete this chapter in Learn first" check, and caps the questions served at `UNIFIED_MAX_QUESTIONS` (settings table, default **8**). Prerequisites and the hearts check are unchanged. | unchanged (a tab still running the old app behaves exactly as before) |
+| `finishTest` | `unified: true` also records the Learn side: it inserts `learn_progress(completed = true)` if that student has no row, stamped with the run's **start** time. An existing row is left exactly as it was. | unchanged |
+| `completeLearn` | only the wording of the message differs when `unified` is sent. Hearts, refill logic and timestamps are untouched. | unchanged |
+| `isAnswerCorrect` | multiple-choice text is compared with line endings normalised (`\r\n` = `\n`). Browsers store CRLF as LF in HTML attributes, so an option with a line break in it could never be marked correct. | identical for single-line answers |
+
+Everything else that matters is the **existing** machinery, reused rather than duplicated: `test_runs` / `attempts` (3 attempts per question, a heart
+lost when all three fail), the partial unique index `idx_test_runs_one_completed_per_chapter` (XP paid once per chapter, atomically), and
+`prerequisites` (a chapter unlocks when the previous chapter's test is completed).
+
+### Why the learn row is stamped at the run's start
+
+Hearts are refilled only by reviewing the chapter where they were lost (`completeLearn`). "Owed" hearts are the losses recorded **after**
+`learn_progress.last_completed_at`. Stamping the new row at the run's start keeps a heart lost during the run owed, so passing a chapter never
+quietly refills hearts. Stamping it at completion time would have erased that debt.
+
+### `UNIFIED_MAX_QUESTIONS`
+
+Only chapters with more than 8 questions are affected. Today that is CH0035 (15 questions; a unified run serves the first 8 by `order`). Per-question
+XP is unchanged. To serve more or fewer, change the setting; no deploy is needed (the function caches settings for 30 s).
+
+### Legacy students (nothing is reset)
+
+| Before | After |
+|---|---|
+| `learn_completed` and `test_completed` | still completed; the chapter opens as an ungraded **review**; a stray run pays 0 XP |
+| `learn_completed` only (learned, never tested) | the chapter is the current one; its first graded run pays XP once; their learn row is untouched |
+| neither | first graded run; the learn row appears when the run completes |
+| hearts owed from old test attempts | still owed; reviewing the chapter refills them, exactly as before |
+
+### Testing the backend without a database
+
+`tests/backend/` boots the **real** `index.ts` under Deno with an in-memory stand-in for the Supabase client (`fake-supabase.ts`) that enforces the same
+primary keys and unique indexes, seeded with the real production content (`tests/fixtures/production-content.json`, rebuilt from these migrations by
+`tests/fixtures/build-production-content.mjs`):
+
+```
+npm i --no-save deno          # or install Deno; then:
+node --test tests/backend/run.test.js
+# or directly:
+deno test --allow-read --allow-env --import-map=tests/backend/import_map.json tests/backend/unified.test.ts
+```
+
+The `prerequisites` rows live in the database, not in this repo, so the tests model the documented rules (chapters unlock in order, a stage after the previous one).

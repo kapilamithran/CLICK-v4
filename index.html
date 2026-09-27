@@ -31,7 +31,7 @@
 .username-mascot{display:block;width:100%;max-width:150px;height:auto;justify-self:center;object-fit:contain}
 @media (max-width:520px){.username-card{grid-template-columns:1fr;text-align:center;gap:10px}.username-mascot{max-width:104px}.username-card .field{text-align:left}}
 .authbox{width:min(940px,100%);max-height:calc(100vh - 40px);display:grid;grid-template-columns:1fr 1fr;background:var(--card-bg);border:var(--card-border);border-radius:var(--r-xl);overflow:hidden;box-shadow:16px 16px 32px rgba(24,31,58,.22),-10px -10px 26px rgba(255,255,255,.65)}.authaside{background:linear-gradient(145deg,#3b1670,#a78bfa);color:#fff;padding:24px;display:flex;flex-direction:column;justify-content:center;gap:16px}.authaside img{max-width:clamp(90px,14vw,140px);align-self:center}.authmain{padding:28px;display:flex;flex-direction:column;justify-content:center;overflow-y:auto}.tabs{display:flex;background:var(--bg);border-radius:13px;padding:4px;margin-bottom:14px}.tabs button{flex:1;border:0;background:transparent;border-radius:10px;padding:10px;font-weight:850;cursor:pointer}.tabs button.active{background:var(--bg);box-shadow:0 2px 10px rgba(20,20,40,.08);color:var(--purple)}.form{display:none}.form.active{display:block}.field{margin-bottom:11px}.field label{display:block;font-size:12px;font-weight:800;margin-bottom:5px}.field input,.field select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px}.error{color:var(--red);font-size:12px;min-height:18px;margin-top:8px}.demo{font-size:12px;background:#ede8fc;color:#000;padding:10px;border-radius:11px;margin:12px 0}.testmodal{position:fixed;inset:0;background:rgba(16,20,35,.58);z-index:70;display:grid;place-items:center;padding:20px}.testbox{width:min(760px,100%);background:var(--card-bg);border:var(--card-border);border-radius:var(--r-xl);padding:24px;max-height:92vh;overflow:auto}.testtop{display:flex;justify-content:space-between;align-items:center;gap:10px}.option{width:100%;text-align:left;border:0;background:var(--bg);box-shadow:var(--raised-sm);border-radius:14px;padding:13px 14px;margin:7px 0;cursor:pointer;transition:.15s}.option:hover{background:#f4f0fc;color:#3b1670}.feedback{margin:12px 0;padding:12px 14px;border-radius:14px;font-weight:750;box-shadow:var(--pressed-sm)}.feedback.good{background:#fef9c3;color:#854d0e}.feedback.bad{background:#ece9ef;color:#1f1a24}.notice{background:#fef9c3;border:1px solid #fde047;border-radius:13px;padding:12px;margin:12px 0}.mobiletabs{display:none}
-@media(max-width:800px){.layout{display:block}.sidebar{display:none}.main{padding:16px 14px 86px}.topbar{padding:0 13px}.tagline{display:none}.grid,.metrics{grid-template-columns:1fr}.hero{padding:20px}.authbox{grid-template-columns:1fr}.authaside{display:none}.walk-card{grid-template-columns:1fr}.walk-card .kabi{justify-self:center}.mobiletabs{display:grid;grid-template-columns:repeat(7,1fr);position:fixed;left:10px;right:10px;bottom:10px;background:var(--bg);border-top:0;border-radius:22px;box-shadow:var(--raised);z-index:40;padding:4px}.mobiletabs button{border:0;background:transparent;border-radius:16px;padding:10px 2px;font-size:10px;font-weight:700;color:var(--ink-soft);transition:.12s}.mobiletabs button:active{background:var(--bg);box-shadow:var(--pressed-sm);color:var(--accent)}.rank{grid-template-columns:38px 1fr 70px}.rank .accuracy{display:none}}
+@media(max-width:800px){.layout{display:block}.sidebar{display:none}.main{padding:16px 14px 86px}.topbar{padding:0 13px}.tagline{display:none}.grid,.metrics{grid-template-columns:1fr}.hero{padding:20px}.authbox{grid-template-columns:1fr}.authaside{display:none}.walk-card{grid-template-columns:1fr}.walk-card .kabi{justify-self:center}.mobiletabs{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;left:10px;right:10px;bottom:10px;background:var(--bg);border-top:0;border-radius:22px;box-shadow:var(--raised);z-index:40;padding:4px}.mobiletabs button{border:0;background:transparent;border-radius:16px;padding:10px 2px;font-size:10px;font-weight:700;color:var(--ink-soft);transition:.12s}.mobiletabs button:active{background:var(--bg);box-shadow:var(--pressed-sm);color:var(--accent)}.rank{grid-template-columns:38px 1fr 70px}.rank .accuracy{display:none}}
 
 /* v12.2 login split */
 .authbox{background:var(--bg)}
@@ -556,7 +556,7 @@ pre,.test-v11-code,.learn-page-body pre{
 
   /* Bottom navigation */
   .mobiletabs{
-    grid-template-columns:repeat(7,minmax(0,1fr));
+    grid-template-columns:repeat(6,minmax(0,1fr));
     min-height:58px;
     padding-bottom:env(safe-area-inset-bottom);
   }
@@ -1053,7 +1053,13 @@ table.staff-table tr.staff-row-clickable:hover{background:rgba(255,255,255,.04)}
   table.staff-table{min-width:760px}
 }
 </style>
-</head><body><script>(function(){try{if(localStorage.getItem('clickTheme')==='light')document.documentElement.setAttribute('data-theme','light')}catch(e){}})()</script><script>
+<link rel="stylesheet" href="assets/home/path.css?v=2">
+<script src="assets/home/path.js?v=2"></script>
+<link rel="stylesheet" href="assets/chapter/chapter.css?v=1">
+<script src="assets/chapter/glossary.js?v=1"></script>
+<script src="assets/chapter/explorer.js?v=1"></script>
+<script src="assets/chapter/chapter.js?v=1"></script>
+</head><body data-page="home"><script>(function(){try{if(localStorage.getItem('clickTheme')==='light')document.documentElement.setAttribute('data-theme','light')}catch(e){}})()</script><script>
 function toast(message,kind){
   kind=kind||'info';
   var stack=document.getElementById('toastStack');
@@ -1120,9 +1126,9 @@ document.addEventListener('paste',function(e){
 </div>
 <div id="mailFlyer" class="hidden" aria-hidden="true">📧</div>
 <div class="shell"><header class="topbar"><div><img class="brand-logo top" src="assets/logo/click-logo-icon.png" alt="CLICK — click learn practice"></div><div class="top-spacer"></div><div class="stat">❤️ <span id="topHearts">3</span></div><div class="stat">⚡ <span id="topXP">0</span> XP</div><div class="userchip"><div class="user-account" id="userMenuTrigger" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false" aria-controls="userMenu"><div id="avatar" class="avatar">S</div><div><div id="topName" style="font-weight:850;font-size:13px">Student</div><div id="topRoll" class="meta"></div></div><div id="userMenu" class="user-menu" role="menu" aria-hidden="true"><button type="button" class="user-menu-item" data-user-menu="profile" role="menuitem">👤 Your Profile</button><button type="button" class="user-menu-item" data-user-menu="reset-password" role="menuitem">🔐 Reset Password</button><button type="button" class="user-menu-item" data-user-menu="logout" role="menuitem">🚪 Logout</button></div></div><button id="themeToggle" class="theme-toggle" type="button" title="Toggle light/dark theme" aria-label="Toggle theme">🌙</button></div></header>
-<div class="layout"><aside class="sidebar"><button class="navbtn active" data-page="home">🏠 Home</button><button class="navbtn" id="navLearn" data-page="learn">📘 Learn</button><button class="navbtn" id="navPractice" data-page="practice">💻 Practice</button><button class="navbtn" id="navProgress" data-page="progress">👤 Profile</button><button class="navbtn" data-page="leadership">🏆 Leadership</button><button class="navbtn" data-page="announcements">📣 Announcements<span class="nav-badge-dot hidden" id="announcementsBadgeDesktop"></span></button><button class="navbtn" data-page="about">🎓 About</button></aside><main class="main">
-<section id="home" class="page active"><div class="hero" id="homeHero"><div><div class="hero-tour-row"><div><h1 id="welcome">Welcome!</h1><p>Learn one tiny chapter, test it, then move forward.</p></div><button id="takeTourBtn" class="btn tour-btn" type="button">▶ Take a Tour</button></div><div id="motivation" class="phrase"></div><div id="homeRecovery"></div></div><div class="hero-kabi-wrap"><img id="homeKabi" class="kabi" alt="DADA"></div></div><div class="section-title" id="learningPathTitle"><h2>Your learning path</h2><span class="meta">Learn chapter → test chapter → unlock next</span></div><div id="stageGrid" class="stage-paths"></div></section>
-<section id="learn" class="page"><div class="section-title"><div><h2>Learn</h2><div class="meta">One micro-chapter at a time from the LearnContent sheet.</div></div><div class="learn-selectors"><select id="learnStage" class="stage-select"></select><select id="learnChapter" class="stage-select"></select></div></div><div id="learnNotice"></div><div id="walk" class="walk"></div></section>
+<div class="layout"><aside class="sidebar"><button class="navbtn active" data-page="home">🏠 Home</button><button class="navbtn" id="navPractice" data-page="practice">💻 Practice</button><button class="navbtn" id="navProgress" data-page="progress">👤 Profile</button><button class="navbtn" data-page="leadership">🏆 Leadership</button><button class="navbtn" data-page="announcements">📣 Announcements<span class="nav-badge-dot hidden" id="announcementsBadgeDesktop"></span></button><button class="navbtn" data-page="about">🎓 About</button></aside><main class="main">
+<section id="home" class="page active"><div class="hero" id="homeHero"><div><div class="hero-tour-row"><div><h1 id="welcome">Welcome!</h1><p>Learn a tiny chapter by doing it, then move forward.</p></div><button id="takeTourBtn" class="btn tour-btn" type="button">▶ Take a Tour</button></div><div id="motivation" class="phrase"></div><div id="homeRecovery"></div></div><div class="hero-kabi-wrap"><img id="homeKabi" class="kabi" alt="DADA"></div></div><div class="section-title" id="learningPathTitle"><h2>CLICK Learning Path</h2><span class="meta">Tap a chapter: learn it and prove it in one short run, then the next one opens</span></div><div id="stageGrid" class="stage-paths"></div></section>
+<section id="learn" class="page"><div class="section-title"><div><button type="button" class="btn ghost learn-back-home" id="learnBackHome" data-page="home">← Learning path</button><h2>Learn</h2><div class="meta">One micro-chapter at a time from the LearnContent sheet.</div></div><div class="learn-selectors"><select id="learnStage" class="stage-select"></select><select id="learnChapter" class="stage-select"></select></div></div><div id="learnNotice"></div><div id="walk" class="walk"></div></section>
 <section id="practice" class="page">
   <div class="section-title"><div><h2>Practice Bank</h2><div class="meta">Real C coding in VS Code. A stage unlocks after every chapter test in that stage is complete.</div></div></div>
   <div id="practiceMobileNotice"></div>
@@ -1150,7 +1156,7 @@ document.addEventListener('paste',function(e){
   <div class="about-section"><h3>Our Curation Team</h3><div class="about-people-grid" id="teamCards"></div></div>
   <div class="about-section"><h3>Meet Our Mascot</h3><div class="about-mascot-wrap"><img id="aboutMascot" alt="DADA Mascot"></div></div>
 </section>
-</main></div><nav class="mobiletabs"><button data-page="home">Home</button><button data-page="learn">Learn</button><button data-page="practice">Practice</button><button data-page="progress">Profile</button><button data-page="leadership">Leaders</button><button data-page="announcements">News<span class="nav-badge-dot hidden" id="announcementsBadgeMobile"></span></button><button data-page="about">About</button></nav></div>
+</main></div><nav class="mobiletabs"><button data-page="home">Home</button><button data-page="practice">Practice</button><button data-page="progress">Profile</button><button data-page="leadership">Leaders</button><button data-page="announcements">News<span class="nav-badge-dot hidden" id="announcementsBadgeMobile"></span></button><button data-page="about">About</button></nav></div>
 
 <section id="staffLoginPage" class="staff-page hidden">
   <div class="staff-login-box">
@@ -1214,12 +1220,13 @@ document.addEventListener('paste',function(e){
   </div>
 </div>
 
-<section id="testPage" class="click-test-page hidden" aria-label="Stage test">
+<section id="testPage" class="click-test-page hidden" aria-label="Chapter">
   <div class="click-test-inner">
     <div class="lessonbar">
       <button id="testBack" class="back" type="button">← Home</button>
       <div class="progress"><i id="testBar"></i></div>
       <b id="testRoundNo">1/10</b>
+      <span class="cc-review-badge">Review</span>
       <div class="test-mini-stat">❤️ <span id="testHeartsText">3</span></div>
       <div class="test-mini-stat xp-mini">⚡ <span id="testPendingText">0</span></div>
     </div>
@@ -1228,8 +1235,11 @@ document.addEventListener('paste',function(e){
       <img class="professor-mini" id="testProfessorMini" src="" alt="DADA">
 
       <div class="round-label" id="testTypeLabel">CHOOSE</div>
+      <div id="testSlideMeta"></div>
       <h2 id="testQuestionTitle"></h2>
       <div class="explain" id="testQuestionExplain"></div>
+      <div id="testLead" class="cc-lead"></div>
+      <div id="testGlossary"></div>
 
       <div id="testQuestionCode"></div>
       <div id="testExercise"></div>
@@ -1238,8 +1248,11 @@ document.addEventListener('paste',function(e){
 
       <div class="actions">
         <button class="primary" id="testCheck" type="button">CHECK</button>
+        <button class="cc-skip" id="testPrev" type="button" hidden>← Previous slide</button>
+        <button class="cc-skip" id="testSkip" type="button" hidden>Skip for now</button>
       </div>
     </div>
+    <div id="testRefs"></div>
   </div>
 </section>
 
@@ -1537,7 +1550,8 @@ function demoAction(action,b){
     const cp=DEMO_DATA.chapters.map(c=>{const sg=demoPrereqStatus('STAGE',c.stage_id,'',d),cg=demoPrereqStatus('CHAPTER',c.stage_id,c.chapter_id,d);return{chapter_id:c.chapter_id,stage_id:c.stage_id,learn_completed:!!d.learnProgress[c.chapter_id]?.completed,learn_times:Number(d.learnProgress[c.chapter_id]?.times||0),test_completed:!!d.chapterProgress[c.chapter_id]?.test,best_xp:Number(d.chapterProgress[c.chapter_id]?.xp||0),failed_attempts:Number(d.chapterProgress[c.chapter_id]?.failed||0),unlocked:sg.unlocked&&cg.unlocked,lock_reason:sg.unlocked?cg.lock_reason:sg.lock_reason}});
     const sp=DEMO_DATA.stages.map(s=>{const cs=DEMO_DATA.chapters.filter(c=>c.stage_id===s.stage_id);const done=cs.filter(c=>d.chapterProgress[c.chapter_id]?.test).length;const learned=cs.filter(c=>d.learnProgress[c.chapter_id]?.completed).length;const g=demoPrereqStatus('STAGE',s.stage_id,'',d);return{stage_id:s.stage_id,learned_chapters:learned,completed_chapters:done,total_chapters:cs.length,progress_percent:cs.length?Math.round(done*100/cs.length):0,test_completed:cs.length>0&&done===cs.length,best_xp:cs.reduce((n,c)=>n+Number(d.chapterProgress[c.chapter_id]?.xp||0),0),unlocked:g.unlocked,lock_reason:g.lock_reason||''}});
     d.user.stages_completed=sp.filter(x=>x.test_completed).length;
-    return{ok:true,user:d.user,stages:DEMO_DATA.stages,chapters:DEMO_DATA.chapters,learn_content:DEMO_DATA.learn_content,practice:DEMO_DATA.practice,announcements:DEMO_DATA.announcements,phrases:DEMO_DATA.phrases,prerequisites:DEMO_DATA.prerequisites,stage_progress:sp,chapter_progress:cp,leaderboard:[{name:d.user.name,roll_no:d.user.roll_no,department:d.user.department,total_xp:d.user.total_xp,stages_completed:d.user.stages_completed,accuracy_percent:d.user.accuracy_percent},{name:'Asha',roll_no:'CS021',department:'CSE',total_xp:42,stages_completed:3,accuracy_percent:88},{name:'Arun',roll_no:'CS014',department:'CSE',total_xp:31,stages_completed:2,accuracy_percent:82}].sort((a,b)=>b.total_xp-a.total_xp),settings:{APP_NAME:'CLICK',TAGLINE:'click → learn → practice',DEFAULT_HEARTS:3,CHARACTER_NAME:'DADA'}}
+    const owedChapter=d.user.heart_recovery_chapter_id?DEMO_DATA.chapters.find(c=>c.chapter_id===d.user.heart_recovery_chapter_id):null;
+    return{ok:true,user:d.user,heart_recovery_chapters:owedChapter?[{stage_id:owedChapter.stage_id,chapter_id:owedChapter.chapter_id,title:owedChapter.title}]:[],stages:DEMO_DATA.stages,chapters:DEMO_DATA.chapters,learn_content:DEMO_DATA.learn_content,practice:DEMO_DATA.practice,announcements:DEMO_DATA.announcements,phrases:DEMO_DATA.phrases,prerequisites:DEMO_DATA.prerequisites,stage_progress:sp,chapter_progress:cp,leaderboard:[{name:d.user.name,roll_no:d.user.roll_no,department:d.user.department,total_xp:d.user.total_xp,stages_completed:d.user.stages_completed,accuracy_percent:d.user.accuracy_percent},{name:'Asha',roll_no:'CS021',department:'CSE',total_xp:42,stages_completed:3,accuracy_percent:88},{name:'Arun',roll_no:'CS014',department:'CSE',total_xp:31,stages_completed:2,accuracy_percent:82}].sort((a,b)=>b.total_xp-a.total_xp),settings:{APP_NAME:'CLICK',TAGLINE:'click → learn → practice',DEFAULT_HEARTS:3,CHARACTER_NAME:'DADA'}}
   }
 
   if(action==='completeLearn'){
@@ -1549,7 +1563,7 @@ function demoAction(action,b){
     const recovery=d.user.heart_recovery_chapter_id===cid&&d.user.hearts<3;
     if(recovery){d.user.hearts=3;d.user.heart_recovery_stage_id='';d.user.heart_recovery_chapter_id=''}
     d.user.last_learn_stage=sid;d.user.last_learn_chapter=cid;saveDemo(d);
-    return{ok:true,chapter_id:cid,times_completed:d.learnProgress[cid].times,refilled:recovery,hearts:d.user.hearts,message:recovery?'Chapter review complete. Your hearts were refilled.':'Chapter Learn complete. Take its test when you are ready.'}
+    return{ok:true,chapter_id:cid,times_completed:d.learnProgress[cid].times,refilled:recovery,hearts:d.user.hearts,message:recovery?'Chapter review complete. Your hearts were refilled.':(b.unified?'Chapter review complete.':'Chapter Learn complete. Take its test when you are ready.')}
   }
 
   if(action==='preloadTestData'){
@@ -1565,40 +1579,47 @@ function demoAction(action,b){
   if(action==='startTest'){
     const cid=b.chapter_id,sid=b.stage_id;
     if(d.user.hearts<=0)throw new Error('No hearts left. Review the chapter where your hearts were lost.');
-    if(!d.learnProgress[cid]?.completed)throw new Error('Complete this chapter in Learn before taking its test.');
+    // a unified chapter run is its own lesson; the old Learn-then-test rule only applies to callers that do not send `unified`
+    if(!b.unified&&!d.learnProgress[cid]?.completed)throw new Error('Complete this chapter in Learn before taking its test.');
     const cs=DEMO_DATA.chapters.filter(c=>c.stage_id===sid).sort((a,b)=>Number(a.order)-Number(b.order));
     const idx=cs.findIndex(c=>c.chapter_id===cid);
     if(idx<0)throw new Error('Chapter not found.');
     const sg=demoPrereqStatus('STAGE',sid,'',d),cg=demoPrereqStatus('CHAPTER',sid,cid,d);
     if(!sg.unlocked)throw new Error(sg.lock_reason);if(!cg.unlocked)throw new Error(cg.lock_reason);
-    const qs=(DEMO_DATA.chapter_questions[cid]||[]).slice(0,5).map(q=>JSON.parse(JSON.stringify(q)));
+    let count=Number(cs[idx].question_limit)||5;if(b.unified)count=Math.min(count,8);
+    const qs=(DEMO_DATA.chapter_questions[cid]||[]).slice(0,count).map(q=>JSON.parse(JSON.stringify(q)));
     qs.forEach(q=>{if(q.options?.length>1)q.options.sort(()=>Math.random()-.5)});
-    return{ok:true,test_run_id:'DTR'+Date.now(),test:{stage_id:sid,chapter_id:cid,title:cs[idx].title+' Test',chapter_title:cs[idx].title},questions:qs,hearts:d.user.hearts}
+    return{ok:true,unified:!!b.unified,test_run_id:'DTR'+Date.now(),test:{stage_id:sid,chapter_id:cid,title:cs[idx].title+' Test',chapter_title:cs[idx].title},questions:qs,hearts:d.user.hearts}
   }
 
   if(action==='saveTestAnswer'){
     const q=testState.questions.find(x=>x.question_id===b.question_id);
     const norm=s=>String(s??'').replace(/\r/g,'').replace(/[ \t]+/g,' ').replace(/\s*\n\s*/g,'\n').trim();
-    const correct=q.type==='TYPE_CODE'?norm(b.answer)===norm(q.answer):q.type==='BLANK'?String(b.answer).trim().toLowerCase()===String(q.answer).trim().toLowerCase():String(b.answer).trim()===String(q.answer).trim();
-    testState.questionAttempts=testState.questionAttempts||{};
-    const attempt=(testState.questionAttempts[q.question_id]||0)+1;testState.questionAttempts[q.question_id]=attempt;
+    const correct=cachedAnswerCorrect(q,b.answer); // same checking rules as the real backend
+    // (its own counter: the client keeps one too, and sharing it counted every attempt twice)
+    testState.demoAttempts=testState.demoAttempts||{};
+    const attempt=(testState.demoAttempts[q.question_id]||0)+1;testState.demoAttempts[q.question_id]=attempt;
     const done=correct||attempt>=3;
     const heartLost=!correct&&attempt>=3;
     if(heartLost){d.user.hearts=Math.max(0,d.user.hearts-1);d.user.heart_recovery_stage_id=testState.stage_id;d.user.heart_recovery_chapter_id=testState.chapter_id}
+    testState.demoPending=(testState.demoPending||0)+(correct?Number(q.xp||1):0); // the run's own XP tally, like the real backend's test_runs.pending_xp
     d.user.questions_attempted++;if(correct)d.user.correct_answers++;
     d.user.accuracy_percent=d.user.questions_attempted?Math.round(d.user.correct_answers*10000/d.user.questions_attempted)/100:0;
     saveDemo(d);
-    return{ok:true,correct,correct_answer:done&&!correct?q.answer:'',explanation:q.explanation||'',hint:q.hint||'',hearts:d.user.hearts,pending_xp:(testState.pending||0)+(correct?q.xp:0),failed:d.user.hearts<=0&&heartLost,heart_lost:heartLost,recovery_chapter_id:heartLost?testState.chapter_id:'',question_done:done,retry_allowed:!correct&&attempt<3,attempt_number:attempt,attempts_remaining:Math.max(0,3-attempt)}
+    return{ok:true,correct,correct_answer:done&&!correct?q.answer:'',explanation:q.explanation||'',hint:q.hint||'',hearts:d.user.hearts,pending_xp:testState.demoPending,failed:d.user.hearts<=0&&heartLost,heart_lost:heartLost,recovery_chapter_id:heartLost?testState.chapter_id:'',question_done:done,retry_allowed:!correct&&attempt<3,attempt_number:attempt,attempts_remaining:Math.max(0,3-attempt)}
   }
 
   if(action==='finishTest'){
     if(d.user.hearts<=0)return{ok:true,completed:false,failed:true,committed_xp:0,chapter_id:testState.chapter_id,message:'Test not completed. Pending XP was discarded. Review the chapter where your hearts were lost.'};
-    const cid=testState.chapter_id,sid=testState.stage_id,xp=testState.pending||0;
+    const cid=testState.chapter_id,sid=testState.stage_id,xp=testState.demoPending||0;
+    const alreadyDone=!!d.chapterProgress[cid]?.test; // XP is paid once per chapter, like the real backend's unique index
+    const paid=alreadyDone?0:xp;
     d.chapterProgress[cid]=d.chapterProgress[cid]||{};d.chapterProgress[cid].test=true;d.chapterProgress[cid].xp=Math.max(Number(d.chapterProgress[cid].xp||0),xp);
-    d.user.total_xp+=xp;d.user.tests_completed++;
+    if(b.unified&&!d.learnProgress[cid]?.completed)d.learnProgress[cid]={completed:true,times:1}; // the run was the lesson
+    d.user.total_xp+=paid;if(!alreadyDone)d.user.tests_completed++;
     d.user.stages_completed=DEMO_DATA.stages.filter(s=>{const cs=DEMO_DATA.chapters.filter(c=>c.stage_id===s.stage_id);return cs.length&&cs.every(c=>d.chapterProgress[c.chapter_id]?.test)}).length;
     saveDemo(d);
-    return{ok:true,completed:true,committed_xp:xp,stage_id:sid,chapter_id:cid,stage_completed:DEMO_DATA.chapters.filter(c=>c.stage_id===sid).every(c=>d.chapterProgress[c.chapter_id]?.test),message:'Chapter test complete. '+xp+' XP added. Hearts are unchanged.'}
+    return{ok:true,completed:true,committed_xp:paid,stage_id:sid,chapter_id:cid,stage_completed:DEMO_DATA.chapters.filter(c=>c.stage_id===sid).every(c=>d.chapterProgress[c.chapter_id]?.test),message:b.unified?(alreadyDone?'Chapter already completed earlier. No additional XP was added.':'Chapter complete! '+paid+' XP added.'):'Chapter test complete. '+paid+' XP added. Hearts are unchanged.'}
   }
   throw new Error('Unsupported demo action')
 }
@@ -1606,10 +1627,10 @@ function demoAction(action,b){
 const TOUR_STEPS=[
   {id:null,isVideo:true,kabi:'welcome',title:'Watch: how CLICK works',html:'<div class="video-card"><video controls playsinline preload="auto" src="assets/Click_Introduction.mp4">Your browser does not support embedded video. <a href="assets/Click_Introduction.mp4">Download the introduction video</a> instead.</video></div><p>Press play for a quick introduction, then continue whenever you are ready.</p>'},
   {id:null,kabi:'welcome',title:'Welcome to CLICK!',html:'<p>I’m DADA, your guide. CLICK uses a simple cycle: <b>learn one tiny idea → test it → practise it in real code</b>.</p><ul><li>Learn stays short.</li><li>Tests check understanding.</li><li>Practice moves to VS Code after a stage is ready.</li></ul>'},
-  {id:'homeHero',kabi:'welcome',title:'This is your Home',html:'<p>Your Home page tells you what to do next. The welcome card also shows DADA’s current motivation and heart-recovery notices when needed.</p>'},
-  {id:'learningPathTitle',kabi:'teaching',title:'Follow the learning path',html:'<p>Stages are made of tiny chapters. Work through them in order unless your teacher changes the prerequisite rules.</p>'},
-  {id:'stageGrid',placement:'left',chapterStep:true,kabi:'thinking',title:'Learn first, then test',html:'<p>Each chapter tile changes state as you progress: Learn first, then take the chapter test. Completed tests stay available for review.</p>'},
-  {id:'navLearn',kabi:'teaching',title:'Learn is the explanation area',html:'<p>DADA teaches one small concept at a time using examples, comparisons, common mistakes and a short “your turn” ending.</p>'},
+  {id:'homeHero',kabi:'welcome',title:'This is your Home',html:'<p>Your Home page is your learning path and tells you what to do next. The welcome card also shows DADA’s current motivation and heart-recovery notices when needed.</p>'},
+  {id:'learningPathTitle',kabi:'teaching',title:'Follow the learning path',html:'<p>Stages are made of tiny chapters, joined together as a path. Work through them in order unless your teacher changes the prerequisite rules.</p>'},
+  {id:'stageGrid',placement:'left',chapterStep:true,kabi:'thinking',title:'One chapter, start to finish',html:'<p>Each chapter is a node on the path: a tick means done, the glowing play button is where you continue, and a lock means it is not open yet. Tap an open chapter to start a short run of slides: tap the code to learn it, try it yourself, and answer a few questions. Finished chapters stay open for review.</p>'},
+  {id:'lpCheckpoint',kabi:'teaching',title:'Your checkpoint card',html:'<p>This card shows your current stage, how far along you are and the chapter to do next. DADA teaches one small concept at a time using examples, comparisons, common mistakes and a short “your turn” ending.</p>'},
   {id:'navPractice',kabi:'coding',title:'Practice uses real VS Code',html:'<p>After the configured prerequisites are satisfied, coding challenges unlock. On a phone, CLICK will remind you to continue Practice on a laptop or desktop.</p>'},
   {id:'navProgress',kabi:'praise',title:'Progress stays saved',html:'<p>Your XP, chapter tests, hearts and coding-practice completion are saved to your CLICK account.</p>'},
   {id:null,kabi:'celebrate',title:'You are ready!',html:'<p>Start with the first unlocked chapter. If you ever want this walkthrough again, use <b>Take a Tour</b> at the top of Home.</p>'}
@@ -1630,7 +1651,12 @@ function renderTour(){
   const card=$('tourCard');
   card.classList.remove('tour-side-left');card.style.left='50%';card.style.right='auto';card.style.top='50%';card.style.bottom='auto';card.style.transform='translate(-50%,-50%)';card.style.width='';
   card.classList.toggle('tour-video-step',!!step.isVideo);
-  if(step.chapterStep&&window.innerWidth>800){target=document.querySelector('#stageGrid .chapter-test-grid > *')||document.querySelector('#stageGrid .stage-path')||target;card.classList.add('tour-side-left');card.style.left='24px';card.style.top='50%';card.style.transform='translateY(-50%)'}
+  if(step.chapterStep){
+    // Highlight the current chapter's path row (the row, not the absolutely-positioned node, since .tour-highlight forces position:relative).
+    const node=document.querySelector('#stageGrid .lp-stage.is-current .lp-node')||document.querySelector('#stageGrid .lp-node');
+    target=node?.closest('.lp-step')||target;
+    if(window.innerWidth>800){card.classList.add('tour-side-left');card.style.left='24px';card.style.top='50%';card.style.transform='translateY(-50%)'}
+  }
   if(target){
     target.classList.add('tour-highlight');tourHighlighted=target;
     if(window.innerWidth<=800){
@@ -1702,8 +1728,8 @@ document.querySelectorAll('[data-user-menu]').forEach(btn=>btn.onclick=e=>{
   else if(action==='reset-password')toast("Password reset isn't available in the app yet. Please ask an administrator to reset your password for now.")
   else if(action==='logout')$('logoutBtn').click()
 });
-document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='learn'&&window.__learnPendingMount){const f=window.__learnPendingMount;window.__learnPendingMount=null;f()}if(id==='practice'){$('practiceSetupBody')?.classList.add('hidden');$('practiceSetupToggle')?.setAttribute('aria-expanded','false');if($('practiceSetupChevron'))$('practiceSetupChevron').textContent='▾';renderPractice()}if(id==='progress')renderProgress();if(id==='leadership')renderLeaderboard();if(id==='announcements'){renderAnnouncements();markAnnouncementsSeen()}if(id==='about')renderAbout()}
-function applyAppState(r){app=r;session.user=r.user;localStorage.setItem('clickSession',JSON.stringify(session));renderHeader();renderStageSelectors();renderHome();renderProgress();renderLeaderboard();renderAnnouncements();renderLearn();renderPractice()}
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));function showPage(id){document.body.dataset.page=id;document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));/* Learn is no longer a tab: it is entered from a Home chapter node, so Home stays highlighted while a chapter is open */document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.page===(id==='learn'?'home':id)));if(id==='learn'&&window.__learnPendingMount){const f=window.__learnPendingMount;window.__learnPendingMount=null;f()}if(id==='practice'){$('practiceSetupBody')?.classList.add('hidden');$('practiceSetupToggle')?.setAttribute('aria-expanded','false');if($('practiceSetupChevron'))$('practiceSetupChevron').textContent='▾';renderPractice()}if(id==='progress')renderProgress();if(id==='leadership')renderLeaderboard();if(id==='announcements'){renderAnnouncements();markAnnouncementsSeen()}if(id==='about')renderAbout()}
+function applyAppState(r){app=r;session.user=r.user;localStorage.setItem('clickSession',JSON.stringify(session));renderHeader();renderHome();renderProgress();renderLeaderboard();renderAnnouncements();renderPractice()/* (the old Learn page is no longer reachable: a chapter is one run, see runChapter, so it is not re-rendered on every refresh) */}
 async function preloadTestData(forceRefresh=false){
   if(!session?.token)return null;
   if(testCache&&!forceRefresh)return testCache;
@@ -1775,24 +1801,10 @@ function chapterVideoFirstTime(kind,cid){
   localStorage.setItem(key,'1');
   return true;
 }
-async function openLearn(sid,cid){
-  const sp=prog(sid),cp=chapterProg(cid);
-  if(sp.unlocked===false){toast(sp.lock_reason||'This stage is locked.');return}
-  if(cp.unlocked===false){toast(cp.lock_reason||'This chapter is locked.');return}
-  if(chapterVideoFirstTime('intro',cid)){
-    await showVideoOverlay('chapter-intro.mp4');
-    hideVideoOverlay();
-  }
-  window.__learnPendingMount=null;showPage('learn');
-  $('learnStage').value=sid;
-  renderLearnChapterSelector(cid);
-  learnPage=0;
-  renderLearn()
-}
 function goHomeToChapter(sid,cid){
   showPage('home');renderHome();
   setTimeout(()=>{
-    const el=document.querySelector(`.chapter-test-tile[data-chapter="${cid}"]`);
+    const el=window.ClickHomePath&&ClickHomePath.reveal($('stageGrid'),cid);
     if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('target-pulse');setTimeout(()=>el.classList.remove('target-pulse'),2400)}
   },80)
 }
@@ -1802,28 +1814,10 @@ function renderHome(){
   $('homeRecovery').innerHTML=owedHome.length?`<div class="recovery-notice"><b>❤️ Hearts do not refill after a test.</b><br>You lost hearts while testing: <b>${owedHome.map(o=>esc(o.title)).join(', ')}</b>. Completing Learn for each of those chapters refills the hearts lost there.<div class="btnrow" style="margin-top:8px">${owedHome.map(o=>`<button class="btn ghost" data-recover="${esc(o.chapter_id)}" data-recover-stage="${esc(o.stage_id)}" type="button">Review ${esc(o.title)}</button>`).join('')}</div></div>`:'';
   $('homeRecovery').querySelectorAll('[data-recover]').forEach(b=>b.onclick=()=>openLearn(b.dataset.recoverStage,b.dataset.recover));
 
-  app.stages.forEach((s,stageIndex)=>{
-    const p=prog(s.stage_id),chapters=stageChapters(s.stage_id),pct=Number(p.progress_percent||0),next=nextChapterForStage(s.stage_id),stageUnlocked=p.unlocked!==false;
-    const sec=document.createElement('section');sec.className='stage-path'+(stageUnlocked?'':' is-locked');sec.dataset.stageSection=s.stage_id;
-    sec.innerHTML=`<div class="stage-path-head"><div><div class="stage-path-title"><div class="stage-sprout">${stageIndex===0?'🌱':'◆'}</div><div><h2>${esc(s.title)}</h2><div class="stage-path-desc">${p.test_completed?'Stage complete. You can review any chapter.':'Learn and test each tiny chapter in order.'}</div><button class="learn-stage-cta" type="button" data-stage-learn="${s.stage_id}" data-chapter-learn="${next?.chapter_id||''}" ${stageUnlocked?'':'disabled'}>${stageUnlocked?(p.test_completed?'Review stage':'Continue learning'):'🔒 Locked stage'}</button>${stageUnlocked?'':`<div class="stage-locked-note">${esc(p.lock_reason||'Complete the required earlier stage first.')}</div>`}</div></div></div><div class="stage-path-progress"><b>${p.completed_chapters||0}/${p.total_chapters||chapters.length} chapter tests</b><div class="bar"><div class="fill" style="width:${pct}%"></div></div><div class="meta">${pct}% complete</div></div></div><div class="chapter-test-grid"></div>`;
-    const grid=sec.querySelector('.chapter-test-grid');
-
-    chapters.forEach((ch,i)=>{
-      const cp=chapterProg(ch.chapter_id);
-      let cls='locked',label=cp.lock_reason||p.lock_reason||'Complete prerequisite content first',icon='🔒',click=null;
-      if(stageUnlocked&&cp.unlocked!==false&&cp.test_completed){cls='completed';label=`Completed · ${Number(cp.best_xp||0)} XP`;icon='✓';click=()=>startTest(s.stage_id,ch.chapter_id)}
-      else if(stageUnlocked&&cp.unlocked!==false&&cp.learn_completed){cls='current';label='Take chapter test';icon=String(i+1);click=()=>startTest(s.stage_id,ch.chapter_id)}
-      else if(stageUnlocked&&cp.unlocked!==false&&!cp.learn_completed){cls='learn-first';label='Learn this chapter first';icon='📘';click=()=>openLearn(s.stage_id,ch.chapter_id)}
-      const tile=document.createElement('button');
-      tile.type='button';tile.className='chapter-test-tile '+cls;tile.dataset.stage=s.stage_id;tile.dataset.chapter=ch.chapter_id;
-      tile.disabled=!click;
-      tile.innerHTML=`<div class="chapter-test-icon">${icon}</div><strong>${esc(ch.title)}</strong><span>${label}</span>`;
-      if(click)tile.onclick=click;
-      grid.appendChild(tile)
-    });
-    host.appendChild(sec)
-  });
-  host.querySelectorAll('[data-stage-learn]').forEach(b=>b.onclick=()=>openLearn(b.dataset.stageLearn,b.dataset.chapterLearn))
+  // Home is the learning path: stage checkpoints + connected chapter nodes (assets/home/path.js).
+  // Progress, locking and routing are all the existing prog()/chapterProg()/openLearn()/startTest(); nothing is duplicated here.
+  if(!window.ClickHomePath){host.innerHTML='<div class="recovery-notice"><b>The learning path could not load.</b><br>Please check your connection and reload CLICK.</div>';return}
+  ClickHomePath.render(host,ClickHomePath.build(app,{prog,chapterProg,stageChapters}),{onStart:startTest,onReview:openLearn,onLocked:msg=>toast(msg)})
 }
 function renderStageSelectors(){
   const stageOption=s=>{const p=prog(s.stage_id);return `<option value="${s.stage_id}" ${p.unlocked===false?'disabled':''}>${p.unlocked===false?'🔒 ':''}Stage ${s.stage_no}: ${esc(s.title)}</option>`};
@@ -1873,7 +1867,7 @@ function scrollLearnToTop(){
 // ---- Learn activity layer (assets/learn/). Interactivity is configuration drawn UNDER the page
 // text: the Learn content is never edited, and activities never touch XP, hearts, Take Test,
 // chapter completion or Next/Back. Nothing loads unless the current page has activities.
-const LEARN_ACTIVITY_LOADER='assets/learn/loader.js?v=1';
+const LEARN_ACTIVITY_LOADER='assets/learn/loader.js?v=2';
 let learnLoaderPromise=null;
 function learnLoadActivityLoader(){
   if(window.ClickLearnLoader)return Promise.resolve();
@@ -2710,7 +2704,9 @@ function cachedAnswerCorrect(q,answer){
     const exp=parsePairs(expected),act=parsePairs(actual);
     return exp.size>0&&exp.size===act.size&&[...exp].every(p=>act.has(p))
   }
-  return expected===actual
+  // Multiple-choice text can span lines (predict-the-output options). Browsers store CRLF as LF inside HTML attributes, so compare
+  // line endings loosely or such an option could never be marked correct.
+  return expected.split("\r\n").join("\n")===actual.split("\r\n").join("\n")
 }
 function queueTestAttempt(q,answer){
   const payload={
@@ -2753,66 +2749,155 @@ async function waitForTestSync(){
   }
 }
 
-async function startTest(sid,cid){
+// ---------------- unified chapter run: learning + questions in one slide sequence ----------------
+// A chapter is 5-10 slides (assets/chapter): a Code Explorer first, hands-on activities, and the chapter's real questions.
+//   mode "graded": the first run of a chapter. Questions are the server's (startTest/saveTestAnswer/finishTest with `unified`): 3 attempts,
+//                  a heart only when all 3 fail, XP once when the chapter completes -- exactly the existing rules.
+//   mode "review": a finished chapter, or a heart-recovery visit. Same slides, checked locally: no XP, no hearts at stake. Completing it calls
+//                  the existing completeLearn, which is what refills hearts lost in this chapter.
+function currentSlide(){return testState.slides[testState.index]}
+function chapterTitleOf(cid){return chapterById(cid)?.title||'this chapter'}
+function shuffleCopy(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+async function loadChapterDeck(cid){
+  // The Learn activity loader only downloads the engine for chapters that use activities; failing to fetch it must never block a chapter.
+  try{await learnLoadActivityLoader()}catch(e){console.warn('Learn activities unavailable:',e&&e.message)}
+  return ClickChapter.load(cid)
+}
+function startTest(sid,cid){return runChapter(sid,cid,'graded')}
+// Kept under its old name: every remaining caller (heart-recovery notices, "review the chapter") means "go through this chapter again".
+function openLearn(sid,cid){return runChapter(sid,cid,'review')}
+async function runChapter(sid,cid,mode){
   const sp=prog(sid),cp=chapterProg(cid);
   if(sp.unlocked===false){toast(sp.lock_reason||'This stage is locked.');return}
   if(cp.unlocked===false){toast(cp.lock_reason||'This chapter is locked.');return}
-  if(!cp.learn_completed){
-    openLearn(sid,cid);toast("Complete this chapter in Learn before taking its test.");return
-  }
-  if(app.user.hearts<=0){
-    const owedNow=outstandingHeartChapters();const recNow=owedNow[0];
-    if(recNow)openLearn(recNow.stage_id,recNow.chapter_id);
-    toast(owedNow.length>1?`No hearts left. Complete Learn for these chapters to refill them: ${owedNow.map(o=>o.title).join(', ')}.`:"No hearts left. Complete Learn for the chapter where your hearts were lost to refill them.",'error');
+  // A finished chapter is only ever reviewed: its XP was paid once, on completion, and hearts are not at stake.
+  if(mode==='graded'&&cp.test_completed)mode='review';
+  if(mode==='graded'&&app.user.hearts<=0){
+    const owedNow=outstandingHeartChapters(),recNow=owedNow[0];
+    toast(owedNow.length>1?`No hearts left. Review these chapters to refill them: ${owedNow.map(o=>o.title).join(', ')}.`:"No hearts left. Review the chapter where your hearts were lost to refill them.",'error');
+    if(recNow)runChapter(recNow.stage_id,recNow.chapter_id,'review');
     return
   }
   try{
-    // Usually already warm because preload starts as soon as the profile opens.
-    const preloadPromise=testCache?Promise.resolve(testCache):preloadTestData(false);
-    const [r]=await Promise.all([
-      withVideoOverlay('test-entry.mp4',()=>post("startTest",{session_token:session.token,stage_id:sid,chapter_id:cid})),
-      preloadPromise
-    ]);
-
-    // Merge private checking data from the profile-time cache.
-    r.questions=(r.questions||[]).map(q=>{
-      const cq=cachedQuestion(q.question_id);
-      return cq?{...q,answer:cq.answer,explanation:cq.explanation||q.explanation||'',hint:cq.hint||q.hint||'',terms:cq.terms||q.terms||[]}:q
-    });
-
+    const deck=await loadChapterDeck(cid);
+    ClickGlossary.clear();ClickGlossary.register(deck.glossary);
+    if(chapterVideoFirstTime('intro',cid)){await showVideoOverlay('chapter-intro.mp4');hideVideoOverlay()}
+    const title=chapterTitleOf(cid);
+    const cache=await (testCache?Promise.resolve(testCache):preloadTestData(false));
+    let run={test_run_id:'',hearts:app.user.hearts},questions;
+    if(mode==='graded'){
+      const begin=()=>post("startTest",{session_token:session.token,stage_id:sid,chapter_id:cid,unified:true});
+      try{run=await begin()}catch(e){
+        // Rollout safety: a backend that does not know `unified` yet (frontend deployed a moment before the edge function) still demands a
+        // finished Learn before any test. Satisfy that old rule here and retry once; every other error is real and is shown.
+        if(!/Complete this chapter in Learn/i.test(String(e&&e.message)))throw e;
+        await post("completeLearn",{session_token:session.token,stage_id:sid,chapter_id:cid,pages_viewed:0});
+        run=await begin()
+      }
+      // Merge private checking data from the profile-time cache (instant local feedback; the server still records every attempt).
+      questions=(run.questions||[]).map(q=>{const cq=cachedQuestion(q.question_id);return cq?{...q,answer:cq.answer,explanation:cq.explanation||q.explanation||'',hint:cq.hint||q.hint||'',terms:cq.terms||q.terms||[]}:q})
+    }else{
+      if(!cache)throw new Error('Could not load this chapter. Check your connection and try again.');
+      const wanted=new Set(deck.slides.filter(s=>s.kind==='question').map(s=>s.question));
+      questions=(cache.questions||[]).filter(q=>wanted.has(q.question_id)).map(q=>({...q,options:(q.options||[]).length>1?shuffleCopy(q.options):(q.options||[])}))
+    }
+    const slides=ClickChapter.plan(deck,questions);
     testState={
-      ...r,index:0,pending:0,stage_id:sid,chapter_id:cid,
-      answered:false,selected:null,order:[],
-      questionAttempts:{},syncChain:Promise.resolve(),syncError:null
+      ...run,questions,slides,deck,mode,index:0,pending:0,finished:false,slideDone:false,
+      hearts:Number(run.hearts??app.user.hearts),stage_id:sid,chapter_id:cid,
+      test:{stage_id:sid,chapter_id:cid,title:title+' chapter',chapter_title:title},
+      answered:false,selected:null,order:[],questionAttempts:{},syncChain:Promise.resolve(),syncError:null
     };
     enterTestPage();renderTest()
   }catch(e){toast(e.message,'error')}
 }
-function renderTest(){
-  const q=testState.questions[testState.index];
-  const pct=(testState.index/testState.questions.length)*100;
-  testState.answered=false;testState.selected=null;testState.order=[];testState.match={};testState.matchSelectedLeft=null;
 
-  $("testBar").style.width=pct+"%";
-  $("testRoundNo").textContent=`${testState.index+1}/${testState.questions.length}`;
+// One slide. The chapter chrome (progress, hearts, references, glossary chips) is shared; the middle depends on the slide kind.
+function renderTest(){
+  const s=currentSlide(),total=testState.slides.length,review=testState.mode==='review';
+  testState.answered=false;testState.selected=null;testState.order=[];testState.match={};testState.matchSelectedLeft=null;testState.slideDone=false;
+  $("testPage").classList.toggle("is-review",review);
+  // Reviewing a chapter that is finished and owes nothing is free navigation (nothing is at stake); a review that can refill hearts still needs real interaction.
+  testState.free=review&&!outstandingHeartChapters().some(o=>o.chapter_id===testState.chapter_id);
+  $("testBar").style.width=(testState.index/total*100)+"%";
+  const pg=document.querySelector("#testPage .progress");
+  pg.setAttribute("role","progressbar");pg.setAttribute("aria-label","Slide progress");pg.setAttribute("aria-valuemin","1");pg.setAttribute("aria-valuemax",String(total));pg.setAttribute("aria-valuenow",String(testState.index+1));
+  $("testRoundNo").textContent=`${testState.index+1}/${total}`;
+  $("testRoundNo").setAttribute("aria-label",`Slide ${testState.index+1} of ${total}`);
   $("testHeartsText").textContent=testState.hearts;
   $("testPendingText").textContent=testState.pending;
+  $("testLead").innerHTML=s.lead?ClickGlossary.linkify(s.lead):"";
+  $("testGlossary").innerHTML=ClickGlossary.chips(s.glossary);
+  $("testRefs").innerHTML=ClickChapter.refsHTML(testState.deck);
+  $("testSkip").hidden=true;$("testSkip").textContent="Skip for now";$("testPrev").hidden=true;
+  $("testFeedbackV11").className="feedback";$("testFeedbackV11").innerHTML="";
+  $("testExercise").innerHTML="";$("testQuestionCode").innerHTML="";
+  $("testCheck").textContent="CHECK";$("testCheck").disabled=false;
+  if(s.kind==="question")renderTestQuestion(s.q,s);
+  else if(s.kind==="explorer")renderExplorerSlide(s);
+  else renderActivitySlide(s);
+  if(testState.free){
+    $("testSkip").hidden=false;$("testSkip").textContent="Skip slide →";$("testSkip").onclick=nextTestRound;
+    if(s.kind!=="question")$("testCheck").disabled=false;
+    $("testPrev").hidden=testState.index===0;$("testPrev").onclick=()=>{testState.index--;renderTest()}
+  }
+  window.scrollTo({top:0,behavior:"instant"})
+}
+// Question slides: the prompt is the heading, so the slide's own title + goal go in a small line above it.
+// Explorer / activity slides: the title is the heading and the goal sits under it (in #testQuestionExplain).
+function slideMeta(s,isQuestion){
+  $("testSlideMeta").innerHTML=isQuestion?`<span class="cc-kicker">${testEscape(s.title)}</span>`+(s.objective?`<span class="cc-goal">You will learn: ${testEscape(s.objective)}</span>`:""):""
+}
+function slideTakeaway(s){
+  if(!s.takeaway)return;
+  const f=$("testFeedbackV11");f.className="feedback show good";
+  f.innerHTML=`✓ <span class="cc-takeaway">${ClickGlossary.linkify(s.takeaway)}</span>`
+}
+function renderExplorerSlide(s){
+  $("testTypeLabel").textContent="CODE EXPLORER";
+  $("testProfessorMini").src=DADA_HALF.teaching||KABI.teaching;
+  slideMeta(s,false);
+  $("testQuestionTitle").textContent=s.title;
+  $("testQuestionExplain").textContent=s.objective?"You will learn: "+s.objective:"";
+  const btn=$("testCheck");btn.textContent="CONTINUE";btn.disabled=true;btn.onclick=nextTestRound;
+  ClickExplorer.render($("testExercise"),s,{onProgress:p=>{testState.slideDone=p.done;btn.disabled=!(p.done||testState.free)}})
+}
+function renderActivitySlide(s){
+  const btn=$("testCheck"),box=$("testExercise");
+  $("testTypeLabel").textContent="TRY IT";
+  $("testProfessorMini").src=DADA_HALF.coding||KABI.coding;
+  slideMeta(s,false);
+  $("testQuestionTitle").textContent=s.title;
+  $("testQuestionExplain").textContent=s.objective?"You will learn: "+s.objective:"";
+  btn.textContent="CONTINUE";btn.disabled=true;btn.onclick=nextTestRound;
+  const finish=()=>{if(testState.slideDone)return;testState.slideDone=true;btn.disabled=false;$("testSkip").hidden=true;slideTakeaway(s)};
+  const ready=window.ClickLearn&&ClickLearn.mountActivity;
+  const sec=ready?ClickLearn.mountActivity(box,s.activity,{userId:app.user.user_id,onDone:finish}):null;
+  if(!sec){
+    // never let a missing/unloadable activity trap a student inside a chapter
+    box.innerHTML='<p class="meta">This activity could not load. You can keep going.</p>';testState.slideDone=true;btn.disabled=false;return
+  }
+  // The activity is a teaching aid, not an assessment (no hearts, no XP): once the student has really tried it, offer a way past it.
+  const engaged=()=>{if(!testState.slideDone)$("testSkip").hidden=false};
+  box.addEventListener("pointerdown",engaged,{once:true});box.addEventListener("keydown",engaged,{once:true});
+  $("testSkip").onclick=()=>{testState.slideDone=true;btn.disabled=false;$("testSkip").hidden=true}
+}
+function renderTestQuestion(q,s){
+  const review=testState.mode==='review';
+  slideMeta(s,true);
   $("testTypeLabel").textContent=typeLabel(q.type);
   $("testProfessorMini").src=testProfessorFor(q);
   $("testQuestionTitle").innerHTML=testHintHTML(q.prompt,false,q.terms).replace(/\n/g,"<br>");
   const hintPart=q.hint?` · <span class="question-hint-trigger" data-test-hint="${testEscape(q.hint)}">DADA Hints</span>`:"";
-  $("testQuestionExplain").innerHTML=`<b>${testEscape(testState.test.chapter_title||testState.test.title||"Chapter test")}</b>${hintPart} <span class="meta">· ${q.xp} XP</span>`;
+  $("testQuestionExplain").innerHTML=`<b>${testEscape(testState.test.chapter_title||testState.test.title||"Chapter")}</b>${hintPart}${review?'':` <span class="meta">· ${q.xp} XP</span>`}`;
   $("testQuestionCode").innerHTML=(q.code&&q.type!=="CODE_FILL")?`<div class="test-v11-code">${testEscape(q.code).replace(/\n/g,"<br>")}</div>`:"";
-  $("testFeedbackV11").className="feedback";$("testFeedbackV11").innerHTML="";
-  $("testCheck").textContent="CHECK";$("testCheck").disabled=false;$("testCheck").onclick=checkTestAnswer;
+  $("testCheck").onclick=checkTestAnswer;
 
   if(q.type==="ORDER"){
     $("testExercise").innerHTML=renderTestOrder(q);
-    // Capture phase: a token's own text can contain a glossary/hint term
-    // (e.g. "int", "printf", "="), which testHintHTML wraps in its own
-    // clickable span. That span's click handler (bound in bindTestHints)
-    // calls stopPropagation, which would otherwise swallow the click before
-    // it ever reaches this handler in the bubble phase.
+    // Capture phase: a token's own text can contain a glossary/hint term (e.g. "int", "printf", "="), which testHintHTML wraps in its own
+    // clickable span. That span's click handler (bound in bindTestHints) calls stopPropagation, which would otherwise swallow the click
+    // before it ever reaches this handler in the bubble phase.
     document.querySelectorAll(".test-v11-token").forEach(btn=>btn.addEventListener("click",()=>selectTestToken(btn),true))
   }else if(q.type==="CODE_FILL"){
     $("testExercise").innerHTML=renderTestCodeFill(q);
@@ -2864,7 +2949,7 @@ function resetTestOrder(){
   if($("testOrderAnswer"))$("testOrderAnswer").innerHTML=""
 }
 function currentTestAnswer(){
-  const q=testState.questions[testState.index];
+  const q=currentSlide().q;
   if(q.type==="ORDER")return testState.order.map(x=>x.value).join("||");
   if(q.type==="CODE_FILL")return JSON.stringify(Array.from(document.querySelectorAll("#testExercise .test-code-fill-box")).map(x=>String(x.value||'').trim()));
   if(q.type==="TYPE_CODE"||q.type==="BLANK")return ($("testTextAnswer")?.value||"").trim();
@@ -2874,7 +2959,7 @@ function currentTestAnswer(){
 
 async function checkTestAnswer(){
   if(testState.answered)return;getTestAudio();
-  const q=testState.questions[testState.index],answer=currentTestAnswer();
+  const slide=currentSlide(),q=slide.q,answer=currentTestAnswer(),review=testState.mode==='review';
   if(q.type==="CODE_FILL"){
     const parts=parseCodeFillAnswers(answer);
     const boxes=document.querySelectorAll("#testExercise .test-code-fill-box");
@@ -2903,23 +2988,27 @@ async function checkTestAnswer(){
 
   // Instant local evaluation from the profile-time cached test bank.
   const correct=cachedAnswerCorrect(q,answer);
-  const heartLost=!correct&&attemptNo>=3;
+  // A review has nothing at stake: no hearts, no XP, and nothing is sent to the server. Only a graded run counts.
+  const heartLost=!review&&!correct&&attemptNo>=3;
   const failed=heartLost&&Number(testState.hearts||0)<=1;
-  if(correct)testState.pending=Number(testState.pending||0)+Number(q.xp||1);
+  if(!review&&correct)testState.pending=Number(testState.pending||0)+Number(q.xp||1);
   if(heartLost)testState.hearts=Math.max(0,Number(testState.hearts||0)-1);
   $("testHeartsText").textContent=testState.hearts;
   $("testPendingText").textContent=testState.pending;
 
-  // Persist quietly. UI does not wait for Apps Script here.
-  queueTestAttempt(q,answer);
+  // Persist quietly. UI does not wait for the backend here.
+  if(!review)queueTestAttempt(q,answer);
 
+  // The bank's explanations are often empty or still say "Refers to: Slide 3" (old Learn layout): use the slide's own takeaway instead.
+  const why=ClickChapter.cleanExplanation(q.explanation);
+  const take=slide.takeaway?`<div class="cc-takeaway">${ClickGlossary.linkify(slide.takeaway)}</div>`:'';
   const f=$("testFeedbackV11");
   if(correct){
     f.className="feedback show good";
-    f.innerHTML=`✓ Correct! +${q.xp} pending XP<div style="font-weight:600;margin-top:4px">${testHintHTML(q.explanation||"Nice work.",false,q.terms)}</div><img class="professor-feedback" src="${DADA_HALF.praise||KABI.praise}" alt="DADA congratulating">`;
-    testCorrectSound();animateTestXP();bindTestHints();
+    f.innerHTML=`✓ Correct!${review?'':` +${q.xp} pending XP`}${why?`<div style="font-weight:600;margin-top:4px">${testHintHTML(why,false,q.terms)}</div>`:''}${take||(why?'':'<div style="font-weight:600;margin-top:4px">Nice work.</div>')}<img class="professor-feedback" src="${DADA_HALF.praise||KABI.praise}" alt="DADA congratulating">`;
+    testCorrectSound();if(!review)animateTestXP();bindTestHints();
     $("testCheck").disabled=false;
-    $("testCheck").textContent=testState.index===testState.questions.length-1?"FINISH":"CONTINUE";
+    $("testCheck").textContent=testState.index===testState.slides.length-1?"FINISH":"CONTINUE";
     $("testCheck").onclick=nextTestRound;
     return
   }
@@ -2952,58 +3041,84 @@ async function checkTestAnswer(){
 
   f.className="feedback show bad";
   const shownAnswer=q.type==='CODE_FILL'?codeFillDisplayAnswer(q.answer):q.answer;
-  f.innerHTML=`✗ Three attempts used.<div style="font-weight:600;margin-top:4px">${testHintHTML((shownAnswer?'Correct answer: '+shownAnswer+'. ':'')+(q.explanation||'Review this idea before continuing.'),false,q.terms)}</div>${heartLost?`<div class="heart-note">❤️ Hearts do not refill after a test.<br>You lost a heart while testing ${testEscape(testState.test.chapter_title||testState.test.title||"this chapter")}. Only completing that chapter in Learn will refill your hearts.</div>`:''}<img class="professor-feedback" src="${DADA_HALF.encourage||KABI.sad}" alt="DADA encouraging review">`;
+  f.innerHTML=`✗ Three attempts used.<div style="font-weight:600;margin-top:4px">${testHintHTML((shownAnswer?'Correct answer: '+shownAnswer+'. ':'')+(why||'Review this idea before continuing.'),false,q.terms)}</div>${take}${heartLost?`<div class="heart-note">❤️ Hearts do not refill after a chapter.<br>You lost a heart in ${testEscape(testState.test.chapter_title||"this chapter")}. Only reviewing that chapter will refill your hearts.</div>`:''}<img class="professor-feedback" src="${DADA_HALF.encourage||KABI.sad}" alt="DADA encouraging review">`;
   bindTestHints();
 
   if(failed){
-    f.insertAdjacentHTML("beforeend",`<div class="test-failed-box"><b>No XP was added.</b> This chapter test was not completed. Hearts can only be restored by completing Learn for this same chapter.</div>`);
-    $("testCheck").disabled=false;$("testCheck").textContent="GO TO LEARN";
+    f.insertAdjacentHTML("beforeend",`<div class="test-failed-box"><b>No XP was added.</b> This chapter was not completed. Hearts can only be restored by reviewing this same chapter.</div>`);
+    $("testCheck").disabled=false;$("testCheck").textContent="REVIEW THE CHAPTER";
     $("testCheck").onclick=async()=>{
       try{await waitForTestSync()}catch(e){toast("Your last answer could not be saved: "+e.message,'error');return}
-      await loadApp(false);leaveTestPage("learn");openLearn(testState.stage_id,testState.chapter_id)
+      await loadApp(false);testState.finished=true;leaveTestPage("home");openLearn(testState.stage_id,testState.chapter_id)
     };
     return
   }
 
   $("testCheck").disabled=false;
-  $("testCheck").textContent=testState.index===testState.questions.length-1?"FINISH":"CONTINUE";
+  $("testCheck").textContent=testState.index===testState.slides.length-1?"FINISH":"CONTINUE";
   $("testCheck").onclick=nextTestRound
 }
 async function nextTestRound(){
-  if(testState.index<testState.questions.length-1){
+  if(testState.index<testState.slides.length-1){
     testState.index++;renderTest();return
   }
+  return testState.mode==='review'?finishReview():finishChapter()
+}
+function showChapterDone(title,message,note){
+  testState.finished=true;
+  $("testBar").style.width="100%";
+  $("testTypeLabel").textContent="COMPLETE";
+  $("testSlideMeta").innerHTML="";$("testLead").innerHTML="";$("testGlossary").innerHTML="";
+  $("testQuestionTitle").textContent=title;
+  $("testQuestionExplain").textContent=note||"";
+  $("testQuestionCode").innerHTML="";
+  $("testSkip").hidden=true;
+  $("testExercise").innerHTML=`<div class="test-complete-full"><img src="${DADA_HALF.celebrate||KABI.celebrate}" alt="DADA celebrating"><h2>Great work!</h2><p>${testEscape(message)}</p></div>`;
+  $("testFeedbackV11").className="feedback"
+}
+async function finishChapter(){
   try{
     const r=await withVideoOverlay('test-complete.mp4',async()=>{
       await waitForTestSync();
-      return post("finishTest",{session_token:session.token,test_run_id:testState.test_run_id});
+      return post("finishTest",{session_token:session.token,test_run_id:testState.test_run_id,unified:true,pages_viewed:testState.slides.length});
     });
-    testCompletionSound();$("testBar").style.width="100%";
-    $("testTypeLabel").textContent="COMPLETE";
-    $("testQuestionTitle").textContent="Chapter test complete!";
-    $("testQuestionExplain").textContent=(r.message||"Your XP has now been added.")+" Hearts never refill from passing a test.";
-    $("testQuestionCode").innerHTML="";
-    $("testExercise").innerHTML=`<div class="test-complete-full"><img src="${DADA_HALF.celebrate||KABI.celebrate}" alt="DADA celebrating"><h2>Great work!</h2><p>${testEscape(r.message||"Your XP has been added.")}</p></div>`;
-    $("testFeedbackV11").className="feedback";
-    if(r.app_state)applyAppState(r.app_state);
+    testCompletionSound();
+    showChapterDone("Chapter complete!",r.message||"Your XP has now been added.","Hearts only refill when you review a chapter where you lost them.");
+    if(r.app_state)applyAppState(r.app_state);else await loadApp(false);
     testCache=null;
     preloadTestData(true);
     if(r.practice_just_unlocked){
       $("testQuestionTitle").textContent="Stage complete — Practice unlocked! 🎉";
-      $("testQuestionExplain").textContent="You finished every chapter test in this stage. DADA unlocked real coding practice in VS Code.";
+      $("testQuestionExplain").textContent="You finished every chapter in this stage. DADA unlocked real coding practice in VS Code.";
       $("testExercise").innerHTML=`<div class="test-complete-full"><img src="${DADA_HALF.celebrate||KABI.celebrate}" alt="DADA celebrating"><h2>Practice Bank unlocked!</h2><p>${isPracticeMobile()?'Open CLICK on a laptop or desktop to code with VS Code. You can still view the setup guide here.':'DADA is taking you to your new coding challenges.'}</p></div>`;
       $("testCheck").textContent="GO TO PRACTICE";
       const goPractice=()=>{leaveTestPage("practice");practiceStageId=r.stage_id;renderPractice()};
       $("testCheck").onclick=goPractice;setTimeout(()=>{if($('testPage')&&!$('testPage').classList.contains('hidden'))goPractice()},2200);
     }else{
-      $("testCheck").textContent="CONTINUE";$("testCheck").onclick=()=>{leaveTestPage("home");renderHome()}
+      $("testCheck").textContent="CONTINUE";$("testCheck").onclick=()=>{leaveTestPage("home");renderHome();goHomeToChapter(testState.stage_id,testState.chapter_id)}
     }
+  }catch(e){toast(e.message,'error')}
+}
+// Reviewing a chapter (finished, or a heart-recovery visit) ends with the existing completeLearn: no XP, no hearts lost; hearts owed
+// for this chapter are refilled -- the one rule that already ties hearts to revisiting the chapter where they were lost.
+async function finishReview(){
+  try{
+    const r=await post("completeLearn",{session_token:session.token,stage_id:testState.stage_id,chapter_id:testState.chapter_id,pages_viewed:testState.slides.length,unified:true});
+    testCompletionSound();
+    if(r.app_state)applyAppState(r.app_state);else await loadApp(false);
+    showChapterDone("Chapter reviewed!",r.refilled?"Your hearts were refilled because you reviewed the chapter where you lost them.":"Nice review!","Reviewing a chapter never costs hearts and adds no XP.");
+    $("testCheck").textContent="CONTINUE";$("testCheck").disabled=false;
+    $("testCheck").onclick=()=>{leaveTestPage("home");renderHome();goHomeToChapter(testState.stage_id,testState.chapter_id)};
+    if(r.refilled)toast('Hearts refilled! DADA restored them because you reviewed the chapter where they were lost.','success')
   }catch(e){toast(e.message,'error')}
 }
 
 $("testBack").onclick=()=>{
-  if(confirm("Leave this unfinished test? Pending XP from this test will not be added."))leaveTestPage("home")
+  // Only an unfinished graded run has anything to lose (its answers are not saved and no XP is added).
+  if(testState&&testState.mode==='graded'&&!testState.finished&&!confirm("Leave this chapter? Answers from this attempt are not saved and no XP will be added."))return;
+  leaveTestPage("home")
 };
+
 
 // ---------------- staff monitoring dashboard ----------------
 // Entirely separate from the student app: own session (clickStaffSession),

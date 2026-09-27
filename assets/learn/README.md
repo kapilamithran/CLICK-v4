@@ -1,5 +1,11 @@
 # CLICK Learn activity layer
 
+> **Update: activities now live inside chapters.** Learn is no longer a page students open: a chapter is one run of slides
+> (`assets/chapter/`), and its hands-on slides are the activities defined here, mounted **by id** with `ClickLearn.mountActivity(container, id, { onDone })`
+> (loaded per chapter with `ClickLearnLoader.ensure(chapter)`). The engine, every kind, the interpreter and every definition below are unchanged; a new
+> activity is still added to `defs/chNNNN.js` as described here, then referenced from the chapter's deck. The old page-anchored mounting
+> (`mountPage`, the heading guard) still exists but nothing in the app calls it any more.
+
 Interactive activities drawn **underneath** the existing Learn page text. The Learn content
 (`learn_content.pages_text` in the database) stays the source of truth and is never edited.
 Activities are plain configuration in this folder, version-controlled with the frontend.

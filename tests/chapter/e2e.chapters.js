@@ -1,0 +1,597 @@
+#!/usr/bin/env node
+/* Real-browser tests for the unified chapter experience (Home -> chapter -> slides -> complete -> next chapter).
+ *
+ *   npm i --no-save playwright-core
+ *   node tests/chapter/e2e.chapters.js               everything (about 3-4 minutes)
+ *   CHAPTERS=CH0034,CH0044 node tests/chapter/e2e.chapters.js     only the every-chapter run for those
+ *
+ * See tests/e2e/lib.js for how the app is run (demo mode + CLICK's real production chapters and questions).
+ */
+"use strict";
+const path = require("path");
+const L = require("../e2e/lib.js");
+const H = require("./helpers.js");
+const { t, section, assert, noErrors, fx } = L;
+const decks = H.loadDecks();
+const { Explorer } = H.loadChapterLayer();
+const strip = (s) => String(s).replace(/`/g, "");
+const num = (s) => Number(String(s).replace(/[^\d]/g, ""));
+
+const C_SIMPLE = "CH0034";                    // Variables: a deck of 8 slides, the exemplar
+const SEED_XP = 120;
+const servedXp = (cid) => L.servedOf(cid).reduce((n, q) => n + L.xpOf(q), 0);
+
+const lum = (rgb) => { const [r, g, b] = rgb.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+const rgb = (s) => (String(s).match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+
+async function openChapter(spec, cid, viewport, opt) {
+  const w = await L.open({ tested: L.before(cid), ...spec }, viewport, opt);
+  await L.node(w.page, cid).scrollIntoViewIfNeeded();
+  await L.node(w.page, cid).click();
+  await w.page.waitForSelector("#testPage:not(.hidden) #testExercise");
+  return w;
+}
+const stat = (page) => page.evaluate(() => ({ hearts: app.user.hearts, xp: app.user.total_xp }));
+
+async function main() {
+  const S = await L.start();
+  console.log("Unified chapter e2e · " + S.base + " · " + path.basename(S.exe));
+
+  // ================================================================ A. entry, Code Explorer, glossary, references
+  section("A. From Home into a chapter: Code Explorer, glossary, references");
+  {
+    const deck = decks[C_SIMPLE], ex = deck.slides[0], parsed = Explorer.parse(ex.code);
+    const { ctx, page, errors } = await openChapter({}, C_SIMPLE, { width: 390, height: 844 }, { mobile: true });
+    await t("tapping the current chapter opens Slide 1 of the chapter run, not the old Learn page or a test", async () => {
+      assert.equal(await page.locator("#learn.active").count(), 0);
+      assert.equal(await page.locator("#testPage.hidden").count(), 0);
+      assert.equal(await page.locator("#testTypeLabel").textContent(), "CODE EXPLORER");
+      assert.equal((await page.locator("#testRoundNo").textContent()).trim(), "1/" + deck.slides.length);
+      assert.equal(await page.locator("#testQuestionTitle").textContent(), ex.title);
+    });
+    await t("slide 1 is the Code Explorer showing the deck's code, with one underlined button per marked part", async () => {
+      assert.equal(await page.locator(".ce-target").count(), parsed.tokens.length);
+      const shown = (await page.locator(".ce-code code").textContent()).replace(/ /g, " ");
+      assert.equal(shown, parsed.code);
+      assert.match(await page.locator(".ce-hint").textContent(), /Tap any underlined part/);
+    });
+    await t("slide progress is announced as a progress bar and is a slide counter (1/8), not a chapter or stage percentage", async () => {
+      const a = await page.evaluate(() => { const p = document.querySelector("#testPage .progress"); return [p.getAttribute("role"), p.getAttribute("aria-valuenow"), p.getAttribute("aria-valuemax"), p.getAttribute("aria-label")]; });
+      assert.deepEqual(a, ["progressbar", "1", String(deck.slides.length), "Slide progress"]);
+      assert.equal(await page.locator("#testRoundNo").getAttribute("aria-label"), "Slide 1 of " + deck.slides.length);
+    });
+    await t("Continue stays disabled until enough different parts were opened, then opens", async () => {
+      const need = Explorer.minTapsFor(ex);
+      assert.equal(await page.locator("#testCheck").isDisabled(), true);
+      const seen = new Set(), tg = page.locator(".ce-target");
+      for (let i = 0; i < (await tg.count()) && seen.size < need; i++) {
+        const id = await tg.nth(i).getAttribute("data-target"); if (seen.has(id)) continue;
+        assert.equal(await page.locator("#testCheck").isDisabled(), true, "still locked after " + seen.size + " of " + need);
+        seen.add(id); await tg.nth(i).click(); await page.keyboard.press("Escape");
+      }
+      await page.waitForFunction(() => !document.getElementById("testCheck").disabled);
+      assert.match(await page.locator(".ce-progress").textContent(), /Nice: you explored/);
+    });
+    await t("every target opens ITS explanation (title, beginner text, example) and closes with 'Got it'", async () => {
+      const before = await stat(page);
+      for (const id of Object.keys(ex.targets)) {
+        const tg = ex.targets[id];
+        await page.locator('.ce-target[data-target="' + id + '"]').first().click();
+        await page.waitForSelector("dialog.cg-sheet[open]");
+        assert.equal((await page.locator("#cgTitle").textContent()).trim(), tg.title, "title of " + id);
+        const body = strip(await page.locator("#cgBody").textContent());
+        assert.ok(body.includes(strip(tg.explain).slice(0, 40)), "explanation of " + id);
+        if (tg.example) assert.ok((await page.locator("#cgBody .cg-code").textContent()).includes(tg.example.split("\n")[0]), "example of " + id);
+        assert.equal(await page.locator('.ce-target[data-target="' + id + '"].is-active').count() > 0, true, "the tapped part is highlighted while its explanation is open");
+        await page.locator("#cgClose").click();
+        await page.waitForFunction(() => !document.querySelector("dialog.cg-sheet[open]"));
+        // (the native `close` event that clears the highlight fires just after the dialog closes)
+        await page.waitForFunction(() => !document.querySelector(".ce-target.is-active"), null, { timeout: 3000 });
+      }
+      assert.deepEqual(await stat(page), before, "reading explanations changes no hearts and no XP");
+      assert.equal((await page.locator("#testRoundNo").textContent()).trim(), "1/" + deck.slides.length, "and never advances or answers anything");
+    });
+    await t("'Words to know' chips open glossary entries; related terms swap the sheet in place", async () => {
+      const chips = await page.locator("#testGlossary .cg-chip").allTextContents();
+      assert.deepEqual(chips.map((s) => s.trim().toLowerCase()), ex.glossary.map((id) => deck.glossary[id].term.toLowerCase()));
+      await page.locator("#testGlossary .cg-chip").first().click();
+      await page.waitForSelector("dialog.cg-sheet[open]");
+      const g = deck.glossary[ex.glossary[0]];
+      assert.equal((await page.locator("#cgTitle").textContent()).trim(), g.term);
+      assert.ok(strip(await page.locator("#cgBody").textContent()).includes(strip(g.short)));
+      await page.keyboard.press("Escape");
+    });
+    await t("reference links are at the bottom of the slide: real YouTube links, open in a new tab, never embedded or autoplayed", async () => {
+      const links = await page.locator("#testRefs a.cc-ref").evaluateAll((as) => as.map((a) => ({ href: a.href, target: a.target, rel: a.rel, label: a.getAttribute("aria-label"), h: a.getBoundingClientRect().height })));
+      assert.deepEqual(links.map((l) => l.href), deck.references.map((r) => r.url));
+      links.forEach((l, i) => { assert.equal(l.target, "_blank"); assert.match(l.rel, /noopener/); assert.match(l.label, /opens YouTube in a new tab/); assert.ok(l.h >= 44, "touch target " + l.h); assert.match(l.label, new RegExp(deck.references[i].channel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))); });
+      assert.equal(await page.locator("#testRefs iframe, #testRefs video, #testRefs embed").count(), 0, "nothing is embedded or autoplayed");
+      assert.equal(await page.locator("iframe[src*='youtube'], video[autoplay]").count(), 0);
+    });
+    await t("no JS errors", async () => noErrors(errors));
+    await ctx.close();
+  }
+
+  // ================================================================ B. keyboard and accessibility
+  section("B. Keyboard and screen-reader access");
+  {
+    const deck = decks[C_SIMPLE];
+    const { ctx, page, errors } = await openChapter({}, C_SIMPLE, { width: 1280, height: 800 });
+    await t("a code target can be focused, opened with Enter, read, closed with Esc, and focus returns to it", async () => {
+      const first = page.locator(".ce-target").first();
+      await page.locator("#testGlossary .cg-chip").last().focus();
+      await page.keyboard.press("Tab"); // real keyboard modality, so :focus-visible applies
+      assert.equal(await page.evaluate(() => document.activeElement.className.includes("ce-target")), true, "Tab from the chips reaches the first code part");
+      assert.match(await first.getAttribute("aria-label"), /^Explain /);
+      assert.equal(await first.getAttribute("aria-haspopup"), "dialog");
+      const ring = await first.evaluate((e) => { const c = getComputedStyle(e); return c.outlineStyle + " " + c.outlineWidth; });
+      assert.match(ring, /solid 3px/, "visible focus ring: " + ring);
+      await page.keyboard.press("Enter");
+      await page.waitForSelector("dialog.cg-sheet[open]");
+      assert.equal(await page.evaluate(() => document.querySelector("dialog.cg-sheet").contains(document.activeElement)), true, "focus moves into the dialog");
+      assert.equal(await page.getAttribute("dialog.cg-sheet", "aria-labelledby"), "cgTitle");
+      await page.keyboard.press("Escape");
+      await page.waitForFunction(() => !document.querySelector("dialog.cg-sheet[open]"));
+      assert.equal(await page.evaluate(() => document.activeElement && document.activeElement.className.includes("ce-target")), true, "focus is back on the code part");
+    });
+    await t("Space also opens a target, and Tab reaches every target in reading order", async () => {
+      const tg = page.locator(".ce-target"), n = await tg.count();
+      await tg.first().focus();
+      const order = [];
+      for (let i = 0; i < n; i++) { order.push(await page.evaluate(() => document.activeElement.textContent)); await page.keyboard.press("Tab"); }
+      assert.deepEqual(order, (await tg.allTextContents()), "Tab order follows the code");
+      await tg.first().focus(); await page.keyboard.press("Space");
+      await page.waitForSelector("dialog.cg-sheet[open]"); await page.keyboard.press("Escape");
+    });
+    await t("glossary sheet content is real text a screen reader gets; the term button labels are descriptive", async () => {
+      await page.locator("#testGlossary .cg-chip").first().click(); await page.waitForSelector("dialog.cg-sheet[open]");
+      assert.ok((await page.locator("dialog.cg-sheet").innerText()).length > 60);
+      await page.keyboard.press("Escape");
+      assert.equal(await page.locator('#testGlossary [role="group"], #testGlossary .cg-chips[role="group"]').count(), 1);
+    });
+    await t("no JS errors", async () => noErrors(errors));
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await openChapter({}, C_SIMPLE, { width: 390, height: 844 }, { mobile: true, reducedMotion: "reduce" });
+    await t("prefers-reduced-motion: the explanation sheet and code parts use no animation", async () => {
+      await page.locator(".ce-target").first().click(); await page.waitForSelector("dialog.cg-sheet[open]");
+      const anim = await page.evaluate(() => [document.querySelector("dialog.cg-sheet"), document.querySelector(".ce-target")].map((e) => getComputedStyle(e).animationName));
+      assert.deepEqual(anim, ["none", "none"]);
+      await page.keyboard.press("Escape");
+    });
+    await ctx.close();
+  }
+
+  // ================================================================ C. slides: activities, questions, feedback
+  section("C. Activities and graded questions inside the chapter run");
+  {
+    const deck = decks[C_SIMPLE];
+    const { ctx, page, errors } = await openChapter({}, C_SIMPLE, { width: 390, height: 844 }, { mobile: true });
+    const kinds = deck.slides.map((s) => s.kind);
+    await page.evaluate(() => { document.getElementById("testCheck").disabled = false; }); // (test-only shortcut past slide 1's tap goal; the goal itself is tested above)
+    await page.locator("#testCheck").click();
+    await t("slide 2 is the chapter's first hands-on activity (existing engine, by id), Continue locked until it is done or tried and skipped", async () => {
+      assert.equal(kinds[1], "activity");
+      await page.waitForSelector("#testExercise .la");
+      assert.equal(await page.locator("#testExercise .la").getAttribute("data-activity"), deck.slides[1].activity);
+      assert.equal(await page.locator("#testCheck").isDisabled(), true);
+      assert.equal(await page.locator("#testSkip").isHidden(), true, "Skip is not offered before the student has tried it");
+      assert.match(await page.locator("#testLead").innerText(), /variable/i);
+      assert.equal(await page.locator("#testLead .cg-term").count() > 0, true, "the lead's glossary words are tappable");
+    });
+    await t("trying the activity offers Skip; skipping enables Continue, and no heart or XP is involved", async () => {
+      const b = await stat(page);
+      await page.locator("#testExercise").click({ position: { x: 6, y: 6 } });
+      await page.waitForSelector("#testSkip:not([hidden])");
+      await page.locator("#testSkip").click();
+      assert.equal(await page.locator("#testCheck").isDisabled(), false);
+      assert.deepEqual(await stat(page), b);
+      await page.locator("#testCheck").click();
+    });
+    await t("a graded question slide keeps the existing rules: chips, XP tag, feedback with the slide's takeaway (the bank explanation is empty)", async () => {
+      await page.waitForFunction(() => currentSlide().kind === "question");
+      const s = deck.slides[2];
+      assert.equal(await page.locator("#testSlideMeta .cc-kicker").textContent(), s.title);
+      assert.match(await page.locator("#testQuestionExplain").textContent(), /1 XP/);
+      assert.deepEqual((await page.locator("#testGlossary .cg-chip").allTextContents()).map((x) => x.trim().toLowerCase()), s.glossary.map((id) => deck.glossary[id].term.toLowerCase()));
+      await L.answerQuestion(page, s.question, true);
+      await page.waitForFunction(() => /Correct!/.test(document.getElementById("testFeedbackV11").textContent));
+      assert.ok(strip(await page.locator("#testFeedbackV11 .cc-takeaway").textContent()).includes(strip(s.takeaway).slice(0, 25)));
+      assert.equal(await page.locator("#testPendingText").textContent(), "1");
+    });
+    await t("stale 'Refers to: Slide N' notes from the old Learn layout are never shown", async () => {
+      const bad = await page.evaluate(() => /Refers?\s+to:\s*Slides?/i.test(document.getElementById("testFeedbackV11").textContent));
+      assert.equal(bad, false);
+    });
+    await t("no JS errors", async () => noErrors(errors));
+    await ctx.close();
+  }
+
+  // ================================================================ D. hearts, XP, review
+  section("D. Hearts, XP-once, review, recovery");
+  {
+    const cid = C_SIMPLE, xp = servedXp(cid);
+    const { ctx, page, errors } = await openChapter({ xp: SEED_XP }, cid, { width: 390, height: 844 }, { mobile: true });
+    let seen;
+    await t("a question missed three times costs exactly one heart; correct answers, glossary and navigation cost none", async () => {
+      seen = await L.playToEnd(page, { wrong: 3 });
+      assert.equal(await page.locator("#testHeartsText").textContent(), "2");
+      assert.equal(await page.evaluate(() => app.user.hearts), 2);
+    });
+    await t("the chapter completes; XP is awarded once (questions answered correctly only), hearts are NOT refilled by passing", async () => {
+      const lost = L.servedOf(cid)[0];
+      const expected = xp - L.xpOf(lost);
+      const after = await stat(page);
+      assert.equal(after.hearts, 2);
+      assert.equal(after.xp, SEED_XP + expected, "XP = the correctly answered questions");
+      assert.match(await page.locator("#testQuestionTitle").textContent(), /Chapter complete!/);
+      assert.match(await page.locator(".test-complete-full p").textContent(), new RegExp("Chapter complete! " + expected + " XP added"));
+    });
+    await t("back on Home the chapter is completed and the next one is open", async () => {
+      await page.locator("#testCheck").click();
+      await page.waitForSelector("#home.active");
+      const cp = await page.evaluate((c) => chapterProg(c), cid);
+      assert.equal(cp.test_completed, true); assert.equal(cp.learn_completed, true);
+      assert.match(await L.node(page, cid).getAttribute("aria-label"), /completed\. Tap to review the chapter/);
+      assert.match(await L.node(page, L.after(cid)).getAttribute("aria-label"), /current, tap to start the chapter/);
+    });
+    await t("a state refresh (reload) never pays again", async () => {
+      const b = await stat(page);
+      await page.evaluate(async () => { await loadApp(true); });
+      assert.deepEqual(await stat(page), b);
+    });
+    await t("tapping the completed chapter opens a REVIEW: same slides, no XP shown, no hearts at stake", async () => {
+      await L.node(page, cid).scrollIntoViewIfNeeded(); await L.node(page, cid).click();
+      await page.waitForSelector("#testPage.is-review");
+      assert.equal(await page.locator(".cc-review-badge").isVisible(), true);
+      assert.equal(await page.locator(".xp-mini").isVisible(), false);
+      assert.equal(await page.evaluate(() => testState.mode), "review");
+      assert.equal(await page.evaluate(() => testState.slides.length), decks[cid].slides.length, "the same chapter, not a shortened one");
+    });
+    await t("reviewing the chapter where the heart was lost refills it (the existing rule) and pays no XP", async () => {
+      const b = await stat(page);
+      assert.equal(b.hearts, 2);
+      await L.playToEnd(page, { wrong: 3 });
+      assert.match(await page.locator("#testQuestionTitle").textContent(), /Chapter reviewed!/);
+      assert.match(await page.locator(".test-complete-full p").textContent(), /hearts were refilled/i);
+      await page.locator("#testCheck").click(); await page.waitForSelector("#home.active");
+      assert.deepEqual(await stat(page), { hearts: 3, xp: b.xp }, "hearts back to 3, XP untouched");
+    });
+    await t("further reviews never award XP and missing review questions three times costs no heart", async () => {
+      const b = await stat(page);
+      for (let i = 0; i < 2; i++) { await L.node(page, cid).click(); await page.waitForSelector("#testPage.is-review"); await L.playToEnd(page, { wrong: 3 }); await page.locator("#testCheck").click(); await page.waitForSelector("#home.active"); }
+      assert.deepEqual(await stat(page), b, "identical after repeated reviews, even with wrong answers");
+    });
+    await t("no JS errors", async () => noErrors(errors));
+    await ctx.close();
+  }
+  {
+    // a finished chapter that owes nothing reviews freely: skip forward, go back, nothing is at stake
+    const cid = C_SIMPLE, n = decks[cid].slides.length;
+    const { ctx, page, errors } = await L.open({ tested: [...L.before(cid), cid], xp: 77 }, { width: 390, height: 844 }, { mobile: true });
+    await t("review of a finished chapter is free navigation: Continue is open on slide 1, slides can be skipped and revisited", async () => {
+      await L.node(page, cid).scrollIntoViewIfNeeded(); await L.node(page, cid).click();
+      await page.waitForSelector("#testPage.is-review .ce-target");
+      assert.equal(await page.evaluate(() => testState.free), true);
+      assert.equal(await page.locator("#testCheck").isDisabled(), false, "no tap goal in a free review");
+      assert.equal(await page.locator("#testPrev").isHidden(), true, "nothing before slide 1");
+      assert.equal((await page.locator("#testSkip").textContent()).trim(), "Skip slide →");
+      await page.locator("#testSkip").click(); await page.locator("#testSkip").click();
+      assert.equal((await page.locator("#testRoundNo").textContent()).trim(), "3/" + n);
+      await page.locator("#testPrev").click();
+      assert.equal((await page.locator("#testRoundNo").textContent()).trim(), "2/" + n);
+    });
+    await t("skipping to the end completes the review with no XP, no heart change and no attempt recorded", async () => {
+      for (let i = 2; i <= n; i++) { await page.locator("#testSkip").click(); await page.waitForTimeout(40); }
+      await page.waitForFunction(() => document.getElementById("testTypeLabel").textContent === "COMPLETE", null, { timeout: 8000 });
+      assert.match(await page.locator("#testQuestionTitle").textContent(), /Chapter reviewed!/);
+      assert.deepEqual(await stat(page), { hearts: 3, xp: 77 });
+      assert.equal(await page.evaluate(() => Object.keys(testState.questionAttempts).length), 0);
+    });
+    await t("no JS errors", async () => noErrors(errors));
+    await ctx.close();
+  }
+  {
+    const cid = C_SIMPLE;
+    const { ctx, page } = await L.open({ tested: [...L.before(cid), cid], hearts: 2, recChapter: cid }, { width: 390, height: 844 }, { mobile: true });
+    await t("heart recovery: the Home notice names the chapter, and its review needs the real interactions (hearts cannot be refilled by skipping)", async () => {
+      assert.match(await page.locator("#homeRecovery").innerText(), /Hearts do not refill after a test/);
+      await L.node(page, cid).scrollIntoViewIfNeeded(); await L.node(page, cid).click();
+      await page.waitForSelector("#testPage.is-review .ce-target");
+      assert.equal(await page.evaluate(() => testState.free), false);
+      assert.equal(await page.locator("#testSkip").isHidden(), true);
+      assert.equal(await page.locator("#testCheck").isDisabled(), true, "the Code Explorer's tap goal applies");
+    });
+    await t("heart recovery: reviewing the chapter where a heart was lost refills it (the existing rule)", async () => {
+      await L.playToEnd(page);
+      assert.match(await page.locator(".test-complete-full p").textContent(), /hearts were refilled/i);
+      assert.equal(await page.evaluate(() => app.user.hearts), 3);
+    });
+    await ctx.close();
+  }
+  {
+    const cid = C_SIMPLE;
+    const { ctx, page } = await L.open({ tested: L.before(cid), hearts: 1 }, { width: 390, height: 844 }, { mobile: true });
+    await t("losing the last heart fails the run (no XP) and offers to review this chapter, which starts the same chapter in review mode", async () => {
+      await L.node(page, cid).scrollIntoViewIfNeeded(); await L.node(page, cid).click();
+      await page.waitForSelector("#testPage:not(.hidden) #testExercise");
+      const qid = await page.evaluate(() => currentSlide().kind === "explorer" ? null : 1);
+      await page.evaluate(() => { document.getElementById("testCheck").disabled = false; });
+      await page.locator("#testCheck").click();                       // explorer -> activity
+      await page.locator("#testExercise").click({ position: { x: 6, y: 6 } }); await page.waitForSelector("#testSkip:not([hidden])"); await page.locator("#testSkip").click(); await page.locator("#testCheck").click();
+      await page.waitForFunction(() => currentSlide().kind === "question");
+      const q = await page.evaluate(() => currentSlide().q.question_id);
+      for (let i = 0; i < 3; i++) { await L.answerQuestion(page, q, false); await page.waitForFunction(() => /Try again|Three attempts/.test(document.getElementById("testFeedbackV11").textContent)); if (i < 2) await page.waitForFunction(() => document.getElementById("testCheck").textContent === "CHECK" && !document.getElementById("testCheck").disabled); }
+      assert.match(await page.locator("#testFeedbackV11").textContent(), /No XP was added/);
+      assert.equal(await page.locator("#testCheck").textContent(), "REVIEW THE CHAPTER");
+      const xp = await page.evaluate(() => app.user.total_xp);
+      await page.locator("#testCheck").click();
+      await page.waitForSelector("#testPage.is-review");
+      assert.equal(await page.evaluate(() => testState.chapter_id), cid);
+      assert.equal(await page.evaluate(() => app.user.total_xp), xp);
+    });
+    await ctx.close();
+  }
+  {
+    const cid = C_SIMPLE;
+    const { ctx, page } = await L.open({ tested: L.before(cid), hearts: 0 }, { width: 390, height: 844 }, { mobile: true });
+    await t("with no hearts a graded run cannot start: a clear message, nothing opens", async () => {
+      await L.node(page, cid).scrollIntoViewIfNeeded(); await L.node(page, cid).click();
+      await page.waitForSelector("#toastStack .toast");
+      assert.match(await page.locator("#toastStack .toast").first().innerText(), /No hearts left/);
+      assert.equal(await page.locator("#testPage.hidden").count(), 1);
+    });
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await L.open({ tested: L.ids("STG001", 0, 3) }, { width: 390, height: 844 }, { mobile: true });
+    await t("a locked chapter explains why and opens nothing", async () => {
+      const locked = L.ids("STG001", 4, 5)[0];
+      await L.node(page, locked).scrollIntoViewIfNeeded(); await L.node(page, locked).click({ force: true });
+      await page.waitForSelector("#toastStack .toast");
+      assert.equal(await page.locator("#testPage.hidden").count(), 1);
+      assert.equal(await page.locator("#home.active").count(), 1);
+    });
+    await ctx.close();
+  }
+  {
+    // legacy: learned under the old flow but never tested
+    const cid = C_SIMPLE;
+    const { ctx, page } = await L.open({ tested: L.before(cid), learned: [cid] }, { width: 390, height: 844 }, { mobile: true });
+    await t("legacy: a student who only did the old Learn half starts the chapter run; XP is paid once", async () => {
+      assert.match(await L.node(page, cid).getAttribute("aria-label"), /current, tap to start the chapter/);
+      await L.node(page, cid).scrollIntoViewIfNeeded(); await L.node(page, cid).click();
+      await page.waitForSelector("#testPage:not(.hidden) #testExercise");
+      assert.equal(await page.evaluate(() => testState.mode), "graded");
+      await L.playToEnd(page);
+      assert.equal(await page.evaluate(() => app.user.total_xp), SEED_XP + servedXp(cid));
+    });
+    await ctx.close();
+  }
+  {
+    // rollout safety: the frontend can go live a moment before the updated edge function
+    const cid = C_SIMPLE;
+    const { ctx, page, errors } = await L.open({ tested: L.before(cid), xp: SEED_XP }, { width: 390, height: 844 }, { mobile: true });
+    await t("rollout safety: against a backend that does not know `unified` yet, the chapter still runs and XP is still paid once", async () => {
+      await page.evaluate(() => { const orig = post; post = (a, p) => orig(a, ["startTest", "finishTest", "completeLearn"].includes(a) ? { ...p, unified: undefined } : p); });
+      await L.node(page, cid).scrollIntoViewIfNeeded(); await L.node(page, cid).click();
+      await page.waitForSelector("#testPage:not(.hidden) .ce-target");   // startTest was refused once (Learn first), satisfied, and retried
+      assert.equal(await page.evaluate(() => testState.mode), "graded");
+      await L.playToEnd(page);
+      assert.equal(await page.evaluate(() => app.user.total_xp), SEED_XP + servedXp(cid));
+      assert.equal(await page.evaluate((c) => chapterProg(c).test_completed && chapterProg(c).learn_completed, cid), true);
+      noErrors(errors);
+    });
+    await ctx.close();
+  }
+  {
+    // legacy: a student who had already completed both halves keeps everything
+    const cid = C_SIMPLE;
+    const { ctx, page } = await L.open({ tested: [...L.before(cid), cid], learned: [cid], xp: 77 }, { width: 390, height: 844 }, { mobile: true });
+    await t("legacy: a fully completed chapter stays completed, opens as a review, and pays nothing", async () => {
+      assert.match(await L.node(page, cid).getAttribute("aria-label"), /completed\. Tap to review the chapter/);
+      assert.match(await L.node(page, L.after(cid)).getAttribute("aria-label"), /current/);
+      await L.node(page, cid).scrollIntoViewIfNeeded(); await L.node(page, cid).click();
+      await page.waitForSelector("#testPage.is-review");
+      await L.playToEnd(page);
+      assert.equal(await page.evaluate(() => app.user.total_xp), 77);
+    });
+    await ctx.close();
+  }
+
+  // ================================================================ E. EVERY chapter, played to completion
+  section("E. Every populated chapter: play all slides in a real browser (first run, all correct)");
+  {
+    const want = (process.env.CHAPTERS ? process.env.CHAPTERS.toUpperCase().split(",") : fx.chapters.map((c) => c.chapter_id)).filter((c) => decks[c]);
+    const out = {};
+    async function one(cid) {
+      const deck = decks[cid], ex = deck.slides[0];
+      const r = { cid, errors: [], problems: [] };
+      const { ctx, page, errors } = await openChapter({ xp: SEED_XP }, cid, { width: 390, height: 844 }, { mobile: true });
+      try {
+        r.total = await page.evaluate(() => testState.slides.length);
+        r.targets = await page.locator(".ce-target").count();
+        r.refs = await page.locator("#testRefs a.cc-ref").evaluateAll((as) => as.map((a) => a.href));
+        r.chips = await page.locator("#testGlossary .cg-chip").count();
+        // every distinct target of slide 1 opens its own explanation
+        for (const id of Object.keys(ex.targets)) {
+          await page.locator('.ce-target[data-target="' + id + '"]').first().click();
+          await page.waitForSelector("dialog.cg-sheet[open]");
+          const title = (await page.locator("#cgTitle").textContent()).trim();
+          if (title !== ex.targets[id].title) r.problems.push("target " + id + " opened '" + title + "'");
+          await page.keyboard.press("Escape");
+          await page.waitForFunction(() => !document.querySelector("dialog.cg-sheet[open]"));
+        }
+        // play; count activity slides that could not mount (the fallback message)
+        const seen = [];
+        for (let guard = 0; guard < 30; guard++) {
+          await page.waitForFunction(() => document.getElementById("testTypeLabel").textContent === "COMPLETE" || !!document.querySelector("#testExercise .ce-target, #testExercise .la, #testExercise .option, #testExercise .test-v11-token, #testExercise .test-code-fill-box, #testTextAnswer, #testExercise p.meta"), null, { timeout: 15000 });
+          if (await page.evaluate(() => document.getElementById("testTypeLabel").textContent === "COMPLETE")) break;
+          const s = await L.slideKind(page); seen.push(s.kind);
+          if (s.kind === "activity" && (await page.locator("#testExercise p.meta").count())) r.problems.push("activity " + s.activity + " could not load");
+          if (s.kind === "explorer") { const need = Explorer.minTapsFor(ex); const tg = page.locator(".ce-target"); const done = new Set(); for (let i = 0; i < (await tg.count()) && done.size < need; i++) { const id = await tg.nth(i).getAttribute("data-target"); if (done.has(id)) continue; done.add(id); await tg.nth(i).click(); await page.keyboard.press("Escape"); await page.waitForFunction(() => !document.querySelector("dialog.cg-sheet[open]")); } await page.locator("#testCheck").click(); }
+          else if (s.kind === "activity") { await page.locator("#testExercise").click({ position: { x: 6, y: 6 } }); await page.waitForFunction(() => !document.getElementById("testCheck").disabled || !document.getElementById("testSkip").hidden, null, { timeout: 5000 }); if (await page.locator("#testSkip:not([hidden])").count()) await page.locator("#testSkip").click(); await page.locator("#testCheck").click(); }
+          else { await L.answerQuestion(page, s.qid, true); await page.waitForFunction(() => /Correct!/.test(document.getElementById("testFeedbackV11").textContent)); await page.waitForFunction(() => !document.getElementById("testCheck").disabled && /CONTINUE|FINISH/.test(document.getElementById("testCheck").textContent)); await page.locator("#testCheck").click(); }
+        }
+        await page.waitForFunction(() => document.getElementById("testTypeLabel").textContent === "COMPLETE", null, { timeout: 15000 });
+        r.kinds = seen;
+        r.after = await page.evaluate((c) => ({ xp: app.user.total_xp, hearts: app.user.hearts, cp: chapterProg(c), title: document.getElementById("testQuestionTitle").textContent }), cid);
+        await page.locator("#testCheck").click(); await page.waitForSelector("#home.active");
+        const nxt = L.after(cid);
+        if (nxt) r.next = await L.node(page, nxt).getAttribute("aria-label");
+      } catch (e) { r.problems.push("run failed: " + String(e.message).split("\n")[0]); }
+      r.errors = errors; await ctx.close();
+      out[cid] = r;
+    }
+    const queue = want.slice();
+    await Promise.all([0, 1, 2, 3].map(async () => { while (queue.length) await one(queue.shift()); }));
+    for (const cid of want) {
+      const deck = decks[cid], r = out[cid];
+      await t(cid + " " + deck.title + ": all " + deck.slides.length + " slides play; questions, XP, unlocking and glossary all work", async () => {
+        assert.deepEqual(r.problems, []);
+        assert.equal(r.total, deck.slides.length);
+        assert.equal(r.targets, Explorer.parse(deck.slides[0].code).tokens.length);
+        assert.deepEqual(r.refs, deck.references.map((x) => x.url));
+        assert.ok(r.chips >= 1);
+        assert.deepEqual(r.kinds, deck.slides.map((s) => s.kind), "slides play in the deck's order");
+        assert.equal(r.after.xp, SEED_XP + servedXp(cid), "chapter XP: the served questions, once");
+        assert.equal(r.after.hearts, 3);
+        assert.equal(r.after.cp.test_completed && r.after.cp.learn_completed, true);
+        assert.equal(r.after.title, "Chapter complete!");
+        if (L.after(cid)) assert.match(r.next, /current, tap to start the chapter|locked/);
+        noErrors(r.errors);
+      });
+    }
+  }
+
+  // ================================================================ G. loading and C execution
+  section("G. Lazy loading and C execution inside a chapter");
+  {
+    const cid = "CH0034";
+    const { ctx, page } = await L.open({ tested: L.before(cid) }, { width: 390, height: 844 }, { mobile: true });
+    const reqs = [];
+    page.on("request", (r) => { const u = r.url(); if (/\/assets\/(chapter|learn)\//.test(u)) reqs.push(u.replace(/^.*\/assets\//, "assets/").split("?")[0]); });
+    await L.node(page, cid).scrollIntoViewIfNeeded(); await L.node(page, cid).click();
+    await page.waitForSelector("#testPage:not(.hidden) .ce-target");
+    await L.passExplorer(page);
+    await page.waitForSelector("#testExercise .la, #testExercise .option");
+    await t("opening a chapter downloads only THAT chapter's deck and activity definitions, never the rest of the course", async () => {
+      assert.deepEqual(reqs.filter((r) => /assets\/chapter\/defs\//.test(r)), ["assets/chapter/defs/ch0034.js"]);
+      assert.deepEqual(reqs.filter((r) => /assets\/learn\/defs\//.test(r)), ["assets/learn/defs/ch0034.js"]);
+      assert.equal(reqs.filter((r) => /defs\/ch\d{4}\.js/.test(r) && !/ch0034/.test(r)).length, 0);
+    });
+    await ctx.close();
+  }
+  {
+    // a chapter whose hands-on slide RUNS C: the sandboxed interpreter executes the student's program in the browser
+    const cid = "CH0031", act = decks[cid].slides.findIndex((s) => s.kind === "activity" && /change-greeting/.test(s.activity));
+    const { ctx, page, errors } = await openChapter({}, cid, { width: 390, height: 844 }, { mobile: true });
+    await t("C execution: the 'run' activity compiles and runs the student's program in the browser and shows its real output", async () => {
+      assert.ok(act > 0, "the deck contains the run activity");
+      await L.passExplorer(page);
+      await page.evaluate((i) => { testState.index = i; renderTest(); }, act);   // jump to that slide (navigation is tested elsewhere)
+      await page.waitForSelector('#testExercise .la-k-run');
+      await page.locator("#testExercise .la-k-run button", { hasText: /^Run$/ }).click();
+      await page.waitForFunction(() => /Hello/.test(document.querySelector("#testExercise .la-k-run").innerText), null, { timeout: 15000 });
+      // edit the program: the output follows the edit
+      await page.locator("#testExercise .la-k-run textarea").first().fill('#include <stdio.h>\nint main() { printf("Chapter run works"); return 0; }');
+      await page.locator("#testExercise .la-k-run button", { hasText: /^Run$/ }).click();
+      await page.waitForFunction(() => /Chapter run works/.test(document.querySelector("#testExercise .la-k-run").innerText), null, { timeout: 15000 });
+      assert.equal(await page.evaluate(() => typeof Worker !== "undefined"), true);
+    });
+    await t("no JS errors while running C", async () => noErrors(errors));
+    await ctx.close();
+  }
+
+  // ================================================================ F. layout and contrast: 6 viewports x 2 themes, representative chapters
+  section("F. Responsive layout and theme contrast (Code Explorer, activity, question, sheet, references)");
+  {
+    const VIEWPORTS = [[360, 800], [390, 844], [412, 915], [1280, 720], [1440, 900], [1920, 1080]];
+    // simple, datatype, operator (bit visualiser), input (buffer simulator), decision, loop (C interpreter), loop lab, glossary-heavy
+    const REPS = ["CH0031", "CH0036", "CH0044", "CH0047", "CH0052", "CH0056", "CH0058", "CH0035"];
+    const layout = () => {
+      const W = document.documentElement.clientWidth, out = [];
+      if (document.documentElement.scrollWidth > W + 1) out.push("horizontal scroll " + document.documentElement.scrollWidth + " > " + W);
+      const inView = (el, name) => { if (!el || !el.getBoundingClientRect().width) return; const r = el.getBoundingClientRect(); if (r.left < -0.5 || r.right > W + 0.5) out.push(name + " outside the screen [" + Math.round(r.left) + "," + Math.round(r.right) + "] of " + W); };
+      inView(document.querySelector("#testLessonCard"), "card");
+      document.querySelectorAll(".ce-code, #testExercise .la, .test-v11-code, #testRefs .cc-ref, #testCheck, .cg-chip, #testExercise .option, #testExercise .la pre").forEach((e, i) => inView(e, e.className.split(" ")[0] + "#" + i));
+      document.querySelectorAll(".ce-code, .test-v11-code, #testExercise .la pre").forEach((e, i) => { if (e.scrollWidth > e.clientWidth + 1) out.push("code block scrolls sideways (" + e.className.split(" ")[0] + "#" + i + ": " + e.scrollWidth + " > " + e.clientWidth + ")"); });
+      const chk = document.getElementById("testCheck").getBoundingClientRect(); if (chk.height < 44) out.push("Check/Continue is only " + Math.round(chk.height) + "px tall");
+      document.querySelectorAll("#testRefs .cc-ref").forEach((a) => { if (a.getBoundingClientRect().height < 44) out.push("reference link under 44px"); });
+      return out;
+    };
+    const theme_ = (page) => page.evaluate(() => {
+      const stops = (el) => { const cs = getComputedStyle(el); return (cs.backgroundImage.match(/rgba?\([^)]*\)/g) || []).concat(cs.backgroundImage === "none" ? [cs.backgroundColor] : []).map((x) => x.match(/[\d.]+/g).slice(0, 3).map(Number)); };
+      const col = (sel) => { const e = document.querySelector(sel); return e ? getComputedStyle(e).color : null; };
+      return { card: stops(document.getElementById("testLessonCard")), code: stops(document.querySelector(".ce-code") || document.body), page: getComputedStyle(document.body).backgroundColor,
+        target: col(".ce-target"), hint: col(".ce-hint"), progress: col(".ce-progress"), goal: col("#testQuestionExplain"), chip: col(".cg-chip"), chipBg: (document.querySelector(".cg-chip") ? getComputedStyle(document.querySelector(".cg-chip")).backgroundColor : null), lead: col("#testLead"), refTitle: col(".cc-refs-title"), refSmall: col(".cc-ref-text small"), refText: col(".cc-ref-text") };
+    });
+    for (const theme of ["dark", "light"]) {
+      for (const cid of REPS) {
+        const deck = decks[cid];
+        const { ctx, page, errors } = await openChapter({ theme }, cid, { width: 390, height: 844 }, {});
+        const problems = [];
+        const checkAll = async (label) => {
+          for (const [w, h] of VIEWPORTS) {
+            await page.setViewportSize({ width: w, height: h }); await page.waitForTimeout(60);
+            const p = await page.evaluate(layout); p.forEach((x) => problems.push(w + "x" + h + " " + label + ": " + x));
+          }
+          await page.setViewportSize({ width: 390, height: 844 });
+        };
+        await checkAll("explorer");
+        if (cid === "CH0031") { await L.shot(page, "ch-" + theme + "-explorer-390"); }
+        // the explanation sheet at every size
+        await page.locator(".ce-target").nth(1).click(); await page.waitForSelector("dialog.cg-sheet[open]");
+        for (const [w, h] of VIEWPORTS) {
+          await page.setViewportSize({ width: w, height: h }); await page.waitForTimeout(60);
+          const r = await page.evaluate(() => { const d = document.querySelector("dialog.cg-sheet").getBoundingClientRect(); return { l: d.left, r: d.right, t: d.top, b: d.bottom, W: innerWidth, H: innerHeight }; });
+          if (r.l < -0.5 || r.r > r.W + 0.5 || r.t < -0.5 || r.b > r.H + 0.5) problems.push(w + "x" + h + " sheet outside the screen " + JSON.stringify(r));
+        }
+        await L.shot(page, "ch-" + theme + "-" + cid + "-sheet"); await page.setViewportSize({ width: 390, height: 844 });
+        const col = await theme_(page);
+        await page.keyboard.press("Escape");
+        // contrast on the explorer slide
+        const minOn = (fg, bgs) => Math.min(...bgs.map((b) => ratio(rgb(fg), b)));
+        const cs = [["code target on the code block", minOn(col.target, col.code)], ["hint text on the card", minOn(col.hint, col.card)], ["progress text on the card", minOn(col.progress, col.card)], ["goal line on the card", minOn(col.goal, col.card)], ["chip text on its chip", ratio(rgb(col.chip), rgb(col.chipBg))], ["reference title on the page", ratio(rgb(col.refTitle), rgb(col.page))], ["reference channel on the page", ratio(rgb(col.refSmall), rgb(col.page))], ["reference link on the page", ratio(rgb(col.refText), rgb(col.page))]];
+        cs.forEach(([name, v]) => { if (v < 4.5) problems.push(theme + " contrast " + v.toFixed(2) + ":1 for " + name); });
+        // the sheet itself: text and label colours against the dialog background
+        await page.locator(".ce-target").nth(1).click(); await page.waitForSelector("dialog.cg-sheet[open]");
+        const sh = await page.evaluate(() => { const d = document.querySelector("dialog.cg-sheet"), bg = getComputedStyle(d).backgroundColor, c = (s) => { const e = d.querySelector(s); return e ? getComputedStyle(e).color : null; }; return { bg, body: c("#cgBody p"), kicker: c("#cgKicker"), title: c("#cgTitle code") }; });
+        [["sheet body text", sh.body], ["sheet kicker", sh.kicker], ["sheet title", sh.title]].forEach(([name, fg]) => { if (fg) { const v = ratio(rgb(fg), rgb(sh.bg)); if (v < 4.5) problems.push(theme + " contrast " + v.toFixed(2) + ":1 for " + name); } });
+        await page.keyboard.press("Escape"); await page.waitForFunction(() => !document.querySelector("dialog.cg-sheet[open]"));
+        // an activity slide and a question slide
+        await L.passExplorer(page);
+        await page.waitForFunction(() => currentSlide().kind !== "explorer");
+        const k2 = (await L.slideKind(page)).kind;
+        await page.waitForSelector("#testExercise .la, #testExercise .option, #testTextAnswer, #testExercise .test-code-fill-box, #testExercise .test-v11-token, #testExercise p.meta");
+        await checkAll(k2); await L.shot(page, "ch-" + theme + "-" + cid + "-slide2");
+        // walk to the first question slide
+        for (let g = 0; g < 8 && (await L.slideKind(page)).kind !== "question"; g++) {
+          if ((await L.slideKind(page)).kind === "activity") { await page.locator("#testExercise").click({ position: { x: 6, y: 6 } }); await page.waitForFunction(() => !document.getElementById("testCheck").disabled || !document.getElementById("testSkip").hidden, null, { timeout: 5000 }); if (await page.locator("#testSkip:not([hidden])").count()) await page.locator("#testSkip").click(); await page.locator("#testCheck").click(); await page.waitForFunction(() => document.getElementById("testTypeLabel").textContent !== "TRY IT" || true); await page.waitForTimeout(150); }
+        }
+        if ((await L.slideKind(page)).kind === "question") {
+          await checkAll("question"); await L.shot(page, "ch-" + theme + "-" + cid + "-question");
+          const q = await theme_(page);
+          const v = Math.min(...[q.goal, q.lead].filter(Boolean).map((c) => minOn(c, q.card)));
+          if (v < 4.5) problems.push(theme + " contrast " + v.toFixed(2) + ":1 for question-slide goal/lead text");
+        }
+        await t(theme + " " + cid + " " + deck.title + ": explorer, activity, question and sheet lay out cleanly at 360/390/412/1280/1440/1920 with readable contrast", async () => { assert.deepEqual(problems, []); noErrors(errors); });
+        await ctx.close();
+      }
+    }
+    await t("Code Explorer parts are big enough to tap: at least 24px tall (WCAG 2.2 target size), and the sheet close button is 44px+", async () => {
+      const { ctx, page } = await openChapter({}, "CH0044", { width: 360, height: 800 }, { mobile: true });
+      const small = await page.locator(".ce-target").evaluateAll((els) => els.map((e) => ({ t: e.textContent, h: Math.round(e.getBoundingClientRect().height) })).filter((x) => x.h < 24));
+      assert.deepEqual(small, []);
+      await page.locator(".ce-target").first().click(); await page.waitForSelector("dialog.cg-sheet[open]");
+      assert.ok((await page.locator("#cgClose").boundingBox()).height >= 44);
+      await ctx.close();
+    });
+  }
+
+  await L.stop(S);
+  L.finish();
+}
+main().catch((e) => { console.error(e); process.exitCode = 1; });

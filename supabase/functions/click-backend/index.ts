@@ -149,7 +149,9 @@ function isAnswerCorrect(q: any, answer: string): boolean {
     const exp = parsePairs(expected), act = parsePairs(actual);
     return exp.size > 0 && exp.size === act.size && [...exp].every((p) => act.has(p));
   }
-  return expected === actual;
+  // Choice text can span lines (predict-the-output options) and browsers store CRLF as LF inside HTML attributes, so a submitted answer
+  // may differ from the stored text only in line endings. Compare them loosely, or such an option could never be marked correct.
+  return expected.split("\r\n").join("\n") === actual.split("\r\n").join("\n");
 }
 
 // ---------------- settings ----------------
@@ -727,7 +729,7 @@ async function completeLearn(b: any) {
   return {
     ok: true, chapter_id: cid, times_completed: times, refilled,
     hearts: heartsAfter,
-    message: refilled ? "Chapter review complete. Your hearts were refilled." : "Chapter Learn complete. Take its test when you are ready.",
+    message: refilled ? "Chapter review complete. Your hearts were refilled." : (truthy(b.unified) ? "Chapter review complete." : "Chapter Learn complete. Take its test when you are ready."),
     app_state: appState,
   };
 }
@@ -755,8 +757,13 @@ async function startTest(b: any) {
   const { data: chapter } = await supabase.from("chapters").select("*").eq("stage_id", sid).eq("chapter_id", cid).eq("active", true).maybeSingle();
   if (!chapter) throw new Error("Chapter not found.");
 
-  const { data: learnedRows } = await supabase.from("learn_progress").select("completed").eq("user_id", uid).eq("chapter_id", cid).eq("completed", true).limit(1);
-  if (!learnedRows || !learnedRows.length) throw new Error("Complete this chapter in Learn before taking its test.");
+  // A unified chapter run (slides = learning + the chapter's questions) is its own lesson, so it does not require a separate Learn first.
+  // Every other caller keeps the original rule (e.g. a browser tab still running an older version of the app).
+  const unified = truthy(b.unified);
+  if (!unified) {
+    const { data: learnedRows } = await supabase.from("learn_progress").select("completed").eq("user_id", uid).eq("chapter_id", cid).eq("completed", true).limit(1);
+    if (!learnedRows || !learnedRows.length) throw new Error("Complete this chapter in Learn before taking its test.");
+  }
 
   const content = await publicContent();
   const facts = await prerequisiteFacts(uid, content);
@@ -769,7 +776,11 @@ async function startTest(b: any) {
   let pool = testBank.questions.filter((q: any) => normalizeId(q.stage_id) === normalizeId(sid) && normalizeId(q.chapter_id) === normalizeId(cid));
   if (!pool.length) throw new Error("No active questions found for this chapter.");
 
-  const count = Math.max(1, Number(chapter.question_limit || settings.QUESTIONS_PER_CHAPTER || 5));
+  let count = Math.max(1, Number(chapter.question_limit || settings.QUESTIONS_PER_CHAPTER || 5));
+  // A unified chapter is 5-10 slides, so it serves at most UNIFIED_MAX_QUESTIONS graded questions (default 8; the `settings` table can
+  // change it without a deploy). Only chapters with more questions than that are affected -- today just CH0035 (15). The cap is decided
+  // here, never by the client, and per-question XP is untouched.
+  if (unified) count = Math.min(count, Math.max(1, Number(settings.UNIFIED_MAX_QUESTIONS || 8)));
   pool = pool.sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0));
   const selected = pool.slice(0, count);
 
@@ -799,7 +810,7 @@ async function startTest(b: any) {
     };
   });
 
-  return { ok: true, test_run_id: runId, test: { stage_id: sid, chapter_id: cid, title: `${chapter.title || "Chapter"} Test`, chapter_title: chapter.title }, questions, hearts: Number(user.hearts) };
+  return { ok: true, test_run_id: runId, unified, test: { stage_id: sid, chapter_id: cid, title: `${chapter.title || "Chapter"} Test`, chapter_title: chapter.title }, questions, hearts: Number(user.hearts) };
 }
 
 async function saveTestAnswer(b: any) {
@@ -946,13 +957,36 @@ async function finishTest(b: any) {
     current_stage: run.stage_id, current_chapter: run.chapter_id,
   }).eq("user_id", uid);
 
+  // Unified chapter: the slides were the lesson, so finishing the run also satisfies "Learn" for this chapter. Everything that still reads
+  // learn_progress (Home node state, `condition: "learned"` prerequisites, heart recovery) then sees a normal, fully completed chapter.
+  // A student who already had a learn_progress row (legacy: learned first, tested later, or reviewed since) is left exactly as they were.
+  if (truthy(b.unified)) {
+    const { data: lp } = await supabase.from("learn_progress").select("*").eq("user_id", uid).eq("chapter_id", run.chapter_id).maybeSingle();
+    const nowIso = new Date().toISOString();
+    if (!lp) {
+      // Stamped at the run's START, not now: heart recovery only counts a loss as "owed" when it happened AFTER learn_progress.last_completed_at,
+      // so a heart lost during this run stays owed until the student reviews the chapter (completeLearn). Hearts still never refill from
+      // passing a chapter -- the rule this product already has -- instead of quietly refilling here.
+      await supabase.from("learn_progress").insert({
+        learn_progress_id: newId("LP"), user_id: uid, stage_id: run.stage_id, chapter_id: run.chapter_id, times_completed: 1,
+        last_completed_at: run.started_at || nowIso, pages_viewed: Number(b.pages_viewed || 0), completed: true, updated_at: nowIso,
+      });
+    } else if (!truthy(lp.completed)) {
+      await supabase.from("learn_progress").update({
+        completed: true, times_completed: Number(lp.times_completed || 0) + 1, last_completed_at: lp.last_completed_at || run.started_at || nowIso, updated_at: nowIso,
+      }).eq("user_id", uid).eq("chapter_id", run.chapter_id);
+    }
+  }
+
   const appState = await bootstrap({ session_token: b.session_token });
 
   return {
     ok: true, completed: true, committed_xp: xpAwarded, stage_id: run.stage_id, chapter_id: run.chapter_id,
     stage_completed: completedStageIds.includes(String(run.stage_id)),
     practice_just_unlocked: !practiceWasUnlockedBefore && (appState.practice || []).some((r: any) => normalizeId(r.stage_id) === normalizeId(run.stage_id) && r.unlocked !== false),
-    message: isFirstCompletion ? `Chapter test complete. ${xpAwarded} XP added. Hearts are unchanged.` : `Chapter already completed earlier. No additional XP was added. Hearts are unchanged.`,
+    message: truthy(b.unified)
+      ? (isFirstCompletion ? `Chapter complete! ${xpAwarded} XP added.` : `Chapter already completed earlier. No additional XP was added.`)
+      : (isFirstCompletion ? `Chapter test complete. ${xpAwarded} XP added. Hearts are unchanged.` : `Chapter already completed earlier. No additional XP was added. Hearts are unchanged.`),
     app_state: appState,
   };
 }

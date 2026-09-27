@@ -125,7 +125,7 @@
   // ----------------------------------------------------------- activity shell
   var KIND_LABEL = { mcq: "Concept check", predict: "Predict the output", fill: "Fill in the code", order: "Build it in order", error: "Spot the mistake", assign: "Match and sort", builder: "Build the statement", reveal: "Explore", pipeline: "Watch it happen", buffer: "Input simulator", bits: "Bit lab", evalorder: "What runs first?", run: "Try it", lab: "Experiment", trace: "Step through", tracetable: "Fill in the trace", challenge: "Challenge" };
 
-  function makeApi(def, body, fb, headTick) {
+  function makeApi(def, body, fb, headTick, onDone) {
     var st = (memory[def.id] = memory[def.id] || { attempts: 0, draft: {} });
     var api = {
       def: def, body: body, fb: fb, h: h, md: md, esc: esc, codeBlock: codeBlock, setLines: setLines, outBox: outBox, norm: norm, normOut: normOut, shuffled: shuffled, hash: hash,
@@ -137,7 +137,7 @@
         if (html) fb.appendChild(h("div", { class: "la-fbbody", html: html }));
       },
       clear: function () { fb.className = "la-feedback"; fb.innerHTML = ""; },
-      done: function () { markDone(def.id); headTick.hidden = false; },
+      done: function () { markDone(def.id); headTick.hidden = false; if (onDone) { var f = onDone; onDone = null; f(def); } },
       draft: {
         get: function (k, d) { return st.draft[k] !== undefined ? st.draft[k] : d; },
         set: function (k, v) { st.draft[k] = v; },
@@ -154,7 +154,7 @@
     return api;
   }
 
-  function renderActivity(def) {
+  function renderActivity(def, onDone) {
     var spec = CL.kinds[def.kind];
     var tick = h("span", { class: "la-done", title: "You have completed this before", "aria-label": "Completed before" }, "✓");
     tick.hidden = !isDone(def.id);
@@ -165,7 +165,7 @@
     var sec = h("section", { class: "la la-k-" + def.kind, "aria-labelledby": tid, "data-activity": def.id, "data-kind": def.kind }, head);
     if (def.intro) sec.appendChild(h("p", { class: "la-intro", html: md(def.intro) }));
     sec.appendChild(body); sec.appendChild(fb);
-    var api = makeApi(def, body, fb, tick);
+    var api = makeApi(def, body, fb, tick, onDone);
     try { spec.render(def, api); }
     catch (e) {
       body.innerHTML = ""; body.appendChild(h("p", { class: "la-intro", text: "This activity could not load. You can keep learning without it." }));
@@ -194,6 +194,23 @@
     list.forEach(function (d) { wrap.appendChild(renderActivity(d)); });
     container.appendChild(wrap);
     return list.length;
+  };
+
+  // Draw ONE activity, chosen by id, into `container` (the unified chapter run mounts the activities a chapter deck names).
+  // There is no page-heading guard here: the deck names the activity explicitly, so it cannot land on the wrong page.
+  // opts: { userId, onDone(def) }  -> onDone fires once, when the student completes it. Each mount starts with a clean attempt counter.
+  CL.mountActivity = function (container, id, opts) {
+    opts = opts || {};
+    if (opts.userId) CL.userId = opts.userId;
+    container.textContent = "";
+    var d = CL.defs.get(id);
+    if (!d || !CL.kinds[d.kind]) return null;
+    var errs = CL.validate(d);
+    if (errs.length) { if (root.console) console.warn("[learn-activity] skipped " + id + ": " + errs.join("; ")); return null; }
+    delete memory[d.id];
+    var sec = renderActivity(d, opts.onDone);
+    container.appendChild(sec);
+    return sec;
   };
 
   // ---------------------------------------------------------- kind: mcq
