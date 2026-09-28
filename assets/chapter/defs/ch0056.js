@@ -134,6 +134,7 @@ ClickChapter.define({
     },
     {
       id: "s4", kind: "question", question: "Q000293",
+      blankLabels: ["initialization", "condition", "update"],
       title: "Fill in the three parts",
       objective: "Write the initialization, the condition and the update of a for loop.",
       glossary: ["initialization", "condition", "update"],
@@ -149,6 +150,7 @@ ClickChapter.define({
     },
     {
       id: "s6", kind: "question", question: "Q000291",
+      blankLabels: ["start value", "update"],
       title: "Count from 1 to 5",
       objective: "Finish a loop header so that it prints the numbers from 1 to 5.",
       glossary: ["initialization", "increment"],

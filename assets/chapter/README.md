@@ -43,7 +43,7 @@ ClickChapter.define({
   slides: [
     { id: "s1", kind: "explorer", title, objective, glossary: [ids], code: "…«id|text»…", targets: { id: {title, explain, example?, mistake?, remember?, terms?: [ids]} }, minTaps: 3, input?: "stdin for scanf" },
     { id: "s2", kind: "activity", activity: "CH0034.p1.build-the-box", title, objective, glossary: [ids], lead?, takeaway? },
-    { id: "s3", kind: "question", question: "Q000166",               title, objective, glossary: [ids], lead?, takeaway? },
+    { id: "s3", kind: "question", question: "Q000166",               title, objective, glossary: [ids], lead?, takeaway?, blankLabels? },
   ],
 });
 ```
@@ -73,6 +73,7 @@ one tiny example, and (when useful) a common mistake.**
 - Bad: "A relational operator compares operands." Good: "A relational operator compares two values and tells us whether the
   comparison is true or false. Example: `10 > 5` is true because 10 is greater than 5."
 - Use `` `code` `` for code inside sentences. Keep every sentence short.
+- `blankLabels` (optional, CODE_FILL questions only) is one short role per `{{n}}` blank, for example `["initialization", "condition", "update"]`. It is shown as a key under the code and in each blank's accessible name; the validator checks the count.
 - `takeaway` is one line shown after a slide: the thing to remember. The question bank often has no explanation, so this is the feedback.
 - Do not paste the old Learn pages. Split them: definitions -> glossary, "what does this part do" -> code targets, the trick to remember ->
   takeaway/remember, the practice -> activities and questions. Keep every fact, example, warning and edge case that the old pages taught.

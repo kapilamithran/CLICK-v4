@@ -124,9 +124,14 @@
   position:sticky;top:0;background:var(--bg);padding:12px 0;z-index:12;
 }
 .click-test-page .back{
-  border:0;background:transparent;font-weight:800;color:var(--muted);
-  cursor:pointer;white-space:nowrap
+  border:0;background:transparent;font-weight:800;color:var(--ink-soft);
+  cursor:pointer;white-space:nowrap;
+  min-height:44px;min-width:44px;padding:6px 10px;border-radius:12px
 }
+.click-test-page .back:hover{color:var(--ink)}
+.click-test-page .back:focus-visible{outline:3px solid #f5d000;outline-offset:2px}
+/* The header is sticky, so anything scrolled into view (keyboard focus, a tap target) must stop below it, not under it. */
+html:has(#testPage:not(.hidden)){scroll-padding-top:92px}
 .click-test-page .progress{
   height:9px;background:var(--bg);border-radius:20px;flex:1;overflow:hidden
 }
@@ -194,7 +199,7 @@ textarea.test-v11-input{min-height:145px;resize:vertical}
 .test-code-fill-editor{
   background:#18151f;color:#efeaff;border-radius:var(--r-md);padding:26px 18px 18px;
   font-family:var(--font-mono);box-shadow:var(--pressed-sm);position:relative;
-  white-space:pre;overflow-x:auto;font-size:15px;line-height:2.15;margin:18px 0
+  white-space:pre-wrap;overflow-x:auto;font-size:15px;line-height:2.15;margin:18px 0
 }
 .test-code-fill-editor::before{
   content:'';position:absolute;top:14px;left:17px;width:9px;height:9px;border-radius:50%;
@@ -209,6 +214,7 @@ textarea.test-v11-input{min-height:145px;resize:vertical}
 }
 .test-code-fill-box:focus{outline:2px solid #f6c945;outline-offset:2px;border-color:#8b6de8}
 .test-code-fill-box:disabled{opacity:.72;background:#eee9f8}
+.test-blank-key{margin:6px 0 14px;padding:0;list-style:none;display:grid;gap:4px;font-size:14px;line-height:1.45;color:var(--ink)}
 .click-test-page .actions{
   display:flex;justify-content:flex-end;margin-top:20px
 }
@@ -627,6 +633,7 @@ pre,.test-v11-code,.learn-page-body pre{
     min-height:100dvh;
     padding:8px 9px calc(22px + env(safe-area-inset-bottom));
     overflow-x:hidden;
+    overflow-x:clip; /* not a scroll container, so the sticky header (Home) keeps working */
   }
   .click-test-inner{width:100%;max-width:100%}
   .click-test-page .lessonbar{
@@ -641,8 +648,8 @@ pre,.test-v11-code,.learn-page-body pre{
   }
   .click-test-page .lessonbar .back{
     order:1;
-    font-size:12px;
-    padding:6px 2px;
+    font-size:13px;
+    padding:6px 8px 6px 2px;
   }
   #testRoundNo{order:2;font-size:12px;margin-left:auto}
   .click-test-page .lessonbar .test-mini-stat{
@@ -727,7 +734,7 @@ pre,.test-v11-code,.learn-page-body pre{
   textarea.test-v11-input{min-height:130px}
   .test-code-fill-editor{
     width:100%;margin:13px 0;padding:22px 13px 13px;border-radius:13px;
-    font-size:12.5px;line-height:2.2;white-space:pre;overflow-x:auto;
+    font-size:12.5px;line-height:2.2;white-space:pre-wrap;overflow-x:auto;
   }
   .test-code-fill-box{
     min-width:76px;width:108px;max-width:170px;height:32px;min-height:32px;
@@ -1223,7 +1230,7 @@ document.addEventListener('paste',function(e){
 <section id="testPage" class="click-test-page hidden" aria-label="Chapter">
   <div class="click-test-inner">
     <div class="lessonbar">
-      <button id="testBack" class="back" type="button">← Home</button>
+      <button id="testBack" class="back" type="button" aria-label="Back to Home">← Home</button>
       <div class="progress"><i id="testBar"></i></div>
       <b id="testRoundNo">1/10</b>
       <span class="cc-review-badge">Review</span>
@@ -1867,7 +1874,7 @@ function scrollLearnToTop(){
 // ---- Learn activity layer (assets/learn/). Interactivity is configuration drawn UNDER the page
 // text: the Learn content is never edited, and activities never touch XP, hearts, Take Test,
 // chapter completion or Next/Back. Nothing loads unless the current page has activities.
-const LEARN_ACTIVITY_LOADER='assets/learn/loader.js?v=5';
+const LEARN_ACTIVITY_LOADER='assets/learn/loader.js?v=6';
 let learnLoaderPromise=null;
 function learnLoadActivityLoader(){
   if(window.ClickLearnLoader)return Promise.resolve();
@@ -2628,6 +2635,8 @@ function parseCodeFillAnswers(raw){
 }
 function renderTestCodeFill(q){
   const source=String(q.code||'');
+  const slide=(typeof currentSlide==='function'&&testState&&testState.slides)?currentSlide():null;
+  const roleLabels=(slide&&slide.q&&slide.q.question_id===q.question_id&&Array.isArray(slide.blankLabels))?slide.blankLabels:[];
   let cursor=0,blankIndex=0,html='';
   const re=/\{\{(\d+)\}\}/g;
   let m;
@@ -2635,14 +2644,15 @@ function renderTestCodeFill(q){
     html+=testEscape(source.slice(cursor,m.index));
     blankIndex++;
     const label=Number(m[1])||blankIndex;
-    html+=`<textarea class="test-code-fill-box" data-code-fill-index="${blankIndex-1}" rows="1" spellcheck="false" autocomplete="off" aria-label="Code blank ${label}" placeholder="blank ${label}"></textarea>`;
+    html+=`<textarea class="test-code-fill-box" data-code-fill-index="${blankIndex-1}" rows="1" spellcheck="false" autocomplete="off" aria-label="Code blank ${label}${roleLabels[blankIndex-1]?': '+testEscape(roleLabels[blankIndex-1]):''}" placeholder="blank ${label}"></textarea>`;
     cursor=m.index+m[0].length
   }
   html+=testEscape(source.slice(cursor));
   if(blankIndex===0){
     return `<div class="test-code-fill-editor">${testEscape(source)}</div><div class="meta" style="margin-top:8px">This CODE_FILL question has no placeholders. Add {{1}}, {{2}}, ... in the question code.</div>`
   }
-  return `<div class="test-code-fill-editor">${html}</div>`
+  const key=roleLabels.length?`<ol class="test-blank-key" aria-label="What each blank is for">${roleLabels.slice(0,blankIndex).map((t,i)=>`<li><b>Blank ${i+1}:</b> ${testEscape(t)}</li>`).join('')}</ol>`:'';
+  return `<div class="test-code-fill-editor">${html}</div>${key}`
 }
 function codeFillAnswerCorrect(expectedRaw,actualRaw){
   const expected=parseCodeFillAnswers(expectedRaw);

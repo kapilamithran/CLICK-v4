@@ -123,6 +123,11 @@
             const q = ctx.questions[s.question];
             if (!q) add(at + ": question '" + s.question + "' does not exist");
             else if (q.chapter_id !== deck.chapter) add(at + ": question " + s.question + " belongs to " + q.chapter_id + ", not " + deck.chapter);
+            else if (s.blankLabels != null) {
+              const blanks = (String(q.code || "").match(/\{\{\d+\}\}/g) || []).length;
+              if (q.type !== "CODE_FILL") add(at + ": blankLabels only applies to a CODE_FILL question");
+              else if (!Array.isArray(s.blankLabels) || s.blankLabels.length !== blanks || s.blankLabels.some((t) => len(t) < 2)) add(at + ": blankLabels needs one short label for each of the " + blanks + " blanks");
+            }
           }
         }
       }

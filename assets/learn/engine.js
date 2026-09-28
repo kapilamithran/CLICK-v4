@@ -323,7 +323,7 @@
         pre.appendChild(document.createTextNode(p));
         if (i < d.blanks.length) {
           var b = d.blanks[i];
-          var inp = h("input", { type: "text", class: "la-blank", "aria-label": "Blank " + (i + 1) + " of " + d.blanks.length, autocomplete: "off", autocapitalize: "off", spellcheck: "false", size: b.code ? codeWidth : Math.max(4, (b.answers[0] || "").length + 1), placeholder: b.placeholder || "" });
+          var inp = h("input", { type: "text", class: "la-blank", "aria-label": "Blank " + (i + 1) + " of " + d.blanks.length + (b.label ? ": " + b.label : ""), autocomplete: "off", autocapitalize: "off", spellcheck: "false", size: b.code ? codeWidth : Math.max(4, (b.answers[0] || "").length + 1), placeholder: b.placeholder || "" });
           inp.value = api.draft.get("b" + i, "");
           inp.addEventListener("input", function () { api.draft.set("b" + i, inp.value); inp.classList.remove("ok", "no"); });
           inp.addEventListener("keydown", function (e) { if (e.key === "Enter") check.click(); });
@@ -332,6 +332,12 @@
       });
       if (d.question) api.body.appendChild(h("p", { class: "la-q", html: api.md(d.question) }));
       api.body.appendChild(pre);
+      // Optional per-blank `label` (+ `expects`): a visible key saying what each blank is for, so the learner never has to guess.
+      if (d.blanks.some(function (b) { return b.label; })) {
+        var key = h("ol", { class: "la-blank-key", "aria-label": "What each blank is for" });
+        d.blanks.forEach(function (b, i) { if (b.label) key.appendChild(h("li", null, h("b", { text: "Blank " + (i + 1) + ": " + b.label }), b.expects ? h("span", { html: " – " + api.md(b.expects) }) : null)); });
+        api.body.appendChild(key);
+      }
       var check = api.btn("Check", function () {
         if (inputs.every(function (i) { return !i.value.trim(); })) { api.say("info", "Type something into the blanks first.", ""); return; }
         api.state.attempts++;

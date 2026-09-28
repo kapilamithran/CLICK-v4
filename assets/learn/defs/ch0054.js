@@ -13,9 +13,9 @@ ClickLearn.define([
     question: "Show `Pass` when `marks` is 40 or more, and `Fail` otherwise. Fill the condition, the TRUE choice and the FALSE choice.",
     code: 'int marks = 65;\nprintf("%s", (___) ? ___ : ___);',
     blanks: [
-      { code: true, answers: ["marks >= 40", "(marks >= 40)", "marks > 39", "40 <= marks"], hint: "This is the yes/no question. Compare `marks` with 40 using a comparison operator." },
-      { code: true, answers: ['"Pass"'], hint: "This is what C picks when the condition is TRUE. Text goes in double quotes." },
-      { code: true, answers: ['"Fail"'], hint: "This is what C picks when the condition is FALSE. Text goes in double quotes." },
+      { code: true, label: "condition", placeholder: "condition", expects: "the yes/no question: compare `marks` with 40.", answers: ["marks >= 40", "(marks >= 40)", "marks > 39", "40 <= marks"], hint: "This is the yes/no question. Compare `marks` with 40 using a comparison operator." },
+      { code: true, label: "TRUE choice", placeholder: "TRUE choice", expects: "what C picks when the condition is TRUE. Text goes in double quotes.", answers: ['"Pass"'], hint: "This is what C picks when the condition is TRUE. Text goes in double quotes." },
+      { code: true, label: "FALSE choice", placeholder: "FALSE choice", expects: "what C picks when the condition is FALSE. Text goes in double quotes.", answers: ['"Fail"'], hint: "This is what C picks when the condition is FALSE. Text goes in double quotes." },
     ],
     explanation: "The pattern is `condition ? TRUE choice : FALSE choice`. For `marks = 65` the condition `marks >= 40` is TRUE, so C picks the first choice, `Pass`.",
   },

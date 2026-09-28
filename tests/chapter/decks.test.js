@@ -121,3 +121,21 @@ test("validator rejects the problems it exists to catch", () => {
     assert.match(errs, re, name + " should be reported (got: " + errs.slice(0, 200) + ")");
   }
 });
+
+test("blankLabels (role of each CODE_FILL blank) is validated: right count, CODE_FILL only, and the real deck passes", () => {
+  const ok = decks.CH0056;
+  if (!ok) return; // filtered run
+  const ctx = H.ctxFor("CH0056", activities);
+  assert.deepEqual(Chapter.validate(JSON.parse(JSON.stringify(ok)), ctx), [], "CH0056 with its blankLabels is valid");
+  const q293 = ok.slides.findIndex((x) => x.question === "Q000293"), mcq = ok.slides.findIndex((x) => x.kind === "question" && x.question === "Q000289");
+  const cases = [
+    ["too few labels", (d) => { d.slides[q293].blankLabels = ["initialization", "condition"]; }, /one short label for each of the 3 blanks/],
+    ["too many labels", (d) => { d.slides[q293].blankLabels = ["a1", "b2", "c3", "d4"]; }, /one short label for each of the 3 blanks/],
+    ["empty label", (d) => { d.slides[q293].blankLabels = ["initialization", "", "update"]; }, /one short label/],
+    ["labels on a multiple-choice question", (d) => { d.slides[mcq].blankLabels = ["x1"]; }, /only applies to a CODE_FILL/],
+  ];
+  for (const [name, mutate, re] of cases) {
+    const d = JSON.parse(JSON.stringify(ok)); mutate(d);
+    assert.match(Chapter.validate(d, ctx).join(" | "), re, name);
+  }
+});

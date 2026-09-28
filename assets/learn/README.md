@@ -72,7 +72,7 @@ Common fields: `id stage chapter page heading kind title` and optional `intro`, 
 |---|---|---|
 | `mcq` | `question`, `choices:[{text, correct?, why?}]` | exactly one `correct`. `code` optional. |
 | `predict` | `code`, `expected`, and `choices:[...]` **or** `typed:true` | `expected` is verified against the interpreter and gcc by the tests. `input`, `hint`, `question` optional. |
-| `fill` | `code` containing `___`, `blanks:[{answers:[...], hint?}]` | one blank per `___`. |
+| `fill` | `code` containing `___`, `blanks:[{answers:[...], hint?, label?, expects?, placeholder?}]` | one blank per `___`. Give each blank a short `label` (and what it `expects`) when the blanks mean different things: they appear as a visible key under the code, so the learner never has to guess which blank is which. `placeholder` is text shown inside an empty box - keep it short and never put the answer there. |
 | `order` | `lines:[...]` (correct order) | `distractors:[...]`, `alternatives:[[...]]` optional. |
 | `error` | `mode:"find"` + `lines`, `bug`(index), `diagnostic`, `fixed` **or** `mode:"toggle"` + `broken`, `fixed`, `diagnostic` | the diagnostic is an authored, *simulated* compiler message. |
 | `assign` | `items:[{text, bucket, why?}]`, `buckets:[{id,label}]` | match/sort. Uses selects, so it is keyboard and touch friendly. |

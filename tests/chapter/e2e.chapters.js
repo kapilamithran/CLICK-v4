@@ -679,6 +679,107 @@ async function main() {
     await ctx.close();
   }
 
+  // ================================================================ I. UX-bug regression: Home mid-chapter, unlabeled fill blanks, clipped choices, clipped CODE_FILL blank
+  section("I. UX-fix regression: Home reachable mid-chapter, blank roles visible, predict choices not clipped, CODE_FILL blanks stay in view");
+  {
+    const ANY = "#testExercise .ce-target, #testExercise .la, #testExercise .option, #testExercise .test-v11-token, #testExercise .test-code-fill-box, #testTextAnswer, #testExercise p.meta";
+    const goTo = async (page, match) => {
+      for (let g = 0; g < 12; g++) {
+        await page.waitForFunction((sel) => !!document.querySelector(sel), ANY, { timeout: 15000 });
+        const s = await L.slideKind(page);
+        if (match(s)) return s;
+        if (s.kind === "explorer") await L.passExplorer(page);
+        else if (s.kind === "activity") { await page.locator("#testExercise").click({ position: { x: 6, y: 6 } }); await page.waitForFunction(() => !document.getElementById("testCheck").disabled || !document.getElementById("testSkip").hidden, null, { timeout: 5000 }); if (await page.locator("#testSkip:not([hidden])").count()) await page.locator("#testSkip").click(); await page.locator("#testCheck").click(); }
+        else { await L.answerQuestion(page, s.qid, true); await page.waitForFunction(() => /Correct!/.test(document.getElementById("testFeedbackV11").textContent)); await page.waitForFunction(() => !document.getElementById("testCheck").disabled && /CONTINUE|FINISH/.test(document.getElementById("testCheck").textContent)); await page.locator("#testCheck").click(); }
+      }
+      throw new Error("slide not found");
+    };
+    const homeProbe = () => { const b = document.getElementById("testBack"), r = b.getBoundingClientRect(), el = document.elementFromPoint(Math.min(Math.max(r.left + r.width / 2, 0), innerWidth - 1), Math.min(Math.max(r.top + r.height / 2, 0), innerHeight - 1)); return { inViewport: r.top >= -0.5 && r.bottom <= innerHeight + 0.5, hit: el === b || b.contains(el), w: r.width, h: r.height, y: Math.round(scrollY), scrolls: document.documentElement.scrollHeight > innerHeight + 20 }; };
+
+    for (const vp of [[390, 844], [1280, 720]]) {
+      const { ctx, page, errors } = await openChapter({}, "CH0032", { width: vp[0], height: vp[1] }, { mobile: vp[0] < 800 });
+      await t("Stage 1 Ch.2 'Only one \\n' at " + vp.join("x") + ": the Words to Know are the chapter's own terms, and the answer choices are fully drawn (first glyph of each line not clipped)", async () => {
+        await goTo(page, (s) => s.activity === "CH0032.p4.predict-newline-middle");
+        assert.deepEqual(await page.locator("#testGlossary .cg-chip").allTextContents().then((a) => a.map((x) => x.trim())), ["\\n (new line)", "output"], "Words to Know come from the chapter's glossary");
+        const ov = await page.evaluate(() => [...document.querySelectorAll(".la-choice-pre")].map((p) => getComputedStyle(p).overflowX + "/" + getComputedStyle(p).overflowY));
+        assert.equal(ov.length, 4); assert.ok(ov.every((o) => o === "visible/visible"), "choice <pre> must not be a scroll container (it clipped the first glyph of every line): " + ov.join(","));
+        assert.deepEqual(await page.locator(".la-choice-pre").allTextContents(), ["CatDogBird", "Cat\nDog\nBird", "Cat\nDogBird", "Cat Dog Bird"], "the four real choices, unchanged");
+      });
+      await t("Home stays reachable at " + vp.join("x") + " after scrolling down a long slide (top, middle and bottom), with a real 44px tap target", async () => {
+        for (const frac of [0, 0.5, 1]) {
+          await page.evaluate((f) => window.scrollTo(0, (document.documentElement.scrollHeight - innerHeight) * f), frac); await page.waitForTimeout(60);
+          const p = await page.evaluate(homeProbe);
+          assert.ok(p.inViewport && p.hit, "Home not reachable at scrollY " + p.y + ": " + JSON.stringify(p));
+          assert.ok(p.w >= 44 && p.h >= 44, "Home tap target " + p.w + "x" + p.h);
+        }
+      });
+      await t("the sticky header never hides what you are working on at " + vp.join("x") + ": an exercise scrolled under it can still be clicked, and Tab never lands a control beneath it", async () => {
+        assert.match(await page.evaluate(() => getComputedStyle(document.documentElement).scrollPaddingTop), /^\d+(\.\d+)?px$/, "scroll-padding-top leaves room for the header");
+        await page.evaluate(() => { const ex = document.getElementById("testExercise"); window.scrollTo(0, window.scrollY + ex.getBoundingClientRect().top - 20); }); await page.waitForTimeout(100);
+        await page.locator("#testExercise").click({ position: { x: 6, y: 6 }, timeout: 4000 });
+        await page.evaluate(() => { window.scrollTo(0, 0); document.activeElement && document.activeElement.blur(); });
+        for (let i = 0; i < 30; i++) {
+          await page.keyboard.press("Tab");
+          const r = await page.evaluate(() => { const e = document.activeElement; if (!e || e === document.body || e.closest(".lessonbar")) return null; const b = e.getBoundingClientRect(); return { top: b.top, bottom: b.bottom, barBottom: document.querySelector(".lessonbar").getBoundingClientRect().bottom }; });
+          if (r) assert.ok(!(r.bottom > 0 && r.top < r.barBottom - 1), "a focused control is hidden under the sticky header: " + JSON.stringify(r));
+        }
+        await page.evaluate(() => window.scrollTo(0, 0));
+      });
+      await t("Home is a labelled, keyboard-reachable button with a visible focus ring, and clicking it mid-chapter returns to Home without touching progress", async () => {
+        assert.equal(await page.getAttribute("#testBack", "aria-label"), "Back to Home");
+        await page.evaluate(() => { window.scrollTo(0, 0); document.activeElement && document.activeElement.blur(); });
+        await page.mouse.click(3, 3); // restart keyboard navigation from the top of the page (a click sets the browser's focus starting point)
+        let reached = false; for (let i = 0; i < 6 && !reached; i++) { await page.keyboard.press("Tab"); reached = await page.evaluate(() => document.activeElement.id === "testBack"); }
+        assert.ok(reached, "Tab reaches Home");
+        assert.ok(await page.evaluate(() => { const c = getComputedStyle(document.activeElement); return c.outlineStyle !== "none" && parseFloat(c.outlineWidth) >= 2; }), "visible focus ring");
+        const before = await stat(page); const done0 = await page.evaluate(() => chapterProg("CH0032").test_completed);
+        await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight)); await page.waitForTimeout(60);
+        await page.locator("#testBack").click();
+        await page.waitForSelector("#home.active");
+        assert.deepEqual(await stat(page), before, "leaving mid-chapter changes neither XP nor hearts");
+        assert.equal(await page.evaluate(() => chapterProg("CH0032").test_completed), done0, "and does not mark the chapter completed");
+        await L.node(page, "CH0032").scrollIntoViewIfNeeded(); await L.node(page, "CH0032").click(); await page.waitForSelector("#testPage:not(.hidden) .ce-target");
+      });
+      await t("no JS errors (Stage 1 Ch.2 slide, " + vp.join("x") + ")", async () => noErrors(errors));
+      await ctx.close();
+    }
+    {
+      const { ctx, page, errors } = await openChapter({}, "CH0054", { width: 390, height: 844 }, { mobile: true });
+      await t("Stage 4 Ch.5 'Build the ternary': each blank says what it is for (placeholder + written key), and the existing typed answers still validate", async () => {
+        await goTo(page, (s) => s.activity === "CH0054.p1.build-ternary");
+        assert.deepEqual(await page.locator("#testExercise input.la-blank").evaluateAll((els) => els.map((e) => e.getAttribute("placeholder"))), ["condition", "TRUE choice", "FALSE choice"]);
+        assert.deepEqual(await page.locator("#testExercise input.la-blank").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label"))), ["Blank 1 of 3: condition", "Blank 2 of 3: TRUE choice", "Blank 3 of 3: FALSE choice"]);
+        const key = (await page.locator("#testExercise .la-blank-key").innerText()).replace(/\s+/g, " ");
+        assert.match(key, /Blank 1: condition/); assert.match(key, /Blank 2: TRUE choice/); assert.match(key, /Blank 3: FALSE choice/); assert.match(key, /double quotes/);
+        const boxes = page.locator("#testExercise input.la-blank");
+        await boxes.nth(0).fill("marks < 40"); await boxes.nth(1).fill("Pass"); await boxes.nth(2).fill("Fail");
+        await page.locator("#testExercise .la-actions button", { hasText: /^Check$/ }).click();
+        await page.waitForFunction(() => /Blank 1|Blank 2|Blank 3/.test(document.querySelector("#testExercise .la-feedback").textContent));
+        await page.locator("#testExercise .la-actions button", { hasText: /^Reset$/ }).click();
+        assert.deepEqual(await boxes.evaluateAll((els) => els.map((e) => e.value)), ["", "", ""], "Reset clears every blank");
+        await boxes.nth(0).fill("marks > 39"); await boxes.nth(1).fill('"Pass"'); await boxes.nth(2).fill('"Fail"'); // an accepted alternative answer
+        await page.locator("#testExercise .la-actions button", { hasText: /^Check$/ }).click();
+        await page.waitForFunction(() => /Correct/.test(document.querySelector("#testExercise .la-feedback").textContent));
+      });
+      await t("no JS errors (Stage 4 Ch.5 fill)", async () => noErrors(errors));
+      await ctx.close();
+    }
+    for (const vp of [[360, 800], [390, 844], [1280, 720]]) {
+      const { ctx, page, errors } = await openChapter({}, "CH0056", { width: vp[0], height: vp[1] }, { mobile: vp[0] < 800 });
+      await t("Stage 5 Ch.1 CODE_FILL at " + vp.join("x") + ": all three blanks sit inside the card (none pushed off the edge), each named in a key, and typing the answers is accepted", async () => {
+        await goTo(page, (s) => s.qid === "Q000293");
+        const r = await page.evaluate(() => { const card = document.getElementById("testLessonCard").getBoundingClientRect(); return { bad: [...document.querySelectorAll("#testExercise .test-code-fill-box")].filter((e) => { const b = e.getBoundingClientRect(); return b.left < card.left - 1 || b.right > card.right + 1; }).length, n: document.querySelectorAll("#testExercise .test-code-fill-box").length, key: document.querySelector("#testExercise .test-blank-key").innerText.replace(/\s+/g, " ") }; });
+        assert.equal(r.n, 3); assert.equal(r.bad, 0, "a blank is outside the card"); assert.match(r.key, /Blank 1: initialization.*Blank 2: condition.*Blank 3: update/);
+        assert.deepEqual(await page.locator("#testExercise .test-code-fill-box").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label"))), ["Code blank 1: initialization", "Code blank 2: condition", "Code blank 3: update"]);
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1), true, "no horizontal page scroll");
+        await L.answerQuestion(page, "Q000293", true);
+        await page.waitForFunction(() => /Correct!/.test(document.getElementById("testFeedbackV11").textContent));
+      });
+      await t("no JS errors (Stage 5 Ch.1 CODE_FILL, " + vp.join("x") + ")", async () => noErrors(errors));
+      await ctx.close();
+    }
+  }
+
   await L.stop(S);
   L.finish();
 }
