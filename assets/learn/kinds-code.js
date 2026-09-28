@@ -47,7 +47,12 @@
 
   function outputView(api, res, label) {
     var box = h("div", { class: "la-outbox" }, h("div", { class: "la-outlabel", text: label || "Output" }));
-    if (res.stdout || res.ok) box.appendChild(h("pre", { class: "la-out", text: res.stdout || "(the program printed nothing)" }));
+    if (res.stdout || res.ok) {
+      // A runaway program (for example a recursion with no base case) can print a wall of text; show the start and say so.
+      var text = res.stdout || "(the program printed nothing)", MAX_SHOWN = 300, cut = text.length > MAX_SHOWN;
+      box.appendChild(h("pre", { class: "la-out", text: cut ? text.slice(0, MAX_SHOWN).replace(/\S*$/, "").replace(/\s+$/, "") + " …" : text }));
+      if (cut) box.appendChild(h("p", { class: "la-note", text: "The program printed " + text.length + " characters before it stopped. Only the start is shown." }));
+    }
     if (res.error) box.appendChild(h("div", { class: "la-err", role: "alert", text: friendlyError(res.error) }));
     return box;
   }
@@ -155,7 +160,12 @@
         if (c.type === "toggle") { var l2 = h("span", { class: "la-switchtext", text: c.label }); wrap.removeChild(lab); wrap.appendChild(h("label", { class: "la-switch", for: id }, input, l2)); }
         ctl.appendChild(wrap);
       });
-      function schedule() { changes++; clearTimeout(timer); timer = setTimeout(update, 120); if (changes >= 3) api.done(); }
+      // A lab with only a couple of possible settings (one switch, a two-choice dropdown) is done once every setting has been seen;
+      // a bigger lab is done after three changes. (Otherwise a one-switch lab could never enable Continue.)
+      var totalStates = d.controls.reduce(function (n, c) { return n * (c.type === "toggle" ? 2 : c.type === "select" ? c.options.length : Infinity); }, 1), seen = {};
+      function noteState() { seen[JSON.stringify(values)] = 1; }
+      noteState();
+      function schedule() { changes++; noteState(); clearTimeout(timer); timer = setTimeout(update, 120); if (changes >= 3 || Object.keys(seen).length >= totalStates) api.done(); }
       function update() {
         var my = ++token, variants = d.variants || [{ label: "", code: d.code }];
         Promise.all(variants.map(function (v) { var code = fillTemplate(v.code, values); return CL.exec(code, { trace: !!(d.show && d.show.indexOf("lines") >= 0), input: d.input || "" }).then(function (r) { return { v: v, code: code, r: r }; }); })).then(function (list) {
@@ -187,12 +197,27 @@
     if (ev.kind === "expr") return "Run: " + ev.text;
     return ev.text || ev.kind;
   }
+  // The functions running after the first n trace steps: main at the bottom, every call on top of its caller, taken off again
+  // by its return. A call is labelled with the values its parameters received, e.g. count(3).
+  function callFrames(trace, n) {
+    var stack = [{ name: "main", label: "main()" }];
+    for (var k = 0; k < n; k++) {
+      var e = trace[k];
+      if (e.kind === "call") {
+        var name = String(e.text).split("(")[0].trim();
+        stack.push({ name: name, label: name + "(" + e.vars.filter(function (v) { return v.scope >= 1; }).map(function (v) { return v.value; }).join(", ") + ")" });
+      } else if (e.kind === "return" && stack.length > 1) stack.pop();
+    }
+    return stack;
+  }
+  // Optional per-activity extras (off unless the definition asks): scopeColumn adds a Global / Local column to the variable table,
+  // callStack lists the calls in progress (so recursion and returns can be seen).
   CL.kind("trace", {
     required: ["code"],
     needs: ["interp"],
     render: function (d, api) {
       var res = null, i = 0, timer = null, playing = false;
-      var codeHost = h("div", { class: "la-codeholder" }), narr = h("div", { class: "la-explain", role: "region", "aria-live": "polite" }), varsHost = h("div", { class: "la-vartable" }), outHost = h("div"), counter = h("span", { class: "la-note la-counter" });
+      var codeHost = h("div", { class: "la-codeholder" }), narr = h("div", { class: "la-explain", role: "region", "aria-live": "polite" }), varsHost = h("div", { class: "la-vartable" }), callHost = h("div", { class: "la-callhost" }), outHost = h("div"), counter = h("span", { class: "la-note la-counter" });
       var prev = api.btn("Back", function () { go(i - 1); }, true), next = api.btn("Next step", function () { go(i + 1); }), play = api.btn("Play", function () { togglePlay(); }, true), reset = api.btn("Restart", function () { stop(); go(0); }, true);
       var reduced = root.matchMedia && root.matchMedia("(prefers-reduced-motion: reduce)").matches; if (reduced) play.hidden = true;
       function stop() { playing = false; clearInterval(timer); play.textContent = "Play"; }
@@ -206,19 +231,31 @@
         codeHost.textContent = ""; var pre = api.codeBlock(d.code, { label: "Program" }); var hl = {}; if (ev) hl[ev.line] = 1; api.setLines(pre, hl, ev ? ev.line : 0); codeHost.appendChild(pre);
         narr.textContent = ""; narr.appendChild(h("p", { html: api.md(ev ? "**Step " + i + ".** " + stepText(ev) : "**Before the program starts.** Press Next step to run the first line.") }));
         if (d.notes && ev && d.notes[ev.line]) narr.appendChild(h("p", { class: "la-note", html: api.md(d.notes[ev.line]) }));
-        varsHost.textContent = "";
+        varsHost.textContent = ""; callHost.textContent = "";
         var vars = ev ? ev.vars : [], prevVars = prevEv ? prevEv.vars : [];
+        var frames = d.callStack || d.scopeColumn ? callFrames(res.trace, i) : null;
         if (vars.length) {
-          var tbl = h("table", { class: "la-table" }, h("thead", null, h("tr", null, h("th", { text: "Variable" }), h("th", { text: "Type" }), h("th", { text: "Value" }))));
-          var tb = h("tbody"); vars.forEach(function (v) { var pv = prevVars.find(function (p) { return p.name === v.name; }); tb.appendChild(h("tr", { class: !pv || pv.value !== v.value ? "chg" : "" }, h("td", null, h("code", { text: v.name })), h("td", { text: v.type }), h("td", null, h("code", { text: v.value })))); }); tbl.appendChild(tb); varsHost.appendChild(tbl);
+          var head = h("tr", null, h("th", { text: "Variable" }), h("th", { text: "Type" }), h("th", { text: "Value" })); if (d.scopeColumn) head.appendChild(h("th", { text: "Where" }));
+          var tbl = h("table", { class: "la-table" }, h("thead", null, head));
+          var tb = h("tbody"); vars.forEach(function (v) {
+            var pv = prevVars.find(function (p) { return p.name === v.name && p.scope === v.scope; });
+            var row = h("tr", { class: !pv || pv.value !== v.value ? "chg" : "" }, h("td", null, h("code", { text: v.name })), h("td", { text: v.type }), h("td", null, h("code", { text: v.value })));
+            if (d.scopeColumn) row.appendChild(h("td", { text: v.scope === 0 ? "global" : "local in " + frames[frames.length - 1].name + "()" }));
+            tb.appendChild(row);
+          }); tbl.appendChild(tb); varsHost.appendChild(tbl);
         } else varsHost.appendChild(h("p", { class: "la-note", text: "No variables yet." }));
+        if (d.callStack) {
+          var ol = h("ol", { class: "la-callstack", "aria-label": "Calls in progress, oldest first" });
+          frames.forEach(function (f, k) { ol.appendChild(h("li", { class: k === frames.length - 1 ? "top" : "", text: f.label })); });
+          callHost.appendChild(h("div", { class: "la-outlabel", text: "Calls in progress" })); callHost.appendChild(ol);
+        }
         outHost.textContent = ""; outHost.appendChild(api.outBox(ev ? res.stdout.slice(0, ev.outLen) : "", "Output so far"));
         counter.textContent = "Step " + i + " of " + res.trace.length;
         prev.disabled = i === 0; next.disabled = i >= res.trace.length;
         if (i >= res.trace.length) { api.done(); if (res.error) narr.appendChild(h("div", { class: "la-err", role: "alert", text: friendlyError(res.error) })); else narr.appendChild(h("p", { class: "la-note", text: "The program has finished." })); stop(); }
       }
       api.body.appendChild(h("p", { class: "la-note", text: "Follow the program one step at a time. The highlighted line is the one that just ran." }));
-      api.body.appendChild(codeHost); api.body.appendChild(narr); api.body.appendChild(varsHost); api.body.appendChild(outHost); api.body.appendChild(counter);
+      api.body.appendChild(codeHost); api.body.appendChild(narr); api.body.appendChild(varsHost); api.body.appendChild(callHost); api.body.appendChild(outHost); api.body.appendChild(counter);
       api.body.appendChild(api.actions(prev, next, play, reset));
       next.disabled = prev.disabled = true;
       CL.exec(d.code, { trace: true, input: d.input || "", limits: { trace: 400 } }).then(function (r) {

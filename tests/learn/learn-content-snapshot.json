@@ -780,6 +780,114 @@
     "Count Vowels and Consonants",
     "Compare Two Strings"
    ]
+  },
+  "CH0094": {
+   "stage": "STG010",
+   "stage_no": 9,
+   "title": "What is a Function?",
+   "headings": [
+    "What Is a Function?",
+    "Why Do We Use Functions?",
+    "Function and Greedy Algorithm",
+    "How Does a Function Work?",
+    "Recap: Functions in C"
+   ]
+  },
+  "CH0095": {
+   "stage": "STG010",
+   "stage_no": 9,
+   "title": "Creating and Calling a Function",
+   "headings": [
+    "Creating and Calling a Function",
+    "Why Are Functions Used?",
+    "Can Functions Be Used in a Greedy Algorithm?",
+    "Flowchart: Creating and Calling a Function",
+    "Recap: The Function Story"
+   ]
+  },
+  "CH0096": {
+   "stage": "STG010",
+   "stage_no": 9,
+   "title": "Functions with Parameters",
+   "headings": [
+    "What Are Parameters?",
+    "Why Are Parameters Used?",
+    "Types of Parameters",
+    "Function with Parameters: Flow",
+    "Parameters in Real Life"
+   ]
+  },
+  "CH0097": {
+   "stage": "STG010",
+   "stage_no": 9,
+   "title": "Functions with Return Values",
+   "headings": [
+    "What Is a Return Value?",
+    "Why Are Return Values Used?",
+    "Return Types",
+    "Flowchart: Function with Return Value",
+    "Recap: Return Values"
+   ]
+  },
+  "CH0098": {
+   "stage": "STG010",
+   "stage_no": 9,
+   "title": "Types of Functions",
+   "headings": [
+    "What Are the Types of Functions?",
+    "Type 1: No Parameters and No Return Value",
+    "Type 2: Parameters and No Return Value",
+    "Type 3 and Type 4",
+    "Flowchart and Recap"
+   ]
+  },
+  "CH0099": {
+   "stage": "STG010",
+   "stage_no": 9,
+   "title": "Multiple Parameters and Arguments",
+   "headings": [
+    "What Are Multiple Parameters?",
+    "Why Are Multiple Parameters Used?",
+    "Parameters vs Arguments",
+    "Flowchart and Function Execution",
+    "Recap: Multiple Parameters"
+   ]
+  },
+  "CH0100": {
+   "stage": "STG010",
+   "stage_no": 9,
+   "title": "Local and Global Variables",
+   "headings": [
+    "What Are Local and Global Variables?",
+    "Why Are Local and Global Variables Used?",
+    "Scope: Where Can the Variable Be Used?",
+    "Flowchart: Local vs Global",
+    "Recap: The College Notice Board"
+   ]
+  },
+  "CH0101": {
+   "stage": "STG010",
+   "stage_no": 9,
+   "title": "Functions with Arrays and Strings",
+   "headings": [
+    "What Are Functions with Arrays and Strings?",
+    "Why Are Arrays and Strings Passed to Functions?",
+    "Arrays vs Strings in Functions",
+    "Flowchart: Function with Array/String",
+    "Recap: The Delivery Team"
+   ]
+  },
+  "CH0102": {
+   "stage": "STG010",
+   "stage_no": 9,
+   "title": "Recursive Functions",
+   "headings": [
+    "What Is a Recursive Function?",
+    "Why Are Recursive Functions Used?",
+    "Base Case and Recursive Case",
+    "Recursion Flowchart",
+    "Recap: Recursion"
+   ]
   }
  }
 }

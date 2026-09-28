@@ -89,8 +89,8 @@ beginner, topic-specific videos from reputable educational channels. Never guess
 
 ## Future chapters
 
-Stage 6 (ARRAYS, CH0062-CH0072 and CH0116), Stage 7 (STRINGS, CH0073-CH0078) and Stage 8 (SEARCHING & SORTING,
-CH0079-CH0093) have full decks, following this same shape - see `defs/ch0062.js`, `defs/ch0073.js` and `defs/ch0079.js`
-onward. Stages 9 and 10 (FUNCTIONS, POINTERS) still have no Learn content, so they have no decks.
-When their content exists: add the chapter's questions, then a `defs/chNNNN.js` deck with the same shape. Nothing in
+Stage 6 (ARRAYS, CH0062-CH0072 and CH0116), Stage 7 (STRINGS, CH0073-CH0078), Stage 8 (SEARCHING & SORTING,
+CH0079-CH0093) and Stage 9 (FUNCTIONS, CH0094-CH0102) have full decks, following this same shape - see `defs/ch0062.js`,
+`defs/ch0073.js`, `defs/ch0079.js` and `defs/ch0094.js` onward. Stage 10 (POINTERS) still has no Learn content, so it has no decks.
+When its content exists: add the chapter's questions, then a `defs/chNNNN.js` deck with the same shape. Nothing in
 the player has to change.

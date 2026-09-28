@@ -69,7 +69,7 @@ const qids = new Set(questions.map((q) => q.question_id));
 const qterms = (await rows(`select * from question_terms order by question_id, "order"`)).filter((t) => qids.has(t.question_id));
 const termIds = new Set(qterms.map((t) => t.term_id));
 const out = {
-  _about: "Effective production content for the 32 populated chapters, produced by applying supabase/migrations on top of the CSV seed (see build-production-content.mjs). Used by the chapter-deck validators and the browser tests.",
+  _about: "Effective production content for the populated chapters, produced by applying supabase/migrations on top of the CSV seed (see build-production-content.mjs). Used by the chapter-deck validators and the browser tests.",
   stages: (await rows(`select * from stages where active order by "order"`)).filter((s) => stageIds.has(s.stage_id)),
   chapters,
   learn_content: learn.filter((l) => populated.has(l.chapter_id)).map((l) => ({ learn_id: l.learn_id, stage_id: l.stage_id, chapter_id: l.chapter_id, title: l.title, pages_text: l.pages_text })),

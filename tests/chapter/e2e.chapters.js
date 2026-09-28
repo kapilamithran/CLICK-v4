@@ -895,6 +895,129 @@ async function main() {
     }
   }
 
+  // ================================================================ K. Stage 9 (Functions): one-switch labs finish, runaway output is cut short, calls in progress, Where column, stage on Home
+  section("K. Stage 9 (Functions): one-switch lab completes, runaway recursion output is cut short, calls in progress and the Where column, Home shows the stage");
+  {
+    const ANY = "#testExercise .ce-target, #testExercise .la, #testExercise .option, #testExercise .test-v11-token, #testExercise .test-code-fill-box, #testTextAnswer, #testExercise p.meta";
+    const goTo = async (page, match) => {
+      for (let g = 0; g < 12; g++) {
+        await page.waitForFunction((sel) => !!document.querySelector(sel), ANY, { timeout: 15000 });
+        const s = await L.slideKind(page);
+        if (match(s)) return s;
+        if (s.kind === "explorer") await L.passExplorer(page);
+        else if (s.kind === "activity") { await page.locator("#testExercise").click({ position: { x: 6, y: 6 } }); if (await page.locator("#testSkip:not([hidden])").count()) await page.locator("#testSkip").click(); await page.locator("#testCheck").click(); }
+        else { await L.answerQuestion(page, s.qid, true); await page.waitForFunction(() => /Correct!/.test(document.getElementById("testFeedbackV11").textContent)); await page.waitForFunction(() => !document.getElementById("testCheck").disabled && /CONTINUE|FINISH/.test(document.getElementById("testCheck").textContent)); await page.locator("#testCheck").click(); }
+      }
+      throw new Error("slide not found");
+    };
+    const stack = async (page) => { await page.waitForSelector("#testExercise .la-callstack li", { timeout: 15000 }); return page.locator("#testExercise .la-callstack li").allInnerTexts(); };
+    {
+      const { ctx, page, errors } = await openChapter({}, "CH0095", { width: 390, height: 844 }, { mobile: true });
+      await t("CH0095 one-switch lab: flipping the switch once is enough to enable CONTINUE (it used to need three changes, which a one-switch lab cannot give)", async () => {
+        await goTo(page, (s) => s.activity === "CH0095.p2.defined-not-called");
+        assert.equal(await page.locator("#testCheck").isDisabled(), true, "Continue is locked before the student has tried the lab");
+        await page.waitForFunction(() => /printed nothing/i.test((document.querySelector("#testExercise .la-labout") || {}).innerText || ""), null, { timeout: 8000 });
+        await page.locator("#testExercise label.la-switch").first().click();
+        await page.waitForFunction(() => !document.getElementById("testCheck").disabled, null, { timeout: 5000 });
+        await page.waitForFunction(() => /Tea is ready/.test(document.querySelector("#testExercise .la-labout").innerText), null, { timeout: 5000 });
+      });
+      await t("no JS errors (one-switch lab)", async () => noErrors(errors));
+      await ctx.close();
+    }
+    {
+      const { ctx, page, errors } = await openChapter({}, "CH0094", { width: 390, height: 844 }, { mobile: true });
+      await t("CH0094 lab with two switches: each extra call adds another Hello Student line, and the lab finishes", async () => {
+        await goTo(page, (s) => s.activity === "CH0094.p2.reuse-lab");
+        const lines = async () => (await page.locator("#testExercise .la-labout .la-out").first().innerText()).trim().split("\n").filter(Boolean).length;
+        assert.equal(await lines(), 1, "one call prints one line");
+        const sw = page.locator("#testExercise label.la-switch");
+        await sw.nth(0).click(); await page.waitForFunction(() => (document.querySelector("#testExercise .la-labout .la-out").innerText.trim().split("\n").length) === 2, null, { timeout: 5000 });
+        await sw.nth(1).click(); await page.waitForFunction(() => (document.querySelector("#testExercise .la-labout .la-out").innerText.trim().split("\n").length) === 3, null, { timeout: 5000 });
+        assert.equal(await page.locator("#testCheck").isDisabled(), true, "a four-setting lab still asks for a third change");
+        await sw.nth(0).click(); await page.waitForFunction(() => (document.querySelector("#testExercise .la-labout .la-out").innerText.trim().split("\n").length) === 2, null, { timeout: 5000 });
+        await page.waitForFunction(() => !document.getElementById("testCheck").disabled, null, { timeout: 5000 });
+      });
+      await t("CH0094 trace: 'Calls in progress' lists main() then greet() while it runs, and greet() is taken off when it returns", async () => {
+        await goTo(page, (s) => s.activity === "CH0094.p4.trace-greet");
+        assert.deepEqual(await stack(page), ["main()"], "before the program starts only main() is running");
+        const next = page.locator("#testExercise button", { hasText: /^Next step$/ });
+        await next.click();
+        assert.deepEqual(await stack(page), ["main()", "greet()"], "after the call greet() is on top of main()");
+        assert.equal(await page.locator("#testExercise .la-callstack li.top").innerText(), "greet()", "the newest call is highlighted");
+        while (await next.isEnabled()) await next.click();
+        assert.deepEqual(await stack(page), ["main()"], "when greet() has returned only main() is left");
+      });
+      await t("no JS errors (call stack)", async () => noErrors(errors));
+      await ctx.close();
+    }
+    {
+      const { ctx, page, errors } = await openChapter({}, "CH0100", { width: 390, height: 844 }, { mobile: true });
+      await t("CH0100 trace: the Where column says global for count and 'local in show()' for marks, and marks is gone after show() returns", async () => {
+        await goTo(page, (s) => s.activity === "CH0100.p3.trace-scope");
+        const next = page.locator("#testExercise button", { hasText: /^Next step$/ });
+        await page.waitForSelector("#testExercise .la-counter", { timeout: 15000 });
+        await next.click();
+        let seenLocal = false;
+        for (let i = 0; i < 8 && (await next.isEnabled()); i++) {
+          const rows = await page.locator("#testExercise .la-vartable tbody tr").evaluateAll((trs) => trs.map((tr) => [...tr.querySelectorAll("td")].map((td) => td.innerText.trim())));
+          const head = await page.locator("#testExercise .la-vartable th").allInnerTexts();
+          assert.match(head[3], /^where$/i, "the variable table has a Where column");
+          rows.forEach((r) => { if (r[0] === "count") assert.equal(r[3], "global"); if (r[0] === "marks") { seenLocal = true; assert.equal(r[3], "local in show()"); } });
+          await next.click();
+        }
+        assert.ok(seenLocal, "marks appeared as a local variable of show()");
+        const last = await page.locator("#testExercise .la-vartable tbody tr").evaluateAll((trs) => trs.map((tr) => tr.querySelector("td").innerText.trim()));
+        assert.deepEqual(last, ["count"], "after show() returns only the global count is left");
+      });
+      await t("no JS errors (Where column)", async () => noErrors(errors));
+      await ctx.close();
+    }
+    {
+      const { ctx, page, errors } = await openChapter({}, "CH0102", { width: 360, height: 800 }, { mobile: true });
+      await t("CH0102 recursion trace at 360px: the calls pile up main() > count(3) > count(2) > count(1) > count(0) and never overflow their box", async () => {
+        await goTo(page, (s) => s.activity === "CH0102.p3.trace-count");
+        await stack(page);
+        const next = page.locator("#testExercise button", { hasText: /^Next step$/ });
+        let deepest = [];
+        for (let i = 0; i < 30 && (await next.isEnabled()); i++) {
+          await next.click(); const s = await stack(page); if (s.length > deepest.length) deepest = s;
+          const fits = await page.locator("#testExercise .la-callstack").evaluate((ol) => { const b = ol.getBoundingClientRect(); return [...ol.querySelectorAll("li")].every((li) => { const r = li.getBoundingClientRect(); return r.right <= b.right + 0.5 && r.left >= b.left - 0.5; }) && ol.scrollWidth <= ol.clientWidth + 1; });
+          assert.ok(fits, "the calls in progress overflow their box at 360px: " + JSON.stringify(s));
+          const arrows = await page.locator("#testExercise .la-callstack li").evaluateAll((lis) => lis.map((li, k) => [getComputedStyle(li, "::after").content, getComputedStyle(li, "::before").content, k === lis.length - 1]));
+          arrows.forEach(([after, before, last]) => { assert.equal(after.includes("→"), !last, "an arrow follows every call except the newest (it used to hang at the start of a wrapped line): " + after); assert.ok(before === "none" || before === "normal", "no arrow is drawn before a call: " + before); });
+        }
+        assert.deepEqual(deepest, ["main()", "count(3)", "count(2)", "count(1)", "count(0)"]);
+        assert.deepEqual(await stack(page), ["main()"], "all calls have returned at the end");
+      });
+      await t("CH0102 no-base-case lab: switching the base case off shows only the start of the runaway output plus a clear stop message (not a screenful of numbers)", async () => {
+        await goTo(page, (s) => s.activity === "CH0102.p4.no-base-case");
+        assert.match(await page.locator("#testExercise .la-labout .la-out").first().innerText(), /^3 2 1\s*$/, "with the base case on: 3 2 1");
+        await page.locator("#testExercise label.la-switch").first().click();
+        await page.waitForFunction(() => !!document.querySelector("#testExercise .la-labout .la-err"), null, { timeout: 8000 });
+        const out = await page.locator("#testExercise .la-labout .la-out").first().innerText();
+        assert.ok(out.length <= 320, "the output panel shows " + out.length + " characters (expected the start only)");
+        assert.match(out, /^3 2 1 0 -1/, "the visible start shows the count going past zero");
+        assert.match(await page.locator("#testExercise .la-labout .la-note").first().innerText(), /printed \d+ characters before it stopped/);
+        assert.match(await page.locator("#testExercise .la-labout .la-err").innerText(), /endless recursion/i);
+        assert.equal(await page.locator("#testCheck").isDisabled(), false, "the lab is finished after both settings were seen");
+      });
+      await t("no JS errors (recursion)", async () => noErrors(errors));
+      await ctx.close();
+    }
+    {
+      const { ctx, page, errors } = await L.open({ tested: L.before("CH0094") }, { width: 390, height: 844 }, { mobile: true });
+      await t("Home lists Stage 9 FUNCTIONS as the current stage with its 9 chapters, once Stage 8 is complete", async () => {
+        const st = await page.evaluate(() => { const s = document.querySelector('[data-stage-section="STG010"]'); return s ? { status: s.dataset.status, nodes: s.querySelectorAll(".lp-node").length, title: (s.querySelector(".lp-card-title") || {}).textContent } : null; });
+        assert.ok(st, "the FUNCTIONS stage is on Home");
+        assert.equal(st.nodes, 9); assert.match(st.title, /FUNCTIONS/i); assert.ok(["current", "available"].includes(st.status), "status is " + st.status);
+        assert.equal(await page.locator('.lp-node[data-chapter="CH0094"]').first().getAttribute("aria-label").then((a) => /current|start/.test(a)), true);
+        assert.equal(await page.locator('.lp-node[data-chapter="CH0095"]').first().getAttribute("aria-label").then((a) => /locked/.test(a)), true, "CH0095 waits for CH0094");
+      });
+      await t("no JS errors (Home, Stage 9)", async () => noErrors(errors));
+      await ctx.close();
+    }
+  }
+
   await L.stop(S);
   L.finish();
 }

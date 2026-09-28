@@ -110,10 +110,11 @@ Learn content is edited on purpose (an activity whose heading no longer matches 
 
 ## The interpreter
 
-`c-interp.js` runs the C that Stage 0-5 and Stage 6 (Arrays) teach: `int char float double bool const`, all
+`c-interp.js` runs the C that Stages 0-9 teach: `int char float double bool const`, all
 operators, `printf` (`%d %i %u %c %s %f %lf %x %o` with width/flags/precision), `scanf`/`fgets` on a
-simulated stdin, `if/else/switch/?:`, `for/while/do-while/break/continue`, simple functions (including array
-parameters, `int a[]`, passed by reference like real C), one- and two-dimensional arrays, `char` arrays and
+simulated stdin, `if/else/switch/?:`, `for/while/do-while/break/continue`, functions (parameters and return
+values, global and local variables, recursion, array parameters `int a[]` passed by reference like real C, and a
+string literal or `char` array passed for a `char name[]` / `char *` parameter), one- and two-dimensional arrays, `char` arrays and
 `strlen strcspn strcmp strcpy strcat strchr` (`strchr` may be compared with `NULL`). Real-C undefined behaviour (unset variables, wrong format specifiers,
 out-of-range indexes, missing `&`) stops with an explanation instead of inventing output. It is not a
 compiler: pointers, structs, `long`/`unsigned`, files and the rest of C are out of scope.
@@ -122,7 +123,17 @@ after 3,000,000 steps (about a quarter of a second), 2 seconds of running time o
 output, and refuses programs longer than 20,000 characters. If Web Workers are unavailable it falls back to the
 main thread with tighter limits (400,000 steps, 0.8 s).
 
-## Future chapters (Stages 9-10)
+## Trace extras for function calls (Stage 9)
+
+`trace` has two opt-in flags. Both are off unless a definition sets them, so every older trace looks exactly as before.
+
+- `callStack: true` draws **Calls in progress** under the variable table (`main()` and then each call with the values its
+  parameters received, for example `main() > count(3) > count(2)`), so calls piling up and returning - recursion
+  especially - can be seen.
+- `scopeColumn: true` adds a **Where** column (`global`, or `local in show()`) to the variable table, so a global variable
+  and a function's local variable can be told apart.
+
+## Future chapters (Stage 10)
 
 Stage 6 (Arrays, CH0062-CH0072 and CH0116) now has full activity defs - see `defs/ch0062.js` onward for the
 `trace`/`builder`/`assign`/`reveal`/`mcq`/`fill` patterns used for array indexing, 2D arrays and array
@@ -132,8 +143,10 @@ string box by box), `trace` for string loops and the `<string.h>` functions (a c
 `lab` for `strlen`/`strcmp`/`strchr` and character changes, `error` for the single-quote mistake, and `order`
 with `noRun: true` for plain-English steps. Stage 8 (Searching & Sorting, CH0079-CH0093) also has full activity defs: `trace` for
 linear/binary search and bubble/selection/insertion sort, `assign`/`reveal`/`builder`/`order`/`predict` for the
-concept work (`order` activities that sequence plain-English algorithm steps set `noRun: true`). The remaining
-chapters (Functions, Pointers) still have no Learn content. Nothing here needs to change for them: when their Learn pages exist, add `defs/chNNNN.js` files
+concept work (`order` activities that sequence plain-English algorithm steps set `noRun: true`). Stage 9 (Functions,
+CH0094-CH0102) has full activity defs as well: `assign`/`lab`/`trace` (with the two extras above) for define-call-execute,
+parameters versus arguments, return values, local versus global variables and recursion. The remaining
+chapters (Pointers) still have no Learn content. Nothing here needs to change for them: when their Learn pages exist, add `defs/chNNNN.js` files
 that point at the real page headings and reuse the same kinds (`trace` for sorting steps, `lab`/`run` for
 small experiments, `order`/`fill` for structure). Kinds for those topics can be added to `kinds-visual.js`
 by registering `ClickLearn.kind(name, {...})`. Do not write activities for chapters whose Learn text does

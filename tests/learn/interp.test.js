@@ -102,6 +102,52 @@ for (const [name, code, input] of PROGRAMS) {
   });
 }
 
+// ---- Stage 9 (Functions): the program shapes the Functions PDFs teach, whole programs, each checked against gcc
+const FN = "#include <stdio.h>\n\n";
+const FUNCTION_PROGRAMS = [
+  ["void function with no parameters", FN + 'void greet() {\n    printf("Hello Student");\n}\n\nint main() {\n    greet();\n    return 0;\n}'],
+  ["void function with two parameters", FN + 'void add(int a, int b) {\n    printf("%d", a + b);\n}\n\nint main() {\n    add(2, 5);\n    return 0;\n}'],
+  ["argument order matters", FN + 'void sub(int a, int b) {\n    printf("%d ", a - b);\n}\n\nint main() {\n    sub(5, 3);\n    sub(3, 5);\n    return 0;\n}'],
+  ["function returns a value that is stored", FN + 'int add(int a, int b) {\n    return a + b;\n}\n\nint main() {\n    int result = add(4, 6);\n    printf("%d", result);\n    return 0;\n}'],
+  ["call used inside printf", FN + 'int square(int n) {\n    return n * n;\n}\nint main() {\n    printf("%d", square(5));\n    return 0;\n}'],
+  ["all four function types", FN + 'void greet() {\n    printf("Hello ");\n}\n\nvoid displaySquare(int n) {\n    printf("%d ", n * n);\n}\n\nint getNumber() {\n    return 10;\n}\n\nint add(int a, int b) {\n    return a + b;\n}\n\nint main() {\n    greet();\n    displaySquare(4);\n    printf("%d ", getNumber());\n    printf("%d", add(2, 3));\n    return 0;\n}'],
+  ["string literal passed to a char name[] parameter", FN + 'void greet(char name[]) {\n    printf("Hello %s", name);\n}\n\nint main() {\n    greet("Arun");\n    return 0;\n}'],
+  ["string literal and an int argument", FN + 'void student(char name[], int age) {\n    printf("%s %d", name, age);\n}\n\nint main() {\n    student("Arun", 18);\n    return 0;\n}'],
+  ["global variable used by two calls", FN + 'int number = 10;\n\nvoid display() {\n    printf("%d ", number);\n}\n\nint main() {\n    display();\n    display();\n    return 0;\n}'],
+  ["local variable hides a global of the same name", FN + 'int x = 5;\n\nvoid show() {\n    int x = 9;\n    printf("%d ", x);\n}\n\nint main() {\n    show();\n    printf("%d", x);\n    return 0;\n}'],
+  ["array and its size passed to a function", FN + 'void display(int arr[], int n) {\n    for (int i = 0; i < n; i++) {\n        printf("%d ", arr[i]);\n    }\n}\n\nint main() {\n    int numbers[] = {10, 20, 30};\n\n    display(numbers, 3);\n\n    return 0;\n}'],
+  ["char array passed to a function", FN + 'void display(char name[]) {\n    printf("%s", name);\n}\n\nint main() {\n    char name[] = "Arun";\n    display(name);\n\n    return 0;\n}'],
+  ["recursion counts down", FN + 'void count(int n) {\n    if (n == 0)\n        return;\n\n    printf("%d ", n);\n    count(n - 1);\n}\n\nint main() {\n    count(3);\n    return 0;\n}'],
+  ["recursion unwinds after the base case", FN + 'void count(int n) {\n    if (n == 0)\n        return;\n\n    count(n - 1);\n    printf("%d ", n);\n}\n\nint main() {\n    count(3);\n    return 0;\n}'],
+];
+for (const [name, code] of FUNCTION_PROGRAMS) {
+  test("functions: " + name + (hasGcc ? " (vs gcc)" : ""), (t) => {
+    const r = Interp.run(code, { input: "" });
+    assert.ok(r.ok, name + " should run: " + (r.error && r.error.message));
+    if (!hasGcc) { t.diagnostic("gcc not installed: comparison skipped"); return; }
+    const g = gccRun(code, "", true);
+    assert.ok(g.ok, "gcc should accept the program: " + g.error);
+    assert.equal(normOut(r.stdout), normOut(g.stdout));
+  });
+}
+test("functions: a recursive function with no base case stops with an explanation instead of hanging", () => {
+  const r = Interp.run(FN + 'void count(int n) {\n    printf("%d ", n);\n    count(n - 1);\n}\n\nint main() {\n    count(3);\n    return 0;\n}');
+  assert.equal(r.ok, false);
+  assert.equal(r.error.kind, "limit");
+  assert.match(r.error.message, /nested too deeply|endless recursion/i);
+});
+test("functions: passing a number where a char array is expected is still refused", () => {
+  const r = Interp.run(FN + 'void greet(char name[]) {\n    printf("%s", name);\n}\n\nint main() {\n    greet(5);\n    return 0;\n}');
+  assert.equal(r.ok, false);
+  assert.match(r.error.message, /expects an array/);
+});
+test("functions: the trace records each call with its parameters and each return", () => {
+  const r = Interp.run(FN + 'void count(int n) {\n    if (n == 0)\n        return;\n    count(n - 1);\n}\n\nint main() {\n    count(2);\n    return 0;\n}', { trace: true });
+  const calls = r.trace.filter((e) => e.kind === "call").map((e) => e.vars.filter((v) => v.scope >= 1).map((v) => v.name + "=" + v.value).join(","));
+  assert.deepEqual(calls, ["n=2", "n=1", "n=0"]);
+  assert.equal(r.trace.filter((e) => e.kind === "return").length, 3);
+});
+
 // ---- undefined behaviour is explained, not invented
 const UB = [
   ["uninitialised variable", P("int x; printf(\"%d\", x);"), "ub"],

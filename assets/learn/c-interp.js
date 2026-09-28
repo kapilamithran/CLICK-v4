@@ -561,6 +561,7 @@
     opts = opts || {};
     const limits = Object.assign({ steps: 3000000, output: 20000, ms: 2000, trace: 2500, depth: 200 }, opts.limits || {});
     const t0 = Date.now();
+    let callDepth = 0;   // user-function calls running right now (the scope stack is reset for every call, so its length cannot be used)
     const result = { ok: true, stdout: "", error: null, trace: opts.trace ? [] : null, steps: 0, exitCode: 0, truncated: false };
     let out = "";
     let steps = 0;
@@ -970,12 +971,18 @@
       const f = program.funcs.get(n.name);
       if (f) {
         if (f.params.length !== n.args.length) throw new CError("syntax", "'" + n.name + "' expects " + f.params.length + " argument(s) but got " + n.args.length + ".", n.line);
-        if (scopes.length > limits.depth) throw new CError("limit", "Too many nested function calls (possible endless recursion).", n.line);
+        if (callDepth >= limits.depth) throw new CError("limit", "Too many nested function calls (possible endless recursion).", n.line);
         const argv = n.args.map((a) => evalE(a));
         const saved = scopes.slice(), savedScope = scope;
         scopes.length = 1; scope = globalScope; pushScope();
         f.params.forEach((p, i) => {
-          if (p.isArray) {
+          if (p.isArray && argv[i].t === "str" && argv[i].v !== null && p.ty.base === "char") {
+            // A string literal passed for a char name[] parameter (greet("Arun")): in real C the literal decays to a
+            // pointer to its characters, so the function sees them, followed by the end marker.
+            const s = argv[i].v, a = new Array(s.length + 1).fill(0);
+            for (let k = 0; k < s.length; k++) a[k] = s.charCodeAt(k);
+            scope.set(p.name, { ty: p.ty, arr: true, dims: [a.length], val: { a } });
+          } else if (p.isArray) {
             if (argv[i].t !== "arr") throw new CError("runtime", "'" + n.name + "' expects an array for its '" + p.name + "' parameter.", n.line);
             // A real C array parameter decays to a pointer: the callee shares the caller's
             // storage (`.val` is the same {a:[...]} object), so writes are visible after the call.
@@ -985,7 +992,7 @@
           }
         });
         rec("call", n, { note: "Call " + n.name + "(" + n.args.map((a) => src.slice(a.s, a.en)).join(", ") + ")" });
-        const sig = execBlockBody(f.body.body);
+        let sig; callDepth++; try { sig = execBlockBody(f.body.body); } finally { callDepth--; }
         scopes.length = 0; saved.forEach((s) => scopes.push(s)); scope = savedScope;
         const rv = sig && sig.t === "return" ? sig.v : null;
         rec("return", n, { note: "Return from " + n.name + (rv ? " with " + rv.v : "") });
