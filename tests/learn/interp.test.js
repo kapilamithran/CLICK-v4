@@ -78,6 +78,15 @@ const PROGRAMS = [
   ["fgets line", P('char name[50]; fgets(name, sizeof(name), stdin); printf("Hello %s!", name);'), "Arun Kumar\n"],
   ["fgets after scanf", P('int n; char s[20]; scanf("%d", &n); fgets(s, 20, stdin); printf("[%s]", s);'), "5\nabc\n"],
   ["strcspn strip newline", P('char s[50]; fgets(s, 50, stdin); s[strcspn(s, "\\n")] = 0; printf("Hello %s!", s);'), "Arun Kumar\n"],
+  ["strcat joins two strings", P('char first[30] = "Hello "; char second[] = "World"; strcat(first, second); printf("%s", first);')],
+  ["strchr found and not found", P('char word[] = "HELLO"; if (strchr(word, \'L\') != NULL) printf("found "); if (strchr(word, \'Z\') == NULL) printf("missing"); if (strchr(word, \'Z\') != NULL) printf("BAD");')],
+  ["strchr result is the rest of the string", P('char word[] = "HELLO"; printf("%s", strchr(word, \'L\'));')],
+  ["strcmp equal and different", P('char a[] = "CAT"; char b[] = "CAT"; char c[] = "DOG"; printf("%d ", strcmp(a, b) == 0); printf("%d", strcmp(a, c) == 0);')],
+  ["strcpy then strlen", P('char source[] = "Hello"; char destination[20]; strcpy(destination, source); printf("%s %d", destination, (int)strlen(destination));')],
+  ["reverse a string with strlen", P('char word[] = "CODE"; int i; for (i = strlen(word) - 1; i >= 0; i--) printf("%c", word[i]);')],
+  ["traverse to the end marker", P('char word[] = "CODING"; for (int i = 0; word[i] != \'\\0\'; i++) printf("%c ", word[i]);')],
+  ["count one letter in a string", P('char word[] = "BANANA"; int count = 0; for (int i = 0; word[i] != \'\\0\'; i++) { if (word[i] == \'A\') { count++; } } printf("%d", count);')],
+  ["modify one character", P('char word[] = "HELLO"; word[1] = \'A\'; printf("%s", word);')],
   ["scanf multiple int", P('int a, b; scanf("%d %d", &a, &b); printf("%d", a + b);'), "10 20\n"],
   ["scanf char", P('char c; scanf(" %c", &c); printf("You entered %c", c);'), "Y\n"],
 ];
@@ -102,6 +111,7 @@ const UB = [
   ["missing & in scanf", P('int age; scanf("%d", age);'), "ub"],
   ["array out of range", P("int a[3] = {1,2,3}; printf(\"%d\", a[5]);"), "ub"],
   ["scanf %s overflow", P('char n[4]; scanf("%s", n);'), "ub"],
+  ["strcat past the end of the array", P('char a[8] = "Hello "; char b[] = "World"; strcat(a, b);'), "ub"],
   ["%f into a double var with scanf", P('double d; scanf("%f", &d);'), "ub"],
 ];
 for (const [name, code, kind] of UB) {

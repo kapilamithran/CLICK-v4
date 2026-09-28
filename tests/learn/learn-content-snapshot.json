@@ -1,5 +1,5 @@
 {
- "source": "learn_content (active) exported 2026-09-26",
+ "source": "learn_content (active) exported 2026-09-28",
  "chapters": {
   "CH0031": {
    "stage": "STG001",
@@ -383,6 +383,402 @@
     "Types of Nested Loops",
     "Building a Nested Loop",
     "Your First Nested Loop Challenge"
+   ]
+  },
+  "CH0062": {
+   "stage": "STG007",
+   "stage_no": 6,
+   "title": "Introduction to Array",
+   "headings": [
+    "What is an Array?",
+    "How Does an Array Work?",
+    "What Can We Store in an Array?",
+    "Arrays in Real Programs",
+    "RECAP"
+   ]
+  },
+  "CH0063": {
+   "stage": "STG007",
+   "stage_no": 6,
+   "title": "Array Indexing and Accessing Element",
+   "headings": [
+    "What is Array Indexing?",
+    "How Does Indexing Work?",
+    "Accessing an Element",
+    "Changing an Element",
+    "RECAP"
+   ]
+  },
+  "CH0064": {
+   "stage": "STG007",
+   "stage_no": 6,
+   "title": "Initializing Array",
+   "headings": [
+    "What is Array Initialization?",
+    "Different Ways to Initialize",
+    "Character Array Initialization",
+    "Initializing Arrays in Programs",
+    "RECAP"
+   ]
+  },
+  "CH0065": {
+   "stage": "STG007",
+   "stage_no": 6,
+   "title": "Combining Loops with Array",
+   "headings": [
+    "What is Combining Loops with Arrays?",
+    "How Does the Loop Access an Array?",
+    "Taking Array Input Using a Loop",
+    "Processing Array Elements",
+    "RECAP"
+   ]
+  },
+  "CH0066": {
+   "stage": "STG007",
+   "stage_no": 6,
+   "title": "Out-of-Bounds Errors & Safety",
+   "headings": [
+    "What is an Out-of-Bounds Error?",
+    "Valid vs Invalid Index",
+    "Why is it Dangerous?",
+    "How to Stay Safe",
+    "RECAP"
+   ]
+  },
+  "CH0067": {
+   "stage": "STG007",
+   "stage_no": 6,
+   "title": "Basic Array Operations- Math & Metric",
+   "headings": [
+    "What are Basic Array Operations?",
+    "Finding the Sum",
+    "Finding Average",
+    "Maximum & Minimum",
+    "RECAP"
+   ]
+  },
+  "CH0068": {
+   "stage": "STG007",
+   "stage_no": 6,
+   "title": "Searching in an Array",
+   "headings": [
+    "What is Searching in an Array?",
+    "Linear Search",
+    "Finding the Position",
+    "Found or Not Found",
+    "RECAP"
+   ]
+  },
+  "CH0069": {
+   "stage": "STG007",
+   "stage_no": 6,
+   "title": "Introduction to Multi-Dimensional Arrays",
+   "headings": [
+    "What is a Multi-Dimensional Array?",
+    "How Does a 2D Array Work?",
+    "Accessing Elements",
+    "Using Loops with 2D Arrays",
+    "RECAP"
+   ]
+  },
+  "CH0070": {
+   "stage": "STG007",
+   "stage_no": 6,
+   "title": "Working with 2D Array",
+   "headings": [
+    "What is Working with a 2D Array?",
+    "Taking Input in a 2D Array",
+    "Displaying a 2D Array",
+    "Basic Operations on a 2D Array",
+    "RECAP"
+   ]
+  },
+  "CH0071": {
+   "stage": "STG007",
+   "stage_no": 6,
+   "title": "Character Array (Introduction to Strings)",
+   "headings": [
+    "What is a Character Array?",
+    "What is a String?",
+    "Accessing Characters",
+    "Reading & Displaying Strings",
+    "RECAP"
+   ]
+  },
+  "CH0072": {
+   "stage": "STG007",
+   "stage_no": 6,
+   "title": "Arrays and Functions",
+   "headings": [
+    "What are Arrays and Functions?",
+    "Passing an Array to a Function",
+    "Using a Function to Calculate Sum",
+    "Why Use Functions with Arrays?",
+    "RECAP"
+   ]
+  },
+  "CH0116": {
+   "stage": "STG007",
+   "stage_no": 6,
+   "title": "Capstone Project: Using Arrays",
+   "headings": [
+    "Capstone Project: Using Arrays",
+    "Mini Capstone Example",
+    "Array Limitations",
+    "Choosing the Right Array",
+    "RECAP"
+   ]
+  },
+  "CH0079": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Searching Basics",
+   "headings": [
+    "What is Searching?",
+    "Target, Found & Not Found",
+    "Types of Searching",
+    "Linear vs Binary Search",
+    "RECAP"
+   ]
+  },
+  "CH0080": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Linear Search",
+   "headings": [
+    "Meet Linear Search",
+    "How Does Linear Search Work?",
+    "Where Can the Target Be?",
+    "Linear Search with Unsorted Data",
+    "When Should We Use Linear Search?"
+   ]
+  },
+  "CH0081": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Linear Search Algorithm",
+   "headings": [
+    "From Idea to Algorithm",
+    "Linear Search Algorithm: The Steps",
+    "Writing the Algorithm",
+    "Let's Trace the Algorithm",
+    "Algorithm to C Code"
+   ]
+  },
+  "CH0082": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Linear Search with Arrays",
+   "headings": [
+    "Connecting Linear Search with Arrays",
+    "Using Index to Check Each Element",
+    "Searching an Array Using a Loop",
+    "Complete Linear Search Program",
+    "Trace the Search Through an Array"
+   ]
+  },
+  "CH0083": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Search Occurrence & Count",
+   "headings": [
+    "What Is an Occurrence?",
+    "Counting Occurrences Using a Counter",
+    "Finding All Occurrences",
+    "What If the Target Is Not Present?",
+    "Complete Program: Count Occurrences"
+   ]
+  },
+  "CH0084": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Binary Search Basics",
+   "headings": [
+    "Meet Binary Search",
+    "Why Must the Array Be Sorted?",
+    "The Power of the Middle Element",
+    "Binary Search Keeps Shrinking the Search Area",
+    "Linear Search vs Binary Search"
+   ]
+  },
+  "CH0085": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Binary Search Algorithm",
+   "headings": [
+    "From Binary Search Idea to Algorithm",
+    "The Binary Search Steps",
+    "How Does the Search Area Change?",
+    "Dry Run: Binary Search Step by Step",
+    "Binary Search Algorithm in One Flow"
+   ]
+  },
+  "CH0086": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Binary Search with Arrays",
+   "headings": [
+    "Setting Up Binary Search with an Array",
+    "Finding the Middle Element in C",
+    "Updating Low and High",
+    "Complete Binary Search Program",
+    "Trace the C Program"
+   ]
+  },
+  "CH0087": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Linear Search vs Binary Search (Quick Recap)",
+   "headings": [
+    "Understanding Linear Search",
+    "Understanding Binary Search",
+    "Linear Search vs Binary Search Example",
+    "Comparing Linear Search and Binary Search",
+    "Which Search Should You Use?"
+   ]
+  },
+  "CH0088": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Sorting Basics",
+   "headings": [
+    "Understanding Sorting",
+    "Why Do We Sort Data?",
+    "Understanding Ascending and Descending Order",
+    "Sorting Numbers Step by Step",
+    "Sorting in C"
+   ]
+  },
+  "CH0089": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Sorting in Ascending & Descending Order",
+   "headings": [
+    "Understanding Ascending Order",
+    "Understanding Descending Order",
+    "Comparing Two Elements",
+    "Swapping Two Values",
+    "One Algorithm, Two Directions"
+   ]
+  },
+  "CH0090": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Bubble Sort",
+   "headings": [
+    "Understanding Bubble Sort",
+    "Comparing and Swapping Neighbors",
+    "Understanding a Bubble Sort Pass",
+    "Bubble Sort in C",
+    "The Main Idea of Bubble Sort"
+   ]
+  },
+  "CH0091": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Selection Sort",
+   "headings": [
+    "Understanding Selection Sort",
+    "Finding the Minimum Element",
+    "The Sorted and Unsorted Parts",
+    "Selection Sort in C",
+    "Selection Sort in Action"
+   ]
+  },
+  "CH0092": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Insertion Sort",
+   "headings": [
+    "Understanding Insertion Sort",
+    "Inserting an Element",
+    "The Sorted Portion",
+    "Insertion Sort in C",
+    "Complete Insertion Sort Process"
+   ]
+  },
+  "CH0093": {
+   "stage": "STG009",
+   "stage_no": 8,
+   "title": "Comparing Sorting Methods",
+   "headings": [
+    "Three Sorting Methods",
+    "How the Three Methods Work",
+    "Beginner-Level Comparison",
+    "Same Array, Three Approaches",
+    "Core Takeaway"
+   ]
+  },
+  "CH0073": {
+   "stage": "STG008",
+   "stage_no": 7,
+   "title": "String Basics & Declaration",
+   "headings": [
+    "What is a String?",
+    "Character vs String",
+    "Character Array",
+    "Declaring & Initializing a String",
+    "String Basics Recap"
+   ]
+  },
+  "CH0074": {
+   "stage": "STG008",
+   "stage_no": 7,
+   "title": "String Input & Output",
+   "headings": [
+    "Reading a String",
+    "Displaying a String",
+    "Using scanf()",
+    "Using printf()",
+    "Using fgets() + Recap"
+   ]
+  },
+  "CH0075": {
+   "stage": "STG008",
+   "stage_no": 7,
+   "title": "Accessing & Traversing Strings",
+   "headings": [
+    "String Indexing",
+    "Accessing Individual Characters",
+    "Using Loops with Strings",
+    "Modifying Characters",
+    "Traversing a String + Recap"
+   ]
+  },
+  "CH0076": {
+   "stage": "STG008",
+   "stage_no": 7,
+   "title": "String Length & Basic Operations",
+   "headings": [
+    "Finding String Length",
+    "Using strlen()",
+    "Counting Characters",
+    "Searching for a Character",
+    "Counting Specific Characters + Recap"
+   ]
+  },
+  "CH0077": {
+   "stage": "STG008",
+   "stage_no": 7,
+   "title": "String Library Functions",
+   "headings": [
+    "strcpy()",
+    "strcat()",
+    "strcmp()",
+    "strchr()",
+    "<string.h> Library + Recap"
+   ]
+  },
+  "CH0078": {
+   "stage": "STG008",
+   "stage_no": 7,
+   "title": "Basic String Programs",
+   "headings": [
+    "Find the Length of a String",
+    "Reverse a String",
+    "Check for Palindrome",
+    "Count Vowels and Consonants",
+    "Compare Two Strings"
    ]
   }
  }

@@ -1,0 +1,123 @@
+ClickChapter.define({
+  chapter: "CH0089",
+  stage: "STG009",
+  title: "Sorting in Ascending & Descending Order",
+  goal: "Write the comparison that swaps two neighboring elements for ascending or descending order, and swap them safely using a temporary variable.",
+
+  references: [
+    { title: "Sorting algorithm in C program | Sorting Array Elements in Ascending or Descending order using C", channel: "Faisal Mahmud", url: "https://www.youtube.com/watch?v=z4PkqevDHL4" },
+    { title: "how to Arrange array in ascending and Descending order By C Programming", channel: "Coding Xpertz", url: "https://www.youtube.com/watch?v=xlwL-PZ3HMM" },
+  ],
+
+  glossary: {
+    swap: {
+      term: "swap",
+      short: "Exchanging the positions of two values.",
+      explain: "When two neighboring values are in the wrong order, sorting exchanges their positions so the smaller (or larger, for descending order) one comes first.",
+      example: "20 10 becomes 10 20 after a swap.",
+    },
+    temp: {
+      term: "temp",
+      short: "A temporary variable used to hold one value safely during a swap.",
+      explain: "Swapping two values needs a third, temporary storage spot. Without it, one of the two original values would be overwritten and lost before it could be saved.",
+      example: "int temp; temp = arr[i]; arr[i] = arr[j]; arr[j] = temp;",
+      mistake: "arr[i] = arr[j]; arr[j] = arr[i]; does NOT swap correctly - arr[i]'s original value is lost after the first line.",
+    },
+    "swap-condition": {
+      term: "swap condition",
+      short: "The comparison that decides whether two neighboring values are in the wrong order.",
+      explain: "For ascending order (smaller first), swap when the left value is bigger: arr[j] > arr[j+1]. For descending order (larger first), swap when the left value is smaller: arr[j] < arr[j+1].",
+      example: "20 10 in ascending order: 20 > 10 is true, so swap.",
+    },
+  },
+
+  slides: [
+    {
+      id: "s1", kind: "explorer",
+      title: "Explore the code",
+      objective: "See how two neighboring values are compared and safely swapped using a temporary variable.",
+      glossary: ["swap-condition", "temp"],
+      minTaps: 3,
+      code: [
+        "int arr[] = {20, 10};",
+        "if (arr[0] «cmp|>» arr[1]) {",
+        "  int «tmp|temp = arr[0]»;",
+        "  arr[0] = arr[1];",
+        "  arr[1] = «assign|temp»;",
+        "}",
+        "printf(\"%d %d\", arr[0], arr[1]);",
+      ].join("\n"),
+      targets: {
+        cmp: { title: "> (ascending: swap when left is bigger)", explain: "For ascending order, we want smaller values first. If the left value is bigger than the right, they are in the wrong order.", example: "20 > 10 is true, so 20 and 10 must be swapped.", terms: ["swap-condition"] },
+        tmp: { title: "temp = arr[0] (save the value first)", explain: "Before arr[0] gets overwritten, its value (20) is saved into temp so it is not lost.", example: "temp now holds 20.", terms: ["temp"] },
+        assign: { title: "temp (put the saved value back)", explain: "Now that arr[1] has been copied into arr[0], the value saved in temp (the original arr[0]) is placed into arr[1], completing the swap.", example: "arr[1] = temp; makes arr[1] become 20.", terms: ["temp", "swap"] },
+      },
+    },
+    {
+      id: "s2", kind: "activity", activity: "CH0089.p4.trace-swap",
+      title: "Step through a swap",
+      objective: "Watch temp hold a value safely while two array elements exchange positions.",
+      glossary: ["temp", "swap"],
+      lead: "{{temp}} protects one value while the swap happens.",
+      takeaway: "temp = arr[i]; arr[i] = arr[j]; arr[j] = temp; exchanges arr[i] and arr[j] without losing either value.",
+    },
+    {
+      id: "s3", kind: "question", question: "Q000444",
+      title: "Build the ascending swap condition",
+      objective: "Complete the comparison used to swap two elements for ascending order.",
+      glossary: ["swap-condition"],
+      takeaway: "if (arr[j] > arr[j + 1]) swaps when the left value is bigger - the rule for ascending order.",
+    },
+    {
+      id: "s4", kind: "activity", activity: "CH0089.p2.build-condition",
+      title: "Build the right swap condition",
+      objective: "Choose the comparison that matches the order you want.",
+      glossary: ["swap-condition"],
+      lead: "Ascending wants smaller first; descending wants {{swap-condition|larger first}}.",
+      takeaway: "Ascending: arr[j] > arr[j+1]. Descending: arr[j] < arr[j+1]. Same structure, opposite comparison.",
+    },
+    {
+      id: "s5", kind: "question", question: "Q000445",
+      title: "Build the descending swap condition",
+      objective: "Complete the comparison used to swap two elements for descending order.",
+      glossary: ["swap-condition"],
+      takeaway: "if (arr[j] < arr[j + 1]) swaps when the left value is smaller - the rule for descending order.",
+    },
+    {
+      id: "s6", kind: "activity", activity: "CH0089.p4.why-temp",
+      title: "Why not swap without temp?",
+      objective: "See why arr[i] = arr[j]; arr[j] = arr[i]; fails to swap correctly.",
+      glossary: ["temp"],
+      takeaway: "After arr[i] = arr[j], arr[i]'s original value is already gone, so arr[j] = arr[i] copies the wrong value.",
+    },
+    {
+      id: "s7", kind: "question", question: "Q000446",
+      title: "Complete the safe swap",
+      objective: "Complete the three-line swap pattern using a temporary variable.",
+      glossary: ["temp"],
+      takeaway: "temp = arr[i]; arr[i] = arr[j]; arr[j] = temp; - temp holds arr[i]'s value so it is not lost.",
+    },
+    {
+      id: "s8", kind: "activity", activity: "CH0089.p3.match-order",
+      title: "Match the order to its rule",
+      objective: "Match ascending and descending order to their swap condition and arrangement.",
+      glossary: ["swap-condition"],
+      lead: "Each order has its own {{swap-condition}}.",
+      takeaway: "Ascending: smaller -> larger, swap when arr[j] > arr[j+1]. Descending: larger -> smaller, swap when arr[j] < arr[j+1].",
+    },
+    {
+      id: "s9", kind: "question", question: "Q000447",
+      title: "Why does the shortcut fail?",
+      objective: "Explain why swapping without a temporary variable loses data.",
+      glossary: ["temp"],
+      takeaway: "Without temp, the original value of arr[i] is overwritten and lost before it can be stored in arr[j].",
+    },
+    {
+      id: "s10", kind: "question", question: "Q000448",
+      title: "Fill in the blank",
+      objective: "Complete the description of descending order's arrangement.",
+      glossary: ["swap-condition"],
+      takeaway: "Descending order arranges values from larger to smaller.",
+    },
+  ],
+});

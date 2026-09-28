@@ -110,10 +110,11 @@ Learn content is edited on purpose (an activity whose heading no longer matches 
 
 ## The interpreter
 
-`c-interp.js` runs the C that Stage 0-5 teach: `int char float double bool const`, all operators,
-`printf` (`%d %i %u %c %s %f %lf %x %o` with width/flags/precision), `scanf`/`fgets` on a simulated
-stdin, `if/else/switch/?:`, `for/while/do-while/break/continue`, simple functions, `char` arrays and
-`strlen strcspn strcmp strcpy`. Real-C undefined behaviour (unset variables, wrong format specifiers,
+`c-interp.js` runs the C that Stage 0-5 and Stage 6 (Arrays) teach: `int char float double bool const`, all
+operators, `printf` (`%d %i %u %c %s %f %lf %x %o` with width/flags/precision), `scanf`/`fgets` on a
+simulated stdin, `if/else/switch/?:`, `for/while/do-while/break/continue`, simple functions (including array
+parameters, `int a[]`, passed by reference like real C), one- and two-dimensional arrays, `char` arrays and
+`strlen strcspn strcmp strcpy strcat strchr` (`strchr` may be compared with `NULL`). Real-C undefined behaviour (unset variables, wrong format specifiers,
 out-of-range indexes, missing `&`) stops with an explanation instead of inventing output. It is not a
 compiler: pointers, structs, `long`/`unsigned`, files and the rest of C are out of scope.
 Student code runs in a Web Worker and is terminated after 3.5 seconds; the interpreter also stops
@@ -121,11 +122,19 @@ after 3,000,000 steps (about a quarter of a second), 2 seconds of running time o
 output, and refuses programs longer than 20,000 characters. If Web Workers are unavailable it falls back to the
 main thread with tighter limits (400,000 steps, 0.8 s).
 
-## Future chapters (Stages 6-10)
+## Future chapters (Stages 9-10)
 
-53 chapters (Arrays, Strings, Searching & Sorting, Functions, Pointers) have no Learn content yet.
-Nothing here needs to change for them: when their Learn pages exist, add `defs/chNNNN.js` files that
-point at the real page headings and reuse the same kinds (`trace` for array indexing and sorting steps,
-`lab`/`run` for small experiments, `order`/`fill` for structure). Kinds for those topics (for example
-an array/memory view) can be added to `kinds-visual.js` by registering `ClickLearn.kind(name, {...})`.
-Do not write activities for chapters whose Learn text does not exist yet.
+Stage 6 (Arrays, CH0062-CH0072 and CH0116) now has full activity defs - see `defs/ch0062.js` onward for the
+`trace`/`builder`/`assign`/`reveal`/`mcq`/`fill` patterns used for array indexing, 2D arrays and array
+function parameters. Stage 7 (Strings, CH0073-CH0078) has full activity defs too: `assign`/`reveal`/`builder`
+for characters, indexes and declarations, `buffer` for `scanf("%s")` versus `fgets` (which also draws the stored
+string box by box), `trace` for string loops and the `<string.h>` functions (a char array is shown as its text),
+`lab` for `strlen`/`strcmp`/`strchr` and character changes, `error` for the single-quote mistake, and `order`
+with `noRun: true` for plain-English steps. Stage 8 (Searching & Sorting, CH0079-CH0093) also has full activity defs: `trace` for
+linear/binary search and bubble/selection/insertion sort, `assign`/`reveal`/`builder`/`order`/`predict` for the
+concept work (`order` activities that sequence plain-English algorithm steps set `noRun: true`). The remaining
+chapters (Functions, Pointers) still have no Learn content. Nothing here needs to change for them: when their Learn pages exist, add `defs/chNNNN.js` files
+that point at the real page headings and reuse the same kinds (`trace` for sorting steps, `lab`/`run` for
+small experiments, `order`/`fill` for structure). Kinds for those topics can be added to `kinds-visual.js`
+by registering `ClickLearn.kind(name, {...})`. Do not write activities for chapters whose Learn text does
+not exist yet.

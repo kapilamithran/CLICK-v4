@@ -1,0 +1,120 @@
+ClickChapter.define({
+  chapter: "CH0088",
+  stage: "STG009",
+  title: "Sorting Basics",
+  goal: "Explain what sorting means, why organized data is useful, and name the three sorting algorithms C programs commonly use.",
+
+  references: [
+    { title: "C Program to Sort Array Elements in Ascending & Descending Order | Learn Coding", channel: "Learn Coding", url: "https://www.youtube.com/watch?v=D53l7rRPlSs" },
+    { title: "Bubble sort in 2 minutes", channel: "Michael Sambol", url: "https://www.youtube.com/watch?v=xli_FI7CuzA" },
+  ],
+
+  glossary: {
+    sorting: {
+      term: "sorting",
+      short: "Rearranging existing data into a required order.",
+      explain: "Sorting does not change what values you have; it only changes the order they sit in. The same values end up in different positions.",
+      example: "40 10 30 20 sorted becomes 10 20 30 40 - same four numbers, new order.",
+      remember: "Sorting = rearranging, not changing, the data.",
+    },
+    ascending: {
+      term: "ascending order",
+      short: "Arranged from the smallest value to the largest.",
+      explain: "In ascending order, each value is greater than or equal to the one before it.",
+      example: "10 20 30 40 is in ascending order.",
+    },
+    algorithm: {
+      term: "algorithm",
+      short: "A set of step-by-step instructions a program follows to solve a problem.",
+      explain: "C does not automatically reorganize an array. A programmer has to provide the exact steps - the algorithm - that move values into their correct order.",
+      example: "Bubble Sort, Selection Sort and Insertion Sort are three different sorting algorithms.",
+    },
+  },
+
+  slides: [
+    {
+      id: "s1", kind: "explorer",
+      title: "Explore the code",
+      objective: "See that sorting keeps the same values and only rearranges their positions.",
+      glossary: ["sorting", "ascending"],
+      minTaps: 2,
+      code: [
+        "int «before|before[] = {40,10,30,20}»;",
+        "int «after|after[] = {10,20,30,40}»;",
+        "for (int i = 0; «bound|i < 4»; i++)",
+        "  printf(\"%d \", after[i]);",
+      ].join("\n"),
+      targets: {
+        before: { title: "before[] (unsorted)", explain: "These four values, 40, 10, 30 and 20, are in no particular order.", example: "before[0] is 40, before[1] is 10.", terms: ["sorting"] },
+        after: { title: "after[] (same values, sorted)", explain: "10, 20, 30, 40 are exactly the same four numbers as before[] - just rearranged into ascending order. Nothing was added or removed.", example: "after[0] is 10, after[3] is 40.", terms: ["sorting", "ascending"] },
+        bound: { title: "i < 4 (matches the array's size)", explain: "The loop bound matches how many elements the array holds, so every value from index 0 to 3 gets printed once.", example: "4 elements -> indexes 0, 1, 2, 3.", terms: ["sorting"] },
+      },
+    },
+    {
+      id: "s2", kind: "activity", activity: "CH0088.p1.sorted-or-not",
+      title: "Sorted or unsorted?",
+      objective: "Decide whether a set of values is already sorted.",
+      glossary: ["sorting"],
+      lead: "{{sorting|Sorting}} arranges data in a particular order.",
+      takeaway: "40 10 30 20 is unsorted; 10 20 30 40 is sorted in ascending order - the same four values, rearranged.",
+    },
+    {
+      id: "s3", kind: "question", question: "Q000439",
+      title: "What does sorting change?",
+      objective: "Say what changes about an array's values when it is sorted.",
+      glossary: ["sorting"],
+      takeaway: "Sorting only changes the positions of values, never the values themselves.",
+    },
+    {
+      id: "s4", kind: "activity", activity: "CH0088.p2.why-sort",
+      title: "Why bother sorting?",
+      objective: "See the practical benefits organized data brings.",
+      glossary: ["sorting"],
+      takeaway: "Sorted data is easier to read, easier to analyze (smallest first, largest last), easier to search, and easier to organize.",
+    },
+    {
+      id: "s5", kind: "question", question: "Q000440",
+      title: "A benefit of sorted data",
+      objective: "Say what sorted data makes easier.",
+      glossary: ["sorting"],
+      takeaway: "Some searching methods, such as Binary Search, require the data to already be sorted.",
+    },
+    {
+      id: "s6", kind: "activity", activity: "CH0088.p4.sort-flow",
+      title: "The general sorting flow",
+      objective: "Arrange the steps a sorting algorithm repeats.",
+      glossary: ["algorithm"],
+      lead: "Every sorting {{algorithm}} follows this same overall pattern.",
+      takeaway: "Unsorted data -> compare values -> move/rearrange values -> repeat with more comparisons -> sorted data.",
+    },
+    {
+      id: "s7", kind: "question", question: "Q000441",
+      title: "Fill in the blank",
+      objective: "Complete the definition of ascending order.",
+      glossary: ["ascending"],
+      takeaway: "Ascending order means arranging values from smallest to largest.",
+    },
+    {
+      id: "s8", kind: "activity", activity: "CH0088.p5.match-algorithm",
+      title: "Match each algorithm to its idea",
+      objective: "Match Bubble Sort, Selection Sort and Insertion Sort to their one-line description.",
+      glossary: ["algorithm"],
+      lead: "Each sorting {{algorithm}} has its own strategy.",
+      takeaway: "Bubble Sort compares neighbors, Selection Sort selects the smallest remaining value, Insertion Sort inserts into the correct position.",
+    },
+    {
+      id: "s9", kind: "question", question: "Q000442",
+      title: "Name the algorithm",
+      objective: "Identify which sorting algorithm repeatedly compares neighboring elements.",
+      glossary: ["algorithm"],
+      takeaway: "Bubble Sort is the algorithm that repeatedly compares neighboring elements.",
+    },
+    {
+      id: "s10", kind: "question", question: "Q000443",
+      title: "Does C sort automatically?",
+      objective: "Say whether an ordinary C array sorts itself.",
+      glossary: ["algorithm"],
+      takeaway: "C does not sort an array automatically; a sorting algorithm must be written to rearrange it.",
+    },
+  ],
+});

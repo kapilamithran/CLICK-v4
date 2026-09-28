@@ -1,10 +1,12 @@
 /*
  * CLICK C-subset interpreter (Learn activities).
  *
- * A small, sandboxed interpreter for the C that the Stage 0-5 Learn pages teach:
- * scalar variables (int, char, float, double, bool, const), operators, printf,
+ * A small, sandboxed interpreter for the C that the Stage 0-5 and Stage 6 (Arrays) Learn
+ * pages teach: scalar variables (int, char, float, double, bool, const), operators, printf,
  * scanf/fgets on a simulated stdin, if/else/switch/ternary, for/while/do-while,
- * break/continue, simple functions, char arrays and a few <string.h> helpers.
+ * break/continue, simple functions (including array parameters, passed by reference like
+ * real C), one- and two-dimensional arrays (char arrays as strings) and a few <string.h>
+ * helpers.
  *
  * It is NOT a compiler. It never uses eval/Function, has no access to the DOM,
  * network or file system, and enforces hard step / output / time limits.
@@ -257,28 +259,40 @@
     }
 
     // ------------- statements
+    // { expr, expr, {nested}, ... } - used for array initializers. Nesting one level per
+    // array dimension (e.g. { {10, 20, 30}, {40, 50, 60} } for a [2][3] array) is allowed;
+    // whether the nesting depth actually matches the array's dimensions is checked later,
+    // once the array's own dimensions are known.
+    parseInitList() {
+      const open = this.expect("{");
+      const items = [];
+      if (!this.is("}")) {
+        do {
+          if (this.is("}")) break;
+          items.push(this.is("{") ? this.parseInitList() : this.parseAssign());
+        } while (this.accept(","));
+      }
+      this.expect("}");
+      return { t: "list", items, line: open.line };
+    }
     parseDeclInit(ty) {
       const items = [];
       do {
         let ptr = ty.ptr; while (this.accept("*")) ptr++;
         const nameTok = this.next();
         if (nameTok.t !== "id") this.fail("Expected a variable name.", nameTok);
-        let dim = null, hasBrackets = false;
-        if (this.is("[")) {
+        let dims = [], hasBrackets = false;
+        while (this.is("[")) {
           this.next(); hasBrackets = true;
-          if (!this.is("]")) { const d = this.parseAssign(); dim = d; }
+          dims.push(this.is("]") ? null : this.parseAssign());
           this.expect("]");
-          if (this.is("[")) this.fail("Only one-dimensional arrays are supported in this simulator.");
         }
+        if (dims.length > 2) this.fail("Only one- and two-dimensional arrays are supported in this simulator.");
         let init = null;
         if (this.accept("=")) {
-          if (this.is("{")) {
-            this.next(); const list = [];
-            if (!this.is("}")) { do { if (this.is("}")) break; list.push(this.parseAssign()); } while (this.accept(",")); }
-            this.expect("}"); init = { t: "list", items: list, line: nameTok.line };
-          } else init = this.parseAssign();
+          init = this.is("{") ? this.parseInitList() : this.parseAssign();
         }
-        items.push({ name: nameTok.v, ptr, hasBrackets, dim, init, line: nameTok.line, s: nameTok.s });
+        items.push({ name: nameTok.v, ptr, hasBrackets, dims, init, line: nameTok.line, s: nameTok.s });
       } while (this.accept(","));
       return items;
     }
@@ -386,8 +400,15 @@
         do {
           const pt = this.parseType(); const pn = this.next();
           if (pn.t !== "id") this.fail("Expected a parameter name.", pn);
-          if (this.is("[")) this.fail("Array parameters are not supported in this simulator.");
-          params.push({ ty: pt, name: pn.v });
+          let isArray = false;
+          if (this.is("[")) {
+            this.next();
+            if (!this.is("]")) this.parseAssign(); // a size here is legal C but ignored: arrays decay to a reference
+            this.expect("]");
+            if (this.is("[")) this.fail("Multi-dimensional array parameters are not supported in this simulator.");
+            isArray = true;
+          }
+          params.push({ ty: pt, name: pn.v, isArray });
         } while (this.accept(","));
       }
       this.expect(")");
@@ -523,7 +544,7 @@
   // ------------------------------------------------------------- runtime
   const HEADERS_FOR = {
     printf: "stdio.h", scanf: "stdio.h", fgets: "stdio.h", puts: "stdio.h", putchar: "stdio.h", getchar: "stdio.h", stdin: "stdio.h",
-    strlen: "string.h", strcspn: "string.h", strcmp: "string.h", strcpy: "string.h",
+    strlen: "string.h", strcspn: "string.h", strcmp: "string.h", strcpy: "string.h", strcat: "string.h", strchr: "string.h",
     sqrt: "math.h", pow: "math.h", fabs: "math.h", abs: "stdlib.h", exit: "stdlib.h",
   };
 
@@ -617,7 +638,17 @@
     const showVal = (cell) => {
       const v = cell.val;
       if (v === UNINIT) return "?";
-      if (cell.arr) { const a = v.a; if (cell.ty.base === "char") { let s = ""; for (let i = 0; i < a.length; i++) { if (a[i] === UNINIT) { s += "?"; continue; } if (a[i] === 0) { s += "\\0"; break; } s += String.fromCharCode(a[i] & 255).replace("\n", "\\n"); } return '"' + s + '"'; } return "[" + a.map((x) => (x === UNINIT ? "?" : x)).join(", ") + "]"; }
+      if (cell.arr) {
+        const a = v.a; const dims = cell.dims || [a.length];
+        if (cell.ty.base === "char" && dims.length === 1) { let s = ""; for (let i = 0; i < a.length; i++) { if (a[i] === UNINIT) { s += "?"; continue; } if (a[i] === 0) { s += "\\0"; break; } s += String.fromCharCode(a[i] & 255).replace("\n", "\\n"); } return '"' + s + '"'; }
+        const render = (offset, dimIdx) => {
+          const stride = dims.slice(dimIdx + 1).reduce((x, y) => x * y, 1);
+          const parts = [];
+          for (let k = 0; k < dims[dimIdx]; k++) parts.push(dimIdx === dims.length - 1 ? (a[offset + k] === UNINIT ? "?" : a[offset + k]) : render(offset + k * stride, dimIdx + 1));
+          return "[" + parts.join(", ") + "]";
+        };
+        return render(0, 0);
+      }
       if (v && v.t === "str") return v.v === null ? "NULL" : '"' + v.v.replace(/\n/g, "\\n") + '"';
       if (cell.ty.base === "char") return "'" + (v === 10 ? "\\n" : v === 0 ? "\\0" : String.fromCharCode(v & 255)) + "' (" + v + ")";
       if (cell.ty.base === "bool") return v ? "true (1)" : "false (0)";
@@ -627,7 +658,7 @@
     };
     const snapshot = () => {
       const seen = new Map();
-      for (let i = 0; i < scopes.length; i++) for (const [name, cell] of scopes[i]) { if (cell.hidden) continue; seen.delete(name); seen.set(name, { name, type: (cell.ty.base + (cell.ty.ptr ? " *" : "") + (cell.arr ? "[" + cell.val.a.length + "]" : "")), value: showVal(cell), scope: i }); }
+      for (let i = 0; i < scopes.length; i++) for (const [name, cell] of scopes[i]) { if (cell.hidden) continue; seen.delete(name); seen.set(name, { name, type: (cell.ty.base + (cell.ty.ptr ? " *" : "") + (cell.arr ? (cell.dims || [cell.val.a.length]).map((d) => "[" + d + "]").join("") : "")), value: showVal(cell), scope: i }); }
       return [...seen.values()];
     };
     const rec = (kind, node, extra) => {
@@ -654,6 +685,18 @@
         const s = readStr(args[1]); const a = args[0].v.a;
         if (s.length + 1 > a.length) throw new CError("ub", "strcpy would write past the end of the array (undefined behavior).", line);
         for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); a[s.length] = 0; return args[0];
+      },
+      strcat(args, line) {
+        if (args[0].t !== "arr") throw new CError("unsupported", "strcat needs a char array as its destination.", line);
+        const a = args[0].v.a, s = readStr(args[0]) + readStr(args[1]);
+        if (s.length + 1 > a.length) throw new CError("ub", "strcat would write past the end of the array (undefined behavior): the joined text needs " + (s.length + 1) + " slots but the array has " + a.length + ".", line);
+        for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); a[s.length] = 0; return args[0];
+      },
+      strchr(args) {
+        const s = readStr(args[0]), c = args[1].v & 255;
+        if (c === 0) return V("str", "");
+        const at = s.indexOf(String.fromCharCode(c));
+        return V("str", at < 0 ? null : s.slice(at));
       },
       fgets(args, line) {
         if (args[0].t !== "arr") throw new CError("unsupported", "fgets needs a char array as its first argument.", line);
@@ -726,13 +769,28 @@
       return cell;
     };
 
+    // node is a chain of `index` nodes ending in an `id` (matrix[i][j] parses as
+    // index(index(id(matrix), i), j)). Walk down to the base variable, then require exactly
+    // as many [ ] as it has dimensions (no partial indexing - a[i] on a 2D array is a row
+    // pointer in real C, which this simulator does not model) and fold them into one flat
+    // offset, since a cell's storage is always a single flat array.
     const getElement = (node, forWrite) => {
-      const cell = lookup(node.e.name, node.line);
-      if (!cell.arr) throw new CError("runtime", "'" + node.e.name + "' is not an array.", node.line);
-      const iv = evalE(node.i); if (iv.t !== "int") throw new CError("runtime", "An array index must be a whole number.", node.line);
-      const a = cell.val.a;
-      if (iv.v < 0 || iv.v >= a.length) throw new CError("ub", "Index " + iv.v + " is outside the array '" + node.e.name + "' (valid indexes are 0 to " + (a.length - 1) + "). Real C would read or write outside the array (undefined behavior).", node.line);
-      return { cell, arrIdx: iv.v, a };
+      const indices = [];
+      let cur = node;
+      while (cur.t === "index") { indices.unshift(cur.i); cur = cur.e; }
+      if (cur.t !== "id") throw new CError("runtime", "Only an array variable can be indexed.", node.line);
+      const cell = lookup(cur.name, node.line);
+      if (!cell.arr) throw new CError("runtime", "'" + cur.name + "' is not an array.", node.line);
+      const dims = cell.dims;
+      if (indices.length !== dims.length) throw new CError("unsupported", "'" + cur.name + "' has " + dims.length + " dimension(s); index it with " + cur.name + dims.map(() => "[i]").join("") + ".", node.line);
+      let offset = 0;
+      for (let d = 0; d < dims.length; d++) {
+        const iv = evalE(indices[d]);
+        if (iv.t !== "int") throw new CError("runtime", "An array index must be a whole number.", node.line);
+        if (iv.v < 0 || iv.v >= dims[d]) throw new CError("ub", "Index " + iv.v + " is outside " + (dims.length > 1 ? "dimension " + (d + 1) + " of " : "") + "'" + cur.name + "' (valid indexes are 0 to " + (dims[d] - 1) + "). Real C would read or write outside the array (undefined behavior).", node.line);
+        offset = offset * dims[d] + iv.v;
+      }
+      return { cell, arrIdx: offset, a: cell.val.a };
     };
 
     const arith = (op, l, r, line) => {
@@ -766,7 +824,7 @@
         case "num": return n.ty;
         case "str": return "str";
         case "id": { const c = lookup(n.name, n.line); return c.arr ? "arr" : c.ty.ptr ? "str" : (c.ty.base === "float" || c.ty.base === "double") ? c.ty.base : "int"; }
-        case "index": { const c = lookup(n.e.name, n.line); return (c.ty.base === "float" || c.ty.base === "double") ? c.ty.base : "int"; }
+        case "index": { let cur = n; while (cur.t === "index") cur = cur.e; const c = lookup(cur.name, n.line); return (c.ty.base === "float" || c.ty.base === "double") ? c.ty.base : "int"; }
         case "cast": return (n.ty.base === "float" || n.ty.base === "double") ? n.ty.base : "int";
         case "bin": { if (["<", "<=", ">", ">=", "==", "!=", "&&", "||"].includes(n.op)) return "int"; if (n.op === "<<" || n.op === ">>") return "int"; const a = staticType(n.l), b = staticType(n.r); const k = Math.max(rank(a), rank(b)); return k === 3 ? "double" : k === 2 ? "float" : "int"; }
         case "un": return n.op === "!" ? "int" : staticType(n.e);
@@ -842,6 +900,10 @@
           if (n.op === "||") { const l = evalE(n.l); if (truthy(l)) return V("int", 1); return V("int", truthy(evalE(n.r)) ? 1 : 0); }
           const l = evalE(n.l), r = evalE(n.r);
           if (["<", "<=", ">", ">=", "==", "!="].includes(n.op)) {
+            if ((n.op === "==" || n.op === "!=") && ((l.t === "str" && r.t === "int" && r.v === 0) || (r.t === "str" && l.t === "int" && l.v === 0))) {
+              const isNull = (l.t === "str" ? l.v : r.v) === null; // comparing a char * with NULL (what strchr returns when it finds nothing)
+              return V("int", (n.op === "==") === isNull ? 1 : 0);
+            }
             if (l.t === "str" || r.t === "str" || l.t === "arr" || r.t === "arr") throw new CError("unsupported", "Comparing strings with " + n.op + " compares addresses in real C. Use strcmp instead.", n.line);
             let a = l.v, b = r.v, res;
             switch (n.op) { case "<": res = a < b; break; case "<=": res = a <= b; break; case ">": res = a > b; break; case ">=": res = a >= b; break; case "==": res = a === b; break; case "!=": res = a !== b; break; }
@@ -912,7 +974,16 @@
         const argv = n.args.map((a) => evalE(a));
         const saved = scopes.slice(), savedScope = scope;
         scopes.length = 1; scope = globalScope; pushScope();
-        f.params.forEach((p, i) => { scope.set(p.name, { ty: p.ty, arr: false, val: p.ty.ptr ? (argv[i].t === "arr" ? V("str", readStr(argv[i])) : argv[i]) : convertTo(argv[i], p.ty.base, n.line).v }); });
+        f.params.forEach((p, i) => {
+          if (p.isArray) {
+            if (argv[i].t !== "arr") throw new CError("runtime", "'" + n.name + "' expects an array for its '" + p.name + "' parameter.", n.line);
+            // A real C array parameter decays to a pointer: the callee shares the caller's
+            // storage (`.val` is the same {a:[...]} object), so writes are visible after the call.
+            scope.set(p.name, { ty: p.ty, arr: true, dims: argv[i].cell.dims, val: argv[i].v });
+          } else {
+            scope.set(p.name, { ty: p.ty, arr: false, val: p.ty.ptr ? (argv[i].t === "arr" ? V("str", readStr(argv[i])) : argv[i]) : convertTo(argv[i], p.ty.base, n.line).v });
+          }
+        });
         rec("call", n, { note: "Call " + n.name + "(" + n.args.map((a) => src.slice(a.s, a.en)).join(", ") + ")" });
         const sig = execBlockBody(f.body.body);
         scopes.length = 0; saved.forEach((s) => scopes.push(s)); scope = savedScope;
@@ -929,6 +1000,28 @@
     }
 
     // ---- statements
+    // Fills a flat array from a (possibly nested) initializer list, C-style: missing trailing
+    // values default to 0 (a real, taught behaviour - see Array3's partial-initialization
+    // slide), and one { } level is required per dimension beyond the last.
+    const buildArrayFromInit = (dims, initNode, base, line) => {
+      const total = dims.reduce((a, b) => a * b, 1);
+      const flat = new Array(total).fill(0);
+      const fillDim = (items, dimIdx, offsetBase) => {
+        if (items.length > dims[dimIdx]) throw new CError("syntax", "Too many initial values for the array.", line);
+        const stride = dims.slice(dimIdx + 1).reduce((a, b) => a * b, 1);
+        items.forEach((it, idx) => {
+          if (dimIdx === dims.length - 1) {
+            if (it.t === "list") throw new CError("syntax", "This array does not have another dimension for a nested { }.", line);
+            flat[offsetBase + idx] = convertTo(evalE(it), base, line).v;
+          } else {
+            if (it.t !== "list") throw new CError("syntax", "Expected a nested { } here: this array has more than one dimension.", line);
+            fillDim(it.items, dimIdx + 1, offsetBase + idx * stride);
+          }
+        });
+      };
+      fillDim(initNode.items, 0, 0);
+      return flat;
+    };
     const declare = (d) => {
       const ty = d.ty;
       if (ty.unsupported) throw new CError("unsupported", "The type '" + ty.unsupported + "' is not supported in this simulator yet (use int, char, float, double or bool).", d.line);
@@ -941,11 +1034,30 @@
         if (it.hasBrackets) {
           if (it.ptr) throw new CError("unsupported", "Arrays of pointers are not supported in this simulator.", it.line);
           cell.arr = true;
-          let size = null;
-          if (it.dim) { const dv = evalE(it.dim); if (dv.t !== "int" || dv.v <= 0) throw new CError("syntax", "An array size must be a positive whole number.", it.line); size = dv.v; }
-          if (it.init && it.init.t === "str" && ty.base === "char") { const s = it.init.v; if (size === null) size = s.length + 1; if (s.length + 1 > size) throw new CError("syntax", "The string \"" + s + "\" needs " + (s.length + 1) + " slots (with the end marker) but the array only has " + size + ".", it.line); const a = new Array(size).fill(0); for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); cell.val = { a }; }
-          else if (it.init && it.init.t === "list") { if (size === null) size = it.init.items.length; if (it.init.items.length > size) throw new CError("syntax", "Too many initial values for the array.", it.line); const a = new Array(size).fill(0); it.init.items.forEach((e, i) => { a[i] = convertTo(evalE(e), ty.base, it.line).v; }); cell.val = { a }; }
-          else { if (size === null) throw new CError("syntax", "An array needs a size or initial values.", it.line); cell.val = { a: new Array(size).fill(UNINIT) }; if (it.init) throw new CError("syntax", "Invalid array initializer.", it.line); }
+          const dims = it.dims.map((d) => {
+            if (d == null) return null;
+            const dv = evalE(d);
+            if (dv.t !== "int" || dv.v <= 0) throw new CError("syntax", "An array size must be a positive whole number.", it.line);
+            return dv.v;
+          });
+          if (dims.slice(1).some((n) => n === null)) throw new CError("syntax", "Only an array's first dimension may be left empty.", it.line);
+          if (it.init && it.init.t === "str" && ty.base === "char" && dims.length === 1) {
+            const s = it.init.v; let size = dims[0];
+            if (size === null) size = s.length + 1;
+            if (s.length + 1 > size) throw new CError("syntax", "The string \"" + s + "\" needs " + (s.length + 1) + " slots (with the end marker) but the array only has " + size + ".", it.line);
+            const a = new Array(size).fill(0);
+            for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
+            cell.val = { a }; cell.dims = [size];
+          } else if (it.init && it.init.t === "list") {
+            if (dims[0] === null) dims[0] = it.init.items.length;
+            const flat = buildArrayFromInit(dims, it.init, ty.base, it.line);
+            cell.val = { a: flat }; cell.dims = dims;
+          } else {
+            if (dims.some((n) => n === null)) throw new CError("syntax", "An array needs a size or initial values.", it.line);
+            if (it.init) throw new CError("syntax", "Invalid array initializer.", it.line);
+            const total = dims.reduce((a, b) => a * b, 1);
+            cell.val = { a: new Array(total).fill(UNINIT) }; cell.dims = dims;
+          }
         } else if (it.init) {
           if (it.init.t === "list") throw new CError("syntax", "A single variable cannot be initialised with { }.", it.line);
           const iv = evalE(it.init);

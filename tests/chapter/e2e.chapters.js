@@ -509,8 +509,11 @@ async function main() {
   section("F. Responsive layout and theme contrast (Code Explorer, activity, question, sheet, references)");
   {
     const VIEWPORTS = [[360, 800], [390, 844], [412, 915], [1280, 720], [1440, 900], [1920, 1080]];
-    // simple, datatype, operator (bit visualiser), input (buffer simulator), decision, loop (C interpreter), loop lab, glossary-heavy
-    const REPS = ["CH0031", "CH0036", "CH0044", "CH0047", "CH0052", "CH0056", "CH0058", "CH0035"];
+    // simple, datatype, operator (bit visualiser), input (buffer simulator), decision, loop (C interpreter), loop lab, glossary-heavy,
+    // 2D array (widest code: nested nested-bracket declaration + nested loops), and Searching & Sorting: binary search (while loop
+    // + trace), bubble sort (nested loops + trace), a comparison chapter (reveal/assign/order/builder activities)
+    // REPS=CH0079,CH0080 (env) replaces this list, e.g. to run the layout checks over a whole stage.
+    const REPS = process.env.REPS ? process.env.REPS.toUpperCase().split(",").map((s) => s.trim()).filter((c) => decks[c]) : ["CH0031", "CH0036", "CH0044", "CH0047", "CH0052", "CH0056", "CH0058", "CH0035", "CH0069", "CH0086", "CH0090", "CH0093", "CH0073", "CH0074", "CH0075", "CH0076", "CH0077", "CH0078"];
     const layout = () => {
       const W = document.documentElement.clientWidth, out = [];
       if (document.documentElement.scrollWidth > W + 1) out.push("horizontal scroll " + document.documentElement.scrollWidth + " > " + W);
