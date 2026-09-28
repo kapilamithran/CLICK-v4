@@ -505,6 +505,48 @@ async function main() {
     await ctx.close();
   }
 
+  // ---------------------------------------------------------------- Z. the curriculum structure incl. the content-pending stages
+  section("Z. Number Crunching (Stage 6) and Patterns (Stage 7) are on the map, structure only, between Loops and Arrays");
+  {
+    const SA = require("./structure-app.js");
+    for (const [w, h, theme] of [[390, 844, "light"], [1440, 900, "dark"]]) {
+      const { ctx, page, errors } = await L.open({ tested: SA.through(5), theme }, { width: w, height: h }, { mobile: w < 800 });
+      // The demo dataset only holds chapters that have learning content, so swap in the full curriculum structure (every active stage
+      // and chapter, with the locks the repo's migrations define) and let the real Home renderer draw it.
+      const appState = SA.appFor(SA.S.prerequisites, SA.through(5));
+      await page.evaluate((a) => { app.stages = a.stages; app.chapters = a.chapters; app.stage_progress = a.stage_progress; app.chapter_progress = a.chapter_progress; renderHome(); }, appState);
+      await t("(" + w + "x" + h + " " + theme + ") Home lists the 13 stages in curriculum order: ... Loops, Number Crunching, Patterns, Arrays ...", async () => {
+        const got = await page.evaluate(() => [...document.querySelectorAll(".lp-stage")].map((s) => ({ id: s.dataset.stageSection, status: s.dataset.status, title: s.querySelector(".lp-card-title").textContent, eyebrow: s.querySelector(".lp-eyebrow").textContent, progress: s.querySelector(".lp-progress-text").textContent })));
+        assert.deepEqual(got.map((g) => g.id), SA.CURRICULUM.map((c) => c.id));
+        assert.deepEqual(got.map((g) => g.title), SA.CURRICULUM.map((c) => c.title));
+        got.forEach((g, i) => assert.ok(g.eyebrow.endsWith("Stage " + SA.CURRICULUM[i].no), g.eyebrow));
+        const at = (id) => got.find((g) => g.id === id);
+        assert.equal(at("STG006").status, "completed");
+        assert.equal(at("STG012").status, "locked", "Number Crunching is content-pending"); assert.equal(at("STG012").progress, "0 / 7 chapters completed");
+        assert.notEqual(at("STG013").status, "locked", "Patterns has its content and opens like the other stages"); assert.equal(at("STG013").progress, "0 / 5 chapters completed");
+        assert.notEqual(at("STG007").status, "locked", "Arrays keeps working exactly as before");
+      });
+      await t("(" + w + "x" + h + " " + theme + ") Number Crunching (content pending) says so, shows a neutral chapter label (no invented titles or internal ids), and every slot is locked; Patterns shows its real chapter titles", async () => {
+        for (const [sid, total] of [["STG012", 7]]) {
+          const sec = page.locator('.lp-stage[data-stage-section="' + sid + '"]');
+          assert.match(await sec.locator(".lp-lock-note").innerText(), /content is coming soon/i);
+          await sec.locator(".lp-toggle").click();
+          const nodes = await sec.locator(".lp-node").evaluateAll((ns) => ns.map((n) => ({ title: n.querySelector(".lp-title").textContent, aria: n.getAttribute("aria-label"), locked: n.disabled || /locked/i.test(n.getAttribute("aria-label") || "") })));
+          assert.equal(nodes.length, total);
+          nodes.forEach((n, i) => { assert.equal(n.title, (i + 1) + ". Content coming soon"); assert.ok(n.locked, n.aria); assert.ok(!/NUMBER_CRUNCHING_CHAPTER|PATTERNS_CHAPTER/.test(n.aria + n.title)); });
+        }
+      });
+      await t("(" + w + "x" + h + " " + theme + ") tapping a content-pending chapter explains why it is locked and opens nothing; the page has no horizontal overflow", async () => {
+        await page.locator('.lp-node[data-chapter="CH0117"]').click({ force: true }); // aria-disabled: Playwright would wait forever, a real tap reaches the handler
+        assert.equal(await page.locator("#testPage:not(.hidden)").count(), 0, "no chapter run opened");
+        assert.equal(await page.locator("#home.active").count(), 1);
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), "horizontal page overflow");
+      });
+      await t("(" + w + "x" + h + " " + theme + ") no JS errors", async () => noErrors(errors));
+      await ctx.close();
+    }
+  }
+
   await L.stop(S);
   L.finish();
 }

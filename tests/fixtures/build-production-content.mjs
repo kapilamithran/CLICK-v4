@@ -81,4 +81,22 @@ const out = {
   settings: (await rows("select * from settings")).filter((s) => ["DEFAULT_HEARTS", "QUESTIONS_PER_CHAPTER"].includes(s.key)),
 };
 fs.writeFileSync(OUT, JSON.stringify(out));
+
+// The curriculum STRUCTURE, including stages whose chapters have no learning content yet (placeholders): every active stage
+// and chapter, the prerequisite rows the repo's migrations define, and how much content each chapter has. Used by
+// tests/home/structure.test.js. (The live prerequisite rows entered directly in the database are not in the repo.)
+const activeStages = await rows(`select stage_id, stage_no, title, "order" from stages where active order by "order"`);
+const allChapters = await rows(`select chapter_id, stage_id, chapter_no, title, "order" from chapters where active and stage_id in (select stage_id from stages where active) order by "order", chapter_id`);
+const structure = {
+  _about: "Every active stage and chapter (including content-less placeholders) after applying supabase/migrations to the CSV seed; produced by build-production-content.mjs. Used by tests/home/structure.test.js.",
+  stages: activeStages,
+  chapters: allChapters,
+  prerequisites: await rows(`select target_id, prerequisite_id, condition, description, active from prerequisites order by target_id, prerequisite_id`),
+  content: Object.fromEntries(allChapters.map((c) => [c.chapter_id, {
+    learn: learn.filter((l) => l.chapter_id === c.chapter_id && (l.pages_text || "").trim()).length,
+    questions: (questions.filter((q) => q.chapter_id === c.chapter_id)).length,
+  }])),
+};
+fs.writeFileSync(path.join(path.dirname(OUT), "curriculum-structure.json"), JSON.stringify(structure));
+console.log("wrote tests/fixtures/curriculum-structure.json: " + activeStages.length + " stages, " + allChapters.length + " chapters");
 console.log("wrote " + path.relative(ROOT, OUT) + ": " + chapters.length + " chapters, " + questions.length + " questions, " + out.options.length + " options");

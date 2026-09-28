@@ -65,6 +65,10 @@
 .ce-progress{margin:10px 2px 0;font-size:13px;font-weight:700;color:var(--muted)}
 .ce-progress.is-done{color:var(--accent)}
 @media (max-width:800px){.ce-code{font-size:13px;padding:22px 10px 12px}}
+/* the Explorer accepts lines of up to 44 columns; at 13px only about 40 fit in a 360-390px phone, so a long line wrapped and its tap target dropped
+   onto a new line without its indentation. One step smaller keeps 44 columns on one line from 360px up. */
+@media (max-width:420px){.ce-code{font-size:12px;padding:22px 8px 12px}}
+@media (max-width:380px){.ce-code{font-size:11px}}
 
 /* ---------------------------------------------------------------- slide chrome (inside the existing test page) */
 /* the slide progress track was the same colour as the page, so it only appeared once it had started to fill */

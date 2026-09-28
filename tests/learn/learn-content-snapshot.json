@@ -387,7 +387,7 @@
   },
   "CH0062": {
    "stage": "STG007",
-   "stage_no": 6,
+   "stage_no": 8,
    "title": "Introduction to Array",
    "headings": [
     "What is an Array?",
@@ -399,7 +399,7 @@
   },
   "CH0063": {
    "stage": "STG007",
-   "stage_no": 6,
+   "stage_no": 8,
    "title": "Array Indexing and Accessing Element",
    "headings": [
     "What is Array Indexing?",
@@ -411,7 +411,7 @@
   },
   "CH0064": {
    "stage": "STG007",
-   "stage_no": 6,
+   "stage_no": 8,
    "title": "Initializing Array",
    "headings": [
     "What is Array Initialization?",
@@ -423,7 +423,7 @@
   },
   "CH0065": {
    "stage": "STG007",
-   "stage_no": 6,
+   "stage_no": 8,
    "title": "Combining Loops with Array",
    "headings": [
     "What is Combining Loops with Arrays?",
@@ -435,7 +435,7 @@
   },
   "CH0066": {
    "stage": "STG007",
-   "stage_no": 6,
+   "stage_no": 8,
    "title": "Out-of-Bounds Errors & Safety",
    "headings": [
     "What is an Out-of-Bounds Error?",
@@ -447,7 +447,7 @@
   },
   "CH0067": {
    "stage": "STG007",
-   "stage_no": 6,
+   "stage_no": 8,
    "title": "Basic Array Operations- Math & Metric",
    "headings": [
     "What are Basic Array Operations?",
@@ -459,7 +459,7 @@
   },
   "CH0068": {
    "stage": "STG007",
-   "stage_no": 6,
+   "stage_no": 8,
    "title": "Searching in an Array",
    "headings": [
     "What is Searching in an Array?",
@@ -471,7 +471,7 @@
   },
   "CH0069": {
    "stage": "STG007",
-   "stage_no": 6,
+   "stage_no": 8,
    "title": "Introduction to Multi-Dimensional Arrays",
    "headings": [
     "What is a Multi-Dimensional Array?",
@@ -483,7 +483,7 @@
   },
   "CH0070": {
    "stage": "STG007",
-   "stage_no": 6,
+   "stage_no": 8,
    "title": "Working with 2D Array",
    "headings": [
     "What is Working with a 2D Array?",
@@ -495,7 +495,7 @@
   },
   "CH0071": {
    "stage": "STG007",
-   "stage_no": 6,
+   "stage_no": 8,
    "title": "Character Array (Introduction to Strings)",
    "headings": [
     "What is a Character Array?",
@@ -507,7 +507,7 @@
   },
   "CH0072": {
    "stage": "STG007",
-   "stage_no": 6,
+   "stage_no": 8,
    "title": "Arrays and Functions",
    "headings": [
     "What are Arrays and Functions?",
@@ -519,7 +519,7 @@
   },
   "CH0116": {
    "stage": "STG007",
-   "stage_no": 6,
+   "stage_no": 8,
    "title": "Capstone Project: Using Arrays",
    "headings": [
     "Capstone Project: Using Arrays",
@@ -531,7 +531,7 @@
   },
   "CH0079": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Searching Basics",
    "headings": [
     "What is Searching?",
@@ -543,7 +543,7 @@
   },
   "CH0080": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Linear Search",
    "headings": [
     "Meet Linear Search",
@@ -555,7 +555,7 @@
   },
   "CH0081": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Linear Search Algorithm",
    "headings": [
     "From Idea to Algorithm",
@@ -567,7 +567,7 @@
   },
   "CH0082": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Linear Search with Arrays",
    "headings": [
     "Connecting Linear Search with Arrays",
@@ -579,7 +579,7 @@
   },
   "CH0083": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Search Occurrence & Count",
    "headings": [
     "What Is an Occurrence?",
@@ -591,7 +591,7 @@
   },
   "CH0084": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Binary Search Basics",
    "headings": [
     "Meet Binary Search",
@@ -603,7 +603,7 @@
   },
   "CH0085": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Binary Search Algorithm",
    "headings": [
     "From Binary Search Idea to Algorithm",
@@ -615,7 +615,7 @@
   },
   "CH0086": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Binary Search with Arrays",
    "headings": [
     "Setting Up Binary Search with an Array",
@@ -627,7 +627,7 @@
   },
   "CH0087": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Linear Search vs Binary Search (Quick Recap)",
    "headings": [
     "Understanding Linear Search",
@@ -639,7 +639,7 @@
   },
   "CH0088": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Sorting Basics",
    "headings": [
     "Understanding Sorting",
@@ -651,7 +651,7 @@
   },
   "CH0089": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Sorting in Ascending & Descending Order",
    "headings": [
     "Understanding Ascending Order",
@@ -663,7 +663,7 @@
   },
   "CH0090": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Bubble Sort",
    "headings": [
     "Understanding Bubble Sort",
@@ -675,7 +675,7 @@
   },
   "CH0091": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Selection Sort",
    "headings": [
     "Understanding Selection Sort",
@@ -687,7 +687,7 @@
   },
   "CH0092": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Insertion Sort",
    "headings": [
     "Understanding Insertion Sort",
@@ -699,7 +699,7 @@
   },
   "CH0093": {
    "stage": "STG009",
-   "stage_no": 8,
+   "stage_no": 10,
    "title": "Comparing Sorting Methods",
    "headings": [
     "Three Sorting Methods",
@@ -711,7 +711,7 @@
   },
   "CH0073": {
    "stage": "STG008",
-   "stage_no": 7,
+   "stage_no": 9,
    "title": "String Basics & Declaration",
    "headings": [
     "What is a String?",
@@ -723,7 +723,7 @@
   },
   "CH0074": {
    "stage": "STG008",
-   "stage_no": 7,
+   "stage_no": 9,
    "title": "String Input & Output",
    "headings": [
     "Reading a String",
@@ -735,7 +735,7 @@
   },
   "CH0075": {
    "stage": "STG008",
-   "stage_no": 7,
+   "stage_no": 9,
    "title": "Accessing & Traversing Strings",
    "headings": [
     "String Indexing",
@@ -747,7 +747,7 @@
   },
   "CH0076": {
    "stage": "STG008",
-   "stage_no": 7,
+   "stage_no": 9,
    "title": "String Length & Basic Operations",
    "headings": [
     "Finding String Length",
@@ -759,7 +759,7 @@
   },
   "CH0077": {
    "stage": "STG008",
-   "stage_no": 7,
+   "stage_no": 9,
    "title": "String Library Functions",
    "headings": [
     "strcpy()",
@@ -771,7 +771,7 @@
   },
   "CH0078": {
    "stage": "STG008",
-   "stage_no": 7,
+   "stage_no": 9,
    "title": "Basic String Programs",
    "headings": [
     "Find the Length of a String",
@@ -783,7 +783,7 @@
   },
   "CH0094": {
    "stage": "STG010",
-   "stage_no": 9,
+   "stage_no": 11,
    "title": "What is a Function?",
    "headings": [
     "What Is a Function?",
@@ -795,7 +795,7 @@
   },
   "CH0095": {
    "stage": "STG010",
-   "stage_no": 9,
+   "stage_no": 11,
    "title": "Creating and Calling a Function",
    "headings": [
     "Creating and Calling a Function",
@@ -807,7 +807,7 @@
   },
   "CH0096": {
    "stage": "STG010",
-   "stage_no": 9,
+   "stage_no": 11,
    "title": "Functions with Parameters",
    "headings": [
     "What Are Parameters?",
@@ -819,7 +819,7 @@
   },
   "CH0097": {
    "stage": "STG010",
-   "stage_no": 9,
+   "stage_no": 11,
    "title": "Functions with Return Values",
    "headings": [
     "What Is a Return Value?",
@@ -831,7 +831,7 @@
   },
   "CH0098": {
    "stage": "STG010",
-   "stage_no": 9,
+   "stage_no": 11,
    "title": "Types of Functions",
    "headings": [
     "What Are the Types of Functions?",
@@ -843,7 +843,7 @@
   },
   "CH0099": {
    "stage": "STG010",
-   "stage_no": 9,
+   "stage_no": 11,
    "title": "Multiple Parameters and Arguments",
    "headings": [
     "What Are Multiple Parameters?",
@@ -855,7 +855,7 @@
   },
   "CH0100": {
    "stage": "STG010",
-   "stage_no": 9,
+   "stage_no": 11,
    "title": "Local and Global Variables",
    "headings": [
     "What Are Local and Global Variables?",
@@ -867,7 +867,7 @@
   },
   "CH0101": {
    "stage": "STG010",
-   "stage_no": 9,
+   "stage_no": 11,
    "title": "Functions with Arrays and Strings",
    "headings": [
     "What Are Functions with Arrays and Strings?",
@@ -879,7 +879,7 @@
   },
   "CH0102": {
    "stage": "STG010",
-   "stage_no": 9,
+   "stage_no": 11,
    "title": "Recursive Functions",
    "headings": [
     "What Is a Recursive Function?",
@@ -887,6 +887,66 @@
     "Base Case and Recursive Case",
     "Recursion Flowchart",
     "Recap: Recursion"
+   ]
+  },
+  "CH0124": {
+   "stage": "STG013",
+   "stage_no": 7,
+   "title": "Pattern Basics & Simple Patterns",
+   "headings": [
+    "What Are Patterns?",
+    "Pattern Logic",
+    "Basic Nested Loop Structure",
+    "Increasing & Decreasing Star Patterns",
+    "Common Beginner Mistakes"
+   ]
+  },
+  "CH0125": {
+   "stage": "STG013",
+   "stage_no": 7,
+   "title": "Number & Character Patterns",
+   "headings": [
+    "Increasing Number Patterns",
+    "Repeated Number Patterns",
+    "Continuous Number Patterns",
+    "Character Patterns",
+    "Using Loop Variables in Patterns"
+   ]
+  },
+  "CH0126": {
+   "stage": "STG013",
+   "stage_no": 7,
+   "title": "Spaces, Alignment & Pyramids",
+   "headings": [
+    "Why Do Spaces Matter?",
+    "Right-Aligned Triangle",
+    "Space + Star Logic",
+    "Full Pyramid",
+    "Pyramid Formulas"
+   ]
+  },
+  "CH0127": {
+   "stage": "STG013",
+   "stage_no": 7,
+   "title": "Hollow Patterns & Conditions",
+   "headings": [
+    "Understanding Hollow Patterns",
+    "Border Conditions",
+    "Hollow Triangle",
+    "X Pattern",
+    "Pattern Conditions"
+   ]
+  },
+  "CH0128": {
+   "stage": "STG013",
+   "stage_no": 7,
+   "title": "Combining Patterns & Problem Solving",
+   "headings": [
+    "Combining Patterns",
+    "Diamond Pattern",
+    "Number Pyramid Patterns",
+    "How to Analyze Any Pattern",
+    "Pattern Problem-Solving Framework"
    ]
   }
  }

@@ -45,14 +45,16 @@
     });
   };
 
-  function outputView(api, res, label) {
-    var box = h("div", { class: "la-outbox" }, h("div", { class: "la-outlabel", text: label || "Output" }));
+  // Activities that set `spaces: true` (pattern programs, where alignment is made of spaces) get a "Show spaces as ·" switch on their output.
+  function spaceState(d) { if (!d.spaces) return null; var st = { spaces: true, spacesOn: true, onSpaces: function (v) { st.spacesOn = v; } }; return st; }
+  function outputView(api, res, label, sp) {
+    var box;
     if (res.stdout || res.ok) {
       // A runaway program (for example a recursion with no base case) can print a wall of text; show the start and say so.
       var text = res.stdout || "(the program printed nothing)", MAX_SHOWN = 300, cut = text.length > MAX_SHOWN;
-      box.appendChild(h("pre", { class: "la-out", text: cut ? text.slice(0, MAX_SHOWN).replace(/\S*$/, "").replace(/\s+$/, "") + " …" : text }));
+      box = api.outBox(cut ? text.slice(0, MAX_SHOWN).replace(/\S*$/, "").replace(/\s+$/, "") + " …" : text, label, res.stdout ? sp : null);
       if (cut) box.appendChild(h("p", { class: "la-note", text: "The program printed " + text.length + " characters before it stopped. Only the start is shown." }));
-    }
+    } else box = h("div", { class: "la-outbox" }, h("div", { class: "la-outlabel", text: label || "Output" }));
     if (res.error) box.appendChild(h("div", { class: "la-err", role: "alert", text: friendlyError(res.error) }));
     return box;
   }
@@ -87,7 +89,7 @@
     required: ["code"],
     needs: ["interp"],
     render: function (d, api) {
-      var ta = editor(api, "code", d.code), stdin = null, outHost = h("div");
+      var ta = editor(api, "code", d.code), stdin = null, outHost = h("div"), sp = spaceState(d);
       if (d.tasks) api.body.appendChild(tasksList(api, d.tasks));
       api.body.appendChild(ta); api.body.appendChild(editorTip());
       if (d.input !== undefined) {
@@ -102,7 +104,7 @@
         CL.exec(ta.value, { input: stdin ? stdin.value : "" }).then(function (res) {
           runBtn.disabled = false; runBtn.textContent = "Run";
           keepFocus(had, runBtn);
-          outHost.textContent = ""; outHost.appendChild(outputView(api, res));
+          outHost.textContent = ""; outHost.appendChild(outputView(api, res, null, sp));
           if (first === null && res.ok) first = res.stdout;
           if (!res.ok) { api.say("soft", "The program did not run.", "Read the message above. It names the line to look at."); return; }
           var g = d.goal, ok = true;
@@ -135,7 +137,7 @@
       return e;
     },
     render: function (d, api) {
-      var values = {}, ctl = h("div", { class: "la-controls" }), results = h("div", { class: "la-labout" }), token = 0, timer = null, changes = 0;
+      var sp = spaceState(d), values = {}, ctl = h("div", { class: "la-controls" }), results = h("div", { class: "la-labout" }), token = 0, timer = null, changes = 0;
       function init(c) { return c.type === "toggle" ? (c.checked ? c.on : c.off) : c.value; }
       d.controls.forEach(function (c) {
         var saved = api.draft.get("c_" + c.id, undefined); var val = saved !== undefined ? saved : init(c); values[c.id] = val;
@@ -177,7 +179,7 @@
             if (x.v.label) col.appendChild(h("div", { class: "la-varlabel", text: x.v.label }));
             var pre = api.codeBlock(x.code, { label: "Program" });
             if (x.r.trace) { var hl = {}; x.r.trace.forEach(function (ev) { hl[ev.line] = 1; }); api.setLines(pre, hl, 0); }
-            col.appendChild(pre); col.appendChild(outputView(api, x.r, x.v.label ? "Output" : "Output")); grid.appendChild(col);
+            col.appendChild(pre); col.appendChild(outputView(api, x.r, "Output", sp)); grid.appendChild(col);
           });
           results.appendChild(grid);
           if (d.summary && list[0].r.ok) results.appendChild(h("p", { class: "la-summary", html: api.md(fillTemplate(d.summary, Object.assign({}, values, { out: (list[0].r.stdout.split("\n")[0] || "").trim() }))) }));
@@ -216,7 +218,7 @@
     required: ["code"],
     needs: ["interp"],
     render: function (d, api) {
-      var res = null, i = 0, timer = null, playing = false;
+      var res = null, i = 0, timer = null, playing = false, sp = spaceState(d);
       var codeHost = h("div", { class: "la-codeholder" }), narr = h("div", { class: "la-explain", role: "region", "aria-live": "polite" }), varsHost = h("div", { class: "la-vartable" }), callHost = h("div", { class: "la-callhost" }), outHost = h("div"), counter = h("span", { class: "la-note la-counter" });
       var prev = api.btn("Back", function () { go(i - 1); }, true), next = api.btn("Next step", function () { go(i + 1); }), play = api.btn("Play", function () { togglePlay(); }, true), reset = api.btn("Restart", function () { stop(); go(0); }, true);
       var reduced = root.matchMedia && root.matchMedia("(prefers-reduced-motion: reduce)").matches; if (reduced) play.hidden = true;
@@ -249,7 +251,7 @@
           frames.forEach(function (f, k) { ol.appendChild(h("li", { class: k === frames.length - 1 ? "top" : "", text: f.label })); });
           callHost.appendChild(h("div", { class: "la-outlabel", text: "Calls in progress" })); callHost.appendChild(ol);
         }
-        outHost.textContent = ""; outHost.appendChild(api.outBox(ev ? res.stdout.slice(0, ev.outLen) : "", "Output so far"));
+        outHost.textContent = ""; outHost.appendChild(api.outBox(ev ? res.stdout.slice(0, ev.outLen) : "", "Output so far", sp));
         counter.textContent = "Step " + i + " of " + res.trace.length;
         prev.disabled = i === 0; next.disabled = i >= res.trace.length;
         if (i >= res.trace.length) { api.done(); if (res.error) narr.appendChild(h("div", { class: "la-err", role: "alert", text: friendlyError(res.error) })); else narr.appendChild(h("p", { class: "la-note", text: "The program has finished." })); stop(); }

@@ -1018,6 +1018,120 @@ async function main() {
     }
   }
 
+  // ================================================================ L. Stage 7 (Patterns): output choices keep their spaces, the "Show spaces" switch draws dots
+  section("L. Stage 7 (Patterns): multi-line output choices keep their spaces, and the correct answer is shown the same way after three misses");
+  {
+    const ANY = "#testExercise .ce-target, #testExercise .la, #testExercise .option, #testExercise .test-v11-token, #testExercise .test-code-fill-box, #testTextAnswer, #testExercise p.meta";
+    const goTo = async (page, match) => {
+      for (let g = 0; g < 12; g++) {
+        await page.waitForFunction((sel) => !!document.querySelector(sel), ANY, { timeout: 15000 });
+        const s = await L.slideKind(page);
+        if (match(s)) return s;
+        if (s.kind === "explorer") await L.passExplorer(page);
+        else if (s.kind === "activity") { await page.locator("#testExercise").click({ position: { x: 6, y: 6 } }); if (await page.locator("#testSkip:not([hidden])").count()) await page.locator("#testSkip").click(); await page.locator("#testCheck").click(); }
+        else { await L.answerQuestion(page, s.qid, true); await page.waitForFunction(() => /Correct!/.test(document.getElementById("testFeedbackV11").textContent)); await page.waitForFunction(() => !document.getElementById("testCheck").disabled && /CONTINUE|FINISH/.test(document.getElementById("testCheck").textContent)); await page.locator("#testCheck").click(); }
+      }
+      throw new Error("slide not found");
+    };
+    const RIGHT = ["   *", "  **", " ***", "****"].join("\n");   // Q000555: what the right-aligned triangle really prints for n = 4
+    const { ctx, page, errors } = await openChapter({}, "CH0126", { width: 390, height: 844 }, { mobile: true });
+    await t("Q000555 (right-aligned triangle): every output choice is drawn as preformatted monospace text, so the right-aligned choice is visibly different from the left-aligned one", async () => {
+      await goTo(page, (s) => s.qid === "Q000555");
+      const opts = await page.locator("#testExercise .option").evaluateAll((els) => els.map((e) => ({ cls: e.className, text: e.querySelector(".opt-pre") ? e.querySelector(".opt-pre").textContent : null, ws: e.querySelector(".opt-pre") ? getComputedStyle(e.querySelector(".opt-pre")).whiteSpace : null, mono: e.querySelector(".opt-pre") ? /mono|Menlo|Consolas|courier/i.test(getComputedStyle(e.querySelector(".opt-pre")).fontFamily) : false, first: e.querySelector(".opt-pre") ? e.querySelector(".opt-pre").getBoundingClientRect().width : 0 })));
+      assert.equal(opts.length, 4);
+      opts.forEach((o) => { assert.match(o.cls, /option-pre/); assert.equal(o.ws, "pre"); assert.ok(o.mono, "monospace font"); assert.ok(o.text && o.text.includes("\n"), "keeps its line breaks"); });
+      assert.ok(opts.some((o) => o.text === RIGHT), "the correct choice keeps its leading spaces: " + JSON.stringify(opts.map((o) => o.text)));
+      assert.ok(opts.some((o) => o.text === ["*", "**", "***", "****"].join("\n")), "the left-aligned choice is a different text");
+    });
+    await t("after three wrong choices the correct answer is shown in the same monospace layout (spaces and line breaks intact)", async () => {
+      for (let k = 0; k < 3; k++) {
+        const all = await page.locator("#testExercise .option:not([disabled])").evaluateAll((els) => els.map((e, i) => ({ i, t: e.querySelector(".opt-pre").textContent })));
+        const wrong = all.find((o) => o.t !== RIGHT);
+        await page.locator("#testExercise .option:not([disabled])").nth(wrong.i).click();
+        await page.locator("#testCheck").click();
+        await page.waitForFunction(() => /Not quite|Three attempts|wrong|✗|✓/i.test(document.getElementById("testFeedbackV11").textContent) || document.getElementById("testFeedbackV11").className.includes("show"));
+        if (k < 2) await page.waitForFunction(() => !document.getElementById("testCheck").disabled && document.getElementById("testCheck").textContent.trim() === "CHECK", null, { timeout: 8000 });
+      }
+      await page.waitForSelector("#testFeedbackV11 .feedback-pre", { timeout: 8000 });
+      assert.equal(await page.locator("#testFeedbackV11 .feedback-pre").textContent(), RIGHT);
+    });
+    await t("no JS errors (Patterns output choices)", async () => noErrors(errors));
+    await ctx.close();
+    {
+      const w2 = await openChapter({}, "CH0126", { width: 390, height: 844 }, { mobile: true });
+      const pg = w2.page;
+      await t("CH0126 trace with spaces: 'Show spaces as ·' is on by default, draws a dot over every printed space, keeps the real characters, and stays off once switched off", async () => {
+        await goTo(pg, (s) => s.activity === "CH0126.p2.trace-right-aligned");
+        await pg.waitForSelector("#testExercise .la-counter", { timeout: 15000 });
+        const next = pg.locator("#testExercise button", { hasText: /^Next step$/ });
+        const state = () => pg.evaluate(() => { const box = document.querySelector("#testExercise .la-outbox"), pre = box.querySelector(".la-out"); return { on: box.classList.contains("la-showsp"), checked: box.querySelector(".la-spacetoggle input").checked, text: pre.textContent, dots: pre.querySelectorAll(".la-sp").length, label: box.querySelector(".la-spacetoggle").textContent.trim(), before: getComputedStyle(pre.querySelector(".la-sp") || pre, "::before").content }; });
+        let s0 = await state();
+        for (let i = 0; i < 60 && !/^ +\*/m.test((await state()).text); i++) await next.click();
+        const s1 = await state();
+        assert.equal(s1.label, "Show spaces as ·"); assert.ok(s1.checked && s1.on, "the switch is on by default");
+        assert.ok(s1.dots >= 1, "at least one space is drawn as a dot");
+        assert.equal(s1.dots, (s1.text.match(/ /g) || []).length, "one dot per real space");
+        assert.ok(!s1.text.includes("·"), "the real text still holds spaces, not dots (copying and screen readers are unchanged)");
+        assert.match(s1.before, /·/, "the dot is drawn by the switch's styling");
+        await pg.locator("#testExercise .la-spacetoggle").click();
+        const off = await state(); assert.ok(!off.on && !off.checked, "switched off");
+        await next.click();
+        const after = await state(); assert.ok(!after.on && !after.checked, "the choice is kept when the next step is drawn");
+      });
+      await t("CH0126 lab with spaces: the output panel has the same switch and toggling the lab keeps it", async () => {
+        const w3 = await openChapter({}, "CH0126", { width: 390, height: 844 }, { mobile: true });
+        await goTo(w3.page, (s) => s.activity === "CH0126.p1.spaces-lab");
+        await w3.page.waitForSelector("#testExercise .la-spacetoggle", { timeout: 15000 });
+        const dots = () => w3.page.evaluate(() => document.querySelectorAll("#testExercise .la-outbox .la-sp").length);
+        const before = await dots();
+        await w3.page.locator("#testExercise label.la-switch").first().click();
+        await w3.page.waitForFunction((n) => document.querySelectorAll("#testExercise .la-outbox .la-sp").length !== n, before, { timeout: 8000 });
+        assert.ok((await dots()) !== before, "printing spaces before the stars changes the dots shown");
+        await w3.ctx.close();
+      });
+      await t("no JS errors (spaces switch)", async () => noErrors(w2.errors));
+      await w2.ctx.close();
+    }
+    await t("the test library orders chapters by the curriculum (stage order), not by stage id: Loops, then Patterns (STG013), then Arrays (STG007)", async () => {
+      const seq = [...new Set(L.ORDERED.map((c) => c.stage_id))];
+      assert.deepEqual(seq, fx.stages.slice().sort((a, b) => a.order - b.order).map((s) => s.stage_id));
+      assert.ok(seq.indexOf("STG013") > seq.indexOf("STG006") && seq.indexOf("STG013") < seq.indexOf("STG007"), seq.join(" > "));
+      assert.ok(L.before("CH0062").includes("CH0128") && !L.before("CH0124").includes("CH0062"));
+    });
+    for (const [w, h] of [[360, 800], [390, 844]]) {
+      const errs = [];
+      await t("(" + w + "x" + h + ") Code Explorer programs of up to 44 columns stay on one line each, so no tap target drops below its indentation (CH0127, CH0128, CH0078, CH0087)", async () => {
+        for (const cid of ["CH0127", "CH0128", "CH0078", "CH0087"]) {
+          const w3 = await openChapter({}, cid, { width: w, height: h }, { mobile: true });
+          await w3.page.evaluate(() => document.fonts.ready);
+          await w3.page.waitForTimeout(300);
+          const r = await w3.page.evaluate(() => { const pre = document.querySelector(".ce-code"), code = pre.querySelector("code"), lh = parseFloat(getComputedStyle(pre).lineHeight); return { lines: code.textContent.split("\n").length, visual: Math.round(code.getBoundingClientRect().height / lh) }; });
+          errs.push(...w3.errors);
+          await w3.ctx.close();
+          assert.equal(r.visual, r.lines, cid + " draws " + r.lines + " source lines on " + r.visual + " visual lines at " + w + "px");
+        }
+      });
+      await t("(" + w + "x" + h + ") no JS errors (Explorer width)", async () => noErrors(errs));
+    }
+    {
+      const w4 = await openChapter({}, "CH0128", { width: 390, height: 844 }, { mobile: true });
+      await t("CH0128 diamond trace at 390px: a hyphen operator such as i-- is never split across two lines, and the listing text is unchanged", async () => {
+        await goTo(w4.page, (s) => s.activity === "CH0128.p2.diamond-trace");
+        await w4.page.waitForSelector("#testExercise .la-code .l", { timeout: 15000 });
+        const r = await w4.page.evaluate(() => {
+          const lines = [...document.querySelectorAll("#testExercise .la-code .l")], out = { texts: lines.map((l) => l.textContent), split: [], nb: document.querySelectorAll("#testExercise .la-code .la-nb").length };
+          for (const l of lines) { const nb = l.querySelector(".la-nb"); if (!nb) continue; const rects = [...(() => { const g = document.createRange(); g.selectNodeContents(nb); return g.getClientRects(); })()]; out.split.push(new Set(rects.map((x) => Math.round(x.top))).size > 1); }
+          return out;
+        });
+        assert.ok(r.nb >= 1, "the -- operator is wrapped in a no-break span");
+        assert.ok(r.split.every((s) => s === false), "an operator is split across lines");
+        assert.ok(r.texts.some((t) => t.includes("i >= 1; i--) {")), "the visible text is still the program text: " + JSON.stringify(r.texts.filter((t) => t.includes("i >="))));
+      });
+      await t("no JS errors (listing operators)", async () => noErrors(w4.errors));
+      await w4.ctx.close();
+    }
+  }
+
   await L.stop(S);
   L.finish();
 }

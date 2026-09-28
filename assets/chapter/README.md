@@ -89,8 +89,23 @@ beginner, topic-specific videos from reputable educational channels. Never guess
 
 ## Future chapters
 
-Stage 6 (ARRAYS, CH0062-CH0072 and CH0116), Stage 7 (STRINGS, CH0073-CH0078), Stage 8 (SEARCHING & SORTING,
-CH0079-CH0093) and Stage 9 (FUNCTIONS, CH0094-CH0102) have full decks, following this same shape - see `defs/ch0062.js`,
-`defs/ch0073.js`, `defs/ch0079.js` and `defs/ch0094.js` onward. Stage 10 (POINTERS) still has no Learn content, so it has no decks.
+ARRAYS (STG007, CH0062-CH0072 and CH0116), STRINGS (STG008, CH0073-CH0078), SEARCHING & SORTING (STG009, CH0079-CH0093)
+and FUNCTIONS (STG010, CH0094-CH0102) have full decks, following this same shape - see `defs/ch0062.js`, `defs/ch0073.js`,
+`defs/ch0079.js` and `defs/ch0094.js` onward. POINTERS (STG011) still has no Learn content, so it has no decks.
 When its content exists: add the chapter's questions, then a `defs/chNNNN.js` deck with the same shape. Nothing in
 the player has to change.
+
+### Curriculum order (stage numbers are display metadata, ids are permanent)
+
+The number Home prints ("Stage N") is `stages.stage_no`, and the backend sorts stages by `stages."order"`; progress is keyed by
+`stage_id` / `chapter_id`, which never change. The order is: Foundations 0, Datatypes 1, Operators 2, Input 3, Decision Making 4,
+Loops 5, **NUMBER CRUNCHING 6** (STG012, 7 chapter slots CH0117-CH0123), **PATTERNS 7** (STG013, 5 slots CH0124-CH0128), ARRAYS 8,
+STRINGS 9, SEARCHING & SORTING 10, FUNCTIONS 11, POINTERS 12 (`supabase/migrations/20260929000000_structure_number_crunching_patterns.sql`).
+PATTERNS has its content now (CH0124-CH0128, from assets/Contents/Patterns; content migration 20260929010000, unlock migration 20260929020000).
+Number Crunching is still structure only: its chapters are titled "Content coming soon", have no learn text or questions, and the
+stage carries the usual self-referencing lock row so it shows as locked and can never complete.
+When the real Number Crunching content arrives: (1) a content migration that sets the real chapter titles and adds learn_content,
+questions, options, hints and glossary (as for STRINGS or FUNCTIONS), (2) decks in `defs/` and activities in `assets/learn/defs/`,
+(3) an unlock migration that removes the self-lock row and adds the stage-to-stage rules (Number Crunching after Loops,
+PATTERNS after Number Crunching, ARRAYS after Patterns), then `node tests/fixtures/build-production-content.mjs` and update the
+`CURRICULUM` list in `tests/home/structure-app.js`.

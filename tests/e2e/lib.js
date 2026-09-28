@@ -22,7 +22,10 @@ if (SHOT_DIR) fs.mkdirSync(SHOT_DIR, { recursive: true });
 const fx = JSON.parse(fs.readFileSync(path.join(REPO, "tests", "fixtures", "production-content.json"), "utf8"));
 
 // ------------------------------------------------------------------ content, in the shape the app's demo backend expects
-const ORDERED = fx.chapters.slice().sort((a, b) => (a.stage_id === b.stage_id ? a.order - b.order : a.stage_id.localeCompare(b.stage_id)));
+// Curriculum order: stages by their `order` (stage ids are permanent and no longer sort in curriculum order: PATTERNS is STG013 but sits
+// between Loops and Arrays), then chapters by their order inside the stage. `before()`/`after()` and the demo unlock chain depend on this.
+const STAGE_ORDER = Object.fromEntries(fx.stages.map((s) => [s.stage_id, Number(s.order)]));
+const ORDERED = fx.chapters.slice().sort((a, b) => (a.stage_id === b.stage_id ? a.order - b.order : STAGE_ORDER[a.stage_id] - STAGE_ORDER[b.stage_id]));
 const chaptersOf = (sid) => fx.chapters.filter((c) => c.stage_id === sid).sort((a, b) => a.order - b.order);
 const ids = (sid, from, to) => chaptersOf(sid).slice(from, to).map((c) => c.chapter_id);
 const questionsOf = (cid) => fx.questions.filter((q) => q.chapter_id === cid).sort((a, b) => a.order - b.order);

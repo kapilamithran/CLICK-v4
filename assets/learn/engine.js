@@ -65,7 +65,13 @@
     var pre = h("pre", { class: "la-code" + (opts.numbers === false ? " nonum" : ""), tabindex: "0", "aria-label": opts.label || "Code" });
     var lines = String(text).replace(/\n+$/, "").split("\n");
     lines.forEach(function (ln, i) {
-      pre.appendChild(h("span", { class: "l", "data-n": i + 1, "data-line": i + 1, text: ln.length ? ln : " " }));
+      var line = h("span", { class: "l", "data-n": i + 1, "data-line": i + 1 });
+      // A hyphen is a legal place to break a line, so on a phone `i--` could wrap as `i-` / `-)`. Operators made of a hyphen stay in one piece.
+      (ln.length ? ln.split(/(--|->|-=)/) : [" "]).forEach(function (part, k) {
+        if (!part) return;
+        if (k % 2) line.appendChild(h("span", { class: "la-nb", text: part })); else line.appendChild(document.createTextNode(part));
+      });
+      pre.appendChild(line);
     });
     return pre;
   }
@@ -77,8 +83,26 @@
       spans[i].classList.toggle("cur", cur === n);
     }
   }
-  function outBox(text, label) {
-    var b = h("div", { class: "la-outbox" }, h("div", { class: "la-outlabel", text: label || "Output" }), h("pre", { class: "la-out", text: text == null ? "" : text }));
+  // opts (optional, used by activities that set `spaces: true`): { spacesOn, onSpaces } adds a "Show spaces" switch. With it on, every space is
+  // drawn as a dot over the real space character (the space is still there, so copying and screen readers are unchanged).
+  function outBox(text, label, opts) {
+    var t = text == null ? "" : String(text), pre = h("pre", { class: "la-out" });
+    if (opts && opts.spaces) {
+      var buf = "";
+      for (var i = 0; i < t.length; i++) {
+        if (t.charAt(i) === " ") { if (buf) { pre.appendChild(document.createTextNode(buf)); buf = ""; } pre.appendChild(h("span", { class: "la-sp", text: " " })); }
+        else buf += t.charAt(i);
+      }
+      if (buf) pre.appendChild(document.createTextNode(buf));
+    } else pre.textContent = t;
+    var b = h("div", { class: "la-outbox" }, h("div", { class: "la-outlabel", text: label || "Output" }));
+    if (opts && opts.spaces) {
+      var on = opts.spacesOn !== false, id = "la-sp-" + Math.random().toString(36).slice(2, 9), cb = h("input", { type: "checkbox", id: id, class: "la-check", role: "switch" });
+      cb.checked = on; b.classList.toggle("la-showsp", on);
+      cb.addEventListener("change", function () { b.classList.toggle("la-showsp", cb.checked); if (opts.onSpaces) opts.onSpaces(cb.checked); });
+      b.appendChild(h("label", { class: "la-spacetoggle", for: id }, cb, h("span", { text: "Show spaces as ·" })));
+    }
+    b.appendChild(pre);
     return b;
   }
 
