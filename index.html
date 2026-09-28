@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CLICK v16 — click → learn → practice</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CLICK v16 — click → learn → practice</title><link rel="icon" type="image/png" href="assets/logo/click-logo-icon.png">
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#1f0a45">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1874,7 +1874,7 @@ function scrollLearnToTop(){
 // ---- Learn activity layer (assets/learn/). Interactivity is configuration drawn UNDER the page
 // text: the Learn content is never edited, and activities never touch XP, hearts, Take Test,
 // chapter completion or Next/Back. Nothing loads unless the current page has activities.
-const LEARN_ACTIVITY_LOADER='assets/learn/loader.js?v=6';
+const LEARN_ACTIVITY_LOADER='assets/learn/loader.js?v=8';
 let learnLoaderPromise=null;
 function learnLoadActivityLoader(){
   if(window.ClickLearnLoader)return Promise.resolve();
@@ -2943,6 +2943,7 @@ function selectTestToken(btn){
   if(pos!==-1){
     testState.order.splice(pos,1);btn.disabled=false;
     document.querySelector(`#testOrderAnswer [data-i="${i}"]`)?.remove();
+    btn.focus({preventScroll:true}); // the undo chip just disappeared: keep the keyboard on the line that came back
     return
   }
   const item={i,value:btn.dataset.value,text:btn.textContent};
@@ -2951,7 +2952,11 @@ function selectTestToken(btn){
   chip.type="button";chip.className="test-v11-selected";chip.dataset.i=i;chip.textContent=item.text;
   chip.title="Tap to undo";
   chip.onclick=()=>selectTestToken(btn);
-  $("testOrderAnswer").appendChild(chip)
+  $("testOrderAnswer").appendChild(chip);
+  // a disabled button drops keyboard focus to the page: hand it to the next line still available, or to CHECK when all are used
+  const all=Array.from(document.querySelectorAll(".test-v11-token"));
+  const next=all.slice(all.indexOf(btn)+1).find(x=>!x.disabled)||all.find(x=>!x.disabled)||$("testCheck");
+  next.focus({preventScroll:true})
 }
 function resetTestOrder(){
   testState.order=[];

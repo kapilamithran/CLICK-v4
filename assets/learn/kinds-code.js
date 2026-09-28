@@ -55,11 +55,22 @@
     var ta = h("textarea", { class: "la-editor la-mono", rows: rows || Math.min(16, Math.max(4, initial.split("\n").length + 1)), spellcheck: "false", autocomplete: "off", autocapitalize: "off", "aria-label": "C code you can edit" });
     ta.value = api.draft.get(key, initial);
     ta.addEventListener("input", function () { api.draft.set(key, ta.value); });
+    // Tab indents inside the editor, which would trap a keyboard user (WCAG 2.1.2). Escape releases it: Escape, then Tab, moves on.
+    var tabMoves = false;
+    ta.setAttribute("aria-description", "Tab indents the code. To leave the editor with the keyboard, press Escape and then Tab.");
+    ta.addEventListener("blur", function () { tabMoves = false; });
     ta.addEventListener("keydown", function (e) {
-      if (e.key === "Tab" && !e.shiftKey) { e.preventDefault(); var s = ta.selectionStart; ta.value = ta.value.slice(0, s) + "    " + ta.value.slice(ta.selectionEnd); ta.selectionStart = ta.selectionEnd = s + 4; api.draft.set(key, ta.value); }
+      if (e.key === "Escape") { tabMoves = true; return; }
+      if (e.key === "Tab" && !e.shiftKey) {
+        if (tabMoves) { tabMoves = false; return; }   // let the browser move focus to the next control
+        e.preventDefault(); var s = ta.selectionStart; ta.value = ta.value.slice(0, s) + "    " + ta.value.slice(ta.selectionEnd); ta.selectionStart = ta.selectionEnd = s + 4; api.draft.set(key, ta.value);
+      } else if (e.key !== "Shift" && e.key !== "Tab") tabMoves = false;
     });
     return ta;
   }
+  // A button that is disabled while it works loses keyboard focus; give it back once it is usable again (only if focus was there and nothing else took it).
+  function keepFocus(had, btn) { if (had && (!document.activeElement || document.activeElement === document.body)) btn.focus({ preventScroll: true }); }
+  function editorTip() { return h("p", { class: "la-note la-editor-tip", text: "Keyboard tip: Tab indents your code. To leave the editor, press Esc and then Tab." }); }
   function tasksList(api, tasks) {
     if (!tasks || !tasks.length) return null;
     var ul = h("ul", { class: "la-tasks" }); tasks.forEach(function (t) { ul.appendChild(h("li", { html: api.md(t) })); });
@@ -73,7 +84,7 @@
     render: function (d, api) {
       var ta = editor(api, "code", d.code), stdin = null, outHost = h("div");
       if (d.tasks) api.body.appendChild(tasksList(api, d.tasks));
-      api.body.appendChild(ta);
+      api.body.appendChild(ta); api.body.appendChild(editorTip());
       if (d.input !== undefined) {
         stdin = h("textarea", { class: "la-input la-mono", rows: 2, "aria-label": "Keyboard input for scanf", spellcheck: "false" }); stdin.value = api.draft.get("stdin", d.input);
         stdin.addEventListener("input", function () { api.draft.set("stdin", stdin.value); });
@@ -81,9 +92,11 @@
       }
       var first = null;
       var runBtn = api.btn("Run", function () {
+        var had = document.activeElement === runBtn;
         runBtn.disabled = true; runBtn.textContent = "Running…";
         CL.exec(ta.value, { input: stdin ? stdin.value : "" }).then(function (res) {
           runBtn.disabled = false; runBtn.textContent = "Run";
+          keepFocus(had, runBtn);
           outHost.textContent = ""; outHost.appendChild(outputView(api, res));
           if (first === null && res.ok) first = res.stdout;
           if (!res.ok) { api.say("soft", "The program did not run.", "Read the message above. It names the line to look at."); return; }
@@ -317,6 +330,7 @@
         if (!solHost.firstChild) { solHost.appendChild(h("div", { class: "la-outlabel", text: "One way to solve it" })); solHost.appendChild(api.codeBlock(d.solution, { label: "Solution" })); if (d.solutionExplain) solHost.appendChild(h("p", { html: api.md(d.solutionExplain) })); }
       }
       var check = api.btn("Check my code", function () {
+        var had = document.activeElement === check;
         check.disabled = true; check.textContent = "Checking…";
         var i = 0, bad = null, last = null;
         function nextTest() {
@@ -325,7 +339,7 @@
           CL.exec(ta.value, { input: t.input || "" }).then(function (r) { last = r; if (!r.ok) { bad = { err: r.error }; return finish(); } if (api.normOut(r.stdout) !== api.normOut(t.expected)) { bad = { diff: firstDiff(api.normOut(t.expected), api.normOut(r.stdout)), got: r.stdout }; return finish(); } nextTest(); });
         }
         function finish() {
-          check.disabled = false; check.textContent = "Check my code"; api.state.attempts++; resHost.textContent = "";
+          check.disabled = false; check.textContent = "Check my code"; keepFocus(had, check); api.state.attempts++; resHost.textContent = "";
           var lacking = bad ? [] : missingUses(d, ta.value);
           if (!bad && lacking.length) { resHost.appendChild(api.outBox(last ? last.stdout : "", "Your program's output")); api.say("soft", "The output is right, but not the method yet.", api.md("This challenge asks you to " + lacking.map(function (u) { return u.ask; }).join(" and ") + ". Printing the answer by hand would not help you next time." + String.fromCharCode(10) + "Use a hint if you are stuck. You can also open the solution any time.")); return; }
           if (!bad) { solved = true; resHost.appendChild(api.outBox(last ? last.stdout : "", "Your program's output")); api.say("good", "You solved it.", api.md((d.explanation || "Your program printed exactly what the challenge asked for.") + "\nThe worked solution is now open below.")); api.done(); reveal(); return; }
@@ -339,7 +353,7 @@
       if (!(d.hints && d.hints.length)) hintBtn.hidden = true;
       var showBtn = api.btn("Show the solution", function () { reveal(); api.say("info", "Here is one way to do it.", api.md(d.explanation || "Compare it with your own code.")); }, true);
       var reset = api.btn("Reset", function () { ta.value = d.starter; api.draft.set("code", d.starter); resHost.textContent = ""; api.clear(); }, true);
-      api.body.appendChild(ta); api.body.appendChild(api.actions(check, hintBtn, showBtn, reset)); api.body.appendChild(hintEl); api.body.appendChild(resHost); api.body.appendChild(solHost);
+      api.body.appendChild(ta); api.body.appendChild(editorTip()); api.body.appendChild(api.actions(check, hintBtn, showBtn, reset)); api.body.appendChild(hintEl); api.body.appendChild(resHost); api.body.appendChild(solHost);
     },
   });
 

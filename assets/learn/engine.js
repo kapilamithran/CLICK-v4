@@ -372,12 +372,14 @@
       var poolEl = h("div", { class: "la-pool", role: "group", "aria-label": "Available lines" });
       var ansEl = h("ol", { class: "la-answer", "aria-label": "Your program, in order" });
       var hintEl = h("p", { class: "la-note" }, "Tap a line to add it. Tap a line in your program to take it back out.");
-      function paint() {
+      // Every tap rebuilds the buttons, which would drop keyboard focus to the top of the page: hand it to the next useful control.
+      function paint(focusAfter) {
         poolEl.textContent = ""; ansEl.textContent = "";
-        pool.forEach(function (p) { poolEl.appendChild(h("button", { type: "button", class: "la-piece la-mono", text: p.t, onclick: function () { pool = pool.filter(function (x) { return x !== p; }); chosen.push(p); paint(); } })); });
-        chosen.forEach(function (p, i) { ansEl.appendChild(h("li", null, h("button", { type: "button", class: "la-piece placed la-mono", "aria-label": "Line " + (i + 1) + ": " + p.t + ". Remove", text: p.t, onclick: function () { chosen = chosen.filter(function (x) { return x !== p; }); pool.push(p); api.clear(); paint(); } }))); });
+        pool.forEach(function (p) { poolEl.appendChild(h("button", { type: "button", class: "la-piece la-mono", text: p.t, onclick: function () { var at = pool.indexOf(p); pool = pool.filter(function (x) { return x !== p; }); chosen.push(p); paint(pool.length ? { pool: Math.min(at, pool.length - 1) } : { check: true }); } })); });
+        chosen.forEach(function (p, i) { ansEl.appendChild(h("li", null, h("button", { type: "button", class: "la-piece placed la-mono", "aria-label": "Line " + (i + 1) + ": " + p.t + ". Remove", text: p.t, onclick: function () { chosen = chosen.filter(function (x) { return x !== p; }); pool.push(p); api.clear(); paint({ pool: pool.length - 1 }); } }))); });
         if (!chosen.length) ansEl.appendChild(h("li", { class: "la-empty", text: "Your program is empty." }));
         check.disabled = false;
+        if (focusAfter) { var target = focusAfter.check ? check : poolEl.querySelectorAll("button")[focusAfter.pool]; if (target && target.focus) target.focus({ preventScroll: true }); }
       }
       var check = api.btn("Check", function () {
         if (!chosen.length) { api.say("info", "Add some lines first.", ""); return; }
@@ -473,6 +475,7 @@
   });
 
   // ------------------------------------------------------- kind: builder
+  var NONE = "__none__";   // internal value of a builder option that is deliberately empty
   CL.kind("builder", {
     required: ["template", "slots"],
     check: function (d) {
@@ -489,19 +492,21 @@
         if (!m) { if (part) line.appendChild(h("span", { class: "la-lit", text: part })); return; }
         var s = d.slots[m[1]];
         var sel = h("select", { class: "la-select inline", "aria-label": s.label || m[1] }, h("option", { value: "", text: s.label || m[1] }));
-        api.shuffled(s.options, api.hash(d.id + m[1])).forEach(function (o) { sel.appendChild(h("option", { value: o, text: o })); });
+        // An option of "" means "leave this part out" (for example no cast). Give it a visible label so the dropdown never shows a blank row.
+        api.shuffled(s.options, api.hash(d.id + m[1])).forEach(function (o) { sel.appendChild(h("option", { value: o === "" ? NONE : o, text: o === "" ? (s.emptyLabel || "(nothing)") : o })); });
         sel.value = api.draft.get("s_" + m[1], "");
         sel.addEventListener("change", function () { api.draft.set("s_" + m[1], sel.value); sel.classList.remove("ok", "no"); preview(); });
         sels[m[1]] = sel; line.appendChild(sel);
       });
       var prev = h("div", { class: "la-preview" });
-      function preview() { var t = d.template.replace(/\{(\w+)\}/g, function (_, k) { return sels[k].value || "…"; }); prev.textContent = ""; prev.appendChild(h("span", { class: "la-outlabel", text: "Your statement" })); prev.appendChild(h("code", { text: t })); }
+      function chosen(k) { return sels[k].value === NONE ? "" : sels[k].value; }
+      function preview() { var t = d.template.replace(/\{(\w+)\}/g, function (_, k) { return sels[k].value ? chosen(k) : "…"; }); prev.textContent = ""; prev.appendChild(h("span", { class: "la-outlabel", text: "Your statement" })); prev.appendChild(h("code", { text: t })); }
       preview();
       var check = api.btn("Check", function () {
         if (Object.keys(sels).every(function (k) { return !sels[k].value; })) { api.say("info", "Choose the parts first.", ""); return; }
         api.state.attempts++;
         var wrong = [];
-        Object.keys(sels).forEach(function (k) { var ok = sels[k].value === d.slots[k].answer; sels[k].classList.toggle("ok", ok); sels[k].classList.toggle("no", !ok); if (!ok) wrong.push(k); });
+        Object.keys(sels).forEach(function (k) { var ok = chosen(k) === d.slots[k].answer; sels[k].classList.toggle("ok", ok); sels[k].classList.toggle("no", !ok); if (!ok) wrong.push(k); });
         if (!wrong.length) { api.say("good", "That is valid C.", api.md(d.explanation || "")); api.done(); check.disabled = true; return; }
         api.say("soft", "Not quite.", api.md(wrong.map(function (k) { return "**" + (d.slots[k].label || k) + ":** " + (d.slots[k].why || "check this part."); }).join("\n")));
       });

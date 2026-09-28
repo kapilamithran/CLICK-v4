@@ -780,6 +780,121 @@ async function main() {
     }
   }
 
+  // ================================================================ J. Stage 6-8 QA regression: blank builder choice, unlabeled blanks, editor Tab trap, ORDER focus, favicon
+  section("J. Stage 6-8 QA regression: no blank dropdown choice, blank roles, no keyboard trap in the code editor, ORDER keeps focus, page icon");
+  {
+    const ANY = "#testExercise .ce-target, #testExercise .la, #testExercise .option, #testExercise .test-v11-token, #testExercise .test-code-fill-box, #testTextAnswer, #testExercise p.meta";
+    const goTo = async (page, match) => {
+      for (let g = 0; g < 12; g++) {
+        await page.waitForFunction((sel) => !!document.querySelector(sel), ANY, { timeout: 15000 });
+        const s = await L.slideKind(page);
+        if (match(s)) return s;
+        if (s.kind === "explorer") await L.passExplorer(page);
+        else if (s.kind === "activity") { await page.locator("#testExercise").click({ position: { x: 6, y: 6 } }); await page.waitForFunction(() => !document.getElementById("testCheck").disabled || !document.getElementById("testSkip").hidden, null, { timeout: 5000 }); if (await page.locator("#testSkip:not([hidden])").count()) await page.locator("#testSkip").click(); await page.locator("#testCheck").click(); }
+        else { await L.answerQuestion(page, s.qid, true); await page.waitForFunction(() => /Correct!/.test(document.getElementById("testFeedbackV11").textContent)); await page.waitForFunction(() => !document.getElementById("testCheck").disabled && /CONTINUE|FINISH/.test(document.getElementById("testCheck").textContent)); await page.locator("#testCheck").click(); }
+      }
+      throw new Error("slide not found");
+    };
+    const restartFocus = async (page) => { await page.evaluate(() => { window.scrollTo(0, 0); document.activeElement && document.activeElement.blur(); }); await page.mouse.click(3, 3); };
+    const tabUntil = async (page, pred, max = 60) => { for (let i = 0; i < max; i++) { await page.keyboard.press("Tab"); if (await page.evaluate(pred)) return true; } return false; };
+
+    {
+      const { ctx, page, errors } = await openChapter({}, "CH0067", { width: 390, height: 844 }, { mobile: true });
+      await t("CH0067 builder: no dropdown choice is blank; 'leave it out' is a visible choice, usable, and the statement preview and answer check treat it correctly", async () => {
+        assert.ok(await page.evaluate(() => !!document.querySelector('link[rel~="icon"]')), "the page declares an icon (otherwise every load requests /favicon.ico and gets a 404)");
+        await goTo(page, (s) => s.activity === "CH0067.p3.build-average-line");
+        H.loadActivities();
+        const d = globalThis.ClickLearn.defs.get("CH0067.p3.build-average-line"), keys = [...d.template.matchAll(/\{(\w+)\}/g)].map((m) => m[1]);
+        const sels = page.locator("#testExercise .la-build select.la-select");
+        const opts = await sels.evaluateAll((s) => s.map((x) => [...x.options].map((o) => o.text)));
+        opts.forEach((o) => assert.ok(o.every((x) => x.trim()), "a dropdown row renders blank: " + JSON.stringify(o)));
+        const ci = keys.indexOf("cast"); assert.ok(opts[ci].includes("(nothing)"), "the empty option is labelled: " + JSON.stringify(opts[ci]));
+        for (let i = 0; i < keys.length; i++) await sels.nth(i).selectOption(i === ci ? { label: "(nothing)" } : d.slots[keys[i]].answer);
+        const shown = await page.locator("#testExercise .la-preview code").innerText();
+        assert.ok(!/…/.test(shown) && !/\(float\)|\(int\)/.test(shown), "choosing '(nothing)' shows the statement without a cast: " + shown);
+        await page.locator("#testExercise .la-actions button", { hasText: /^Check$/ }).click();
+        await page.waitForFunction(() => /Not quite/.test(document.querySelector("#testExercise .la-feedback").textContent));
+        assert.match(await page.locator("#testExercise .la-feedback").innerText(), /cast/i, "the feedback explains the cast");
+        await page.locator("#testExercise .la-actions button", { hasText: /^Reset$/ }).click();
+        for (let i = 0; i < keys.length; i++) await sels.nth(i).selectOption(d.slots[keys[i]].answer);
+        await page.locator("#testExercise .la-actions button", { hasText: /^Check$/ }).click();
+        await page.waitForFunction(() => /valid C/.test(document.querySelector("#testExercise .la-feedback").textContent));
+      });
+      await t("no JS errors (CH0067 builder)", async () => noErrors(errors));
+      await ctx.close();
+    }
+    for (const [cid, qid, roles] of [["CH0069", "Q000370", ["row index", "column index"]], ["CH0070", "Q000375", ["row variable", "column variable"]]]) {
+      const { ctx, page, errors } = await openChapter({}, cid, { width: 390, height: 844 }, { mobile: true });
+      await t(cid + " " + qid + ": the two blanks say what they are for (key + accessible names) and the existing answer is accepted", async () => {
+        await goTo(page, (s) => s.qid === qid);
+        const key = (await page.locator("#testExercise .test-blank-key").innerText()).replace(/\s+/g, " ");
+        assert.match(key, new RegExp("Blank 1: " + roles[0])); assert.match(key, new RegExp("Blank 2: " + roles[1]));
+        assert.deepEqual(await page.locator("#testExercise .test-code-fill-box").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label"))), ["Code blank 1: " + roles[0], "Code blank 2: " + roles[1]]);
+        await L.answerQuestion(page, qid, true);
+        await page.waitForFunction(() => /Correct!/.test(document.getElementById("testFeedbackV11").textContent));
+      });
+      await t("no JS errors (" + cid + " " + qid + ")", async () => noErrors(errors));
+      await ctx.close();
+    }
+    {
+      const { ctx, page, errors } = await openChapter({}, "CH0078", { width: 1280, height: 720 }, {});
+      await t("CH0078 code editor: Tab still indents, but Escape then Tab leaves the editor (no keyboard trap) and Run is reachable; the tip is shown", async () => {
+        await goTo(page, (s) => s.activity === "CH0078.p1.change-and-run");
+        assert.ok(await page.locator("#testExercise .la-editor-tip").isVisible(), "the keyboard tip is visible under the editor");
+        const ta = page.locator("#testExercise textarea").first(); await ta.focus();
+        const before = (await ta.inputValue()).length;
+        await page.keyboard.press("Tab");
+        assert.equal((await ta.inputValue()).length, before + 4, "Tab indents by four spaces");
+        assert.ok(await page.evaluate(() => document.activeElement.tagName === "TEXTAREA"), "focus stays in the editor after an indenting Tab");
+        await page.keyboard.press("Escape"); await page.keyboard.press("Tab");
+        assert.ok(await page.evaluate(() => document.activeElement.tagName !== "TEXTAREA"), "Escape then Tab moves focus out of the editor");
+        const onRun = () => /^Run$/.test((document.activeElement.innerText || "").trim());
+        assert.ok((await page.evaluate(onRun)) || (await tabUntil(page, onRun, 6)), "the Run button is reachable by keyboard");
+        await page.keyboard.press("Enter");
+        await page.waitForFunction(() => /Ran fine|reached the goal|did not run/.test((document.querySelector("#testExercise .la-feedback") || {}).textContent || ""));
+        assert.equal(await page.evaluate(() => (document.activeElement.innerText || "").trim()), "Run", "after Run finishes, keyboard focus is still on the Run button (it was dropped to the page body while the button was disabled)");
+        await ta.focus(); await page.keyboard.press("Tab"); await page.keyboard.press("Tab");
+        assert.equal((await ta.inputValue()).length, before + 12, "after leaving and returning, each Tab indents again by four (the release is one-shot): 4 from the first Tab + 2 x 4");
+      });
+      await t("no JS errors (CH0078 editor)", async () => noErrors(errors));
+      await ctx.close();
+    }
+    {
+      const { ctx, page, errors } = await openChapter({}, "CH0062", { width: 1280, height: 720 }, {});
+      await t("graded ORDER question (Q000336): activating a line with Enter keeps keyboard focus on the next line, then on CHECK", async () => {
+        await goTo(page, (s) => s.qid === "Q000336");
+        const n = await page.locator("#testExercise .test-v11-token").count(); assert.ok(n >= 3);
+        await restartFocus(page); assert.ok(await tabUntil(page, () => document.activeElement.matches(".test-v11-token"), 30), "a line is reachable by Tab");
+        for (let i = 0; i < n; i++) {
+          await page.keyboard.press("Enter");
+          const where = await page.evaluate(() => { const e = document.activeElement; return e === document.body ? "body" : e.id || e.className.split(" ")[0]; });
+          assert.notEqual(where, "body", "focus was dropped after line " + (i + 1) + " of " + n);
+          if (i < n - 1) assert.equal(where, "test-v11-token", "focus moves to the next available line (was " + where + ")");
+        }
+        assert.equal(await page.evaluate(() => document.activeElement.id), "testCheck", "with every line used, focus lands on CHECK");
+      });
+      await t("no JS errors (ORDER question)", async () => noErrors(errors));
+      await ctx.close();
+    }
+    {
+      const { ctx, page, errors } = await openChapter({}, "CH0076", { width: 1280, height: 720 }, {});
+      await t("Learn order activity (CH0076): tapping a line with Enter keeps focus in the pool, then moves to Check", async () => {
+        await goTo(page, (s) => s.activity === "CH0076.p3.order-count-steps");
+        const n = await page.locator("#testExercise .la-pool button.la-piece").count(); assert.ok(n >= 3);
+        await restartFocus(page); assert.ok(await tabUntil(page, () => document.activeElement.matches(".la-pool button.la-piece"), 30), "a line is reachable by Tab");
+        for (let i = 0; i < n; i++) {
+          await page.keyboard.press("Enter");
+          const where = await page.evaluate(() => { const e = document.activeElement; return e === document.body ? "body" : (e.closest(".la-pool") ? "pool" : (e.textContent || "").trim()); });
+          assert.notEqual(where, "body", "focus was dropped after line " + (i + 1) + " of " + n);
+          if (i < n - 1) assert.equal(where, "pool", "focus stays on a remaining line");
+        }
+        assert.match(await page.evaluate(() => document.activeElement.textContent), /^Check$/, "with every line used, focus lands on Check");
+      });
+      await t("no JS errors (Learn order activity)", async () => noErrors(errors));
+      await ctx.close();
+    }
+  }
+
   await L.stop(S);
   L.finish();
 }

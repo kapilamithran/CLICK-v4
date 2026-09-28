@@ -128,6 +128,7 @@ ClickChapter.define({
     },
     {
       id: "s9", kind: "question", question: "Q000370",
+      blankLabels: ["row index", "column index"],
       title: "Access row 1, column 2",
       objective: "Complete the two indexes needed to reach a specific element.",
       glossary: ["row-col-access"],

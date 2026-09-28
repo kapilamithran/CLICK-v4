@@ -107,6 +107,7 @@ ClickChapter.define({
     },
     {
       id: "s7", kind: "question", question: "Q000375",
+      blankLabels: ["row variable", "column variable"],
       title: "Complete the nested loops",
       objective: "Fill in the two indexes used inside a nested loop.",
       glossary: ["nested-loop"],
