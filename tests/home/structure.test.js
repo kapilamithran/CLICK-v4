@@ -68,8 +68,8 @@ test("Patterns: the five chapters carry the titles of the Patterns source PDFs, 
 test("Patterns is unlocked the same way as the other populated stages: no self-lock, and the Patterns chapters keep their slot-to-slot chain", () => {
   assert.strictEqual(S.prerequisites.filter((p) => p.target_id === "STG013").length, 0);
 });
-test("Pointers keeps its self-lock (not yet through the unified-chapter QA process), so it is still the one populated stage that cannot complete", () => {
-  assert.ok(S.prerequisites.some((p) => p.target_id === "STG011" && p.prerequisite_id === "STG011" && p.active), "Pointers is still locked the same way");
+test("Pointers is unlocked the same way as the other populated stages: no self-lock", () => {
+  assert.strictEqual(S.prerequisites.filter((p) => p.target_id === "STG011").length, 0);
 });
 test("the existing chapter unlock mechanism is ready: each new slot requires the previous slot", () => {
   for (const sid of ["STG012", "STG013"]) {
@@ -126,7 +126,9 @@ test("Home: Patterns chapters open one at a time (chapter n needs chapter n-1)",
 test("Home: Arrays, Strings, Searching & Sorting and Functions behave exactly as before (not locked by the new stages)", () => {
   const model = HP.build(appFor(S.prerequisites, through(5)));
   for (const t of ["ARRAYS", "STRINGS", "SEARCHING & SORTING", "FUNCTIONS"]) assert.notStrictEqual(stageOf(model, t).status, "locked", t);
-  assert.strictEqual(stageOf(model, "POINTERS").status, "locked");
+  // Pointers has real content now too (see 20261001010000_unlock_stage12_pointers.sql) and, like Number Crunching and
+  // Patterns before it, is unlocked the same way: no self-lock means it is never reported as "locked".
+  assert.notStrictEqual(stageOf(model, "POINTERS").status, "locked");
 });
 test("Home: a student who finished everything through Patterns has Number Crunching and Patterns both complete", () => {
   const model = HP.build(appFor(S.prerequisites, through(7)));

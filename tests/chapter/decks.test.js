@@ -62,7 +62,11 @@ for (const id of Object.keys(decks).sort()) {
     if (LH.hasGcc) {
       const g = LH.gccRun(code, input, /\bmain\s*\(/.test(code));
       assert.ok(g.ok, "gcc could not compile/run the example: " + g.error);
-      assert.strictEqual(LH.normOut(r.stdout), LH.normOut(g.stdout), "interpreter and gcc disagree on the example's output");
+      // s.addressOutputVaries: the example prints a pointer's address with %p. A real memory address is never
+      // reproducible between two runs, let alone between this simulator's synthetic one and gcc's real one (the
+      // Pointers PDFs say so themselves: "the actual address will be different on each run/system"), so only the
+      // "both engines accept and run the program" checks above apply; the exact bytes are not compared here.
+      if (!s.addressOutputVaries) assert.strictEqual(LH.normOut(r.stdout), LH.normOut(g.stdout), "interpreter and gcc disagree on the example's output");
     }
   });
 

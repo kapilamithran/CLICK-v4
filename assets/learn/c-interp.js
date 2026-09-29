@@ -172,7 +172,7 @@
       const l = this.parseCond();
       const t = this.peek();
       if (t.t === "op" && ASSIGN_OPS.has(t.v)) {
-        if (!["id", "index"].includes(l.t)) this.fail("The left side of an assignment must be a variable (or an array element).", t);
+        if (!["id", "index", "deref"].includes(l.t)) this.fail("The left side of an assignment must be a variable, an array element, or a dereferenced pointer (*p).", t);
         this.next();
         const r = this.parseAssign();
         return { t: "assign", op: t.v, l, r, line: t.line, s: l.s, en: r.en, opPos: t.s };
@@ -210,7 +210,7 @@
         return { t: "pre", op: t.v, e, line: t.line, s: t.s, en: e.en, opPos: t.s };
       }
       if (t.t === "op" && t.v === "&") { this.next(); const e = this.parseUnary(); return { t: "addr", e, line: t.line, s: t.s, en: e.en }; }
-      if (t.t === "op" && t.v === "*") this.fail("Pointer dereference (*) is not supported in this simulator.", t);
+      if (t.t === "op" && t.v === "*") { this.next(); const e = this.parseUnary(); return { t: "deref", e, line: t.line, s: t.s, en: e.en }; }
       if (t.t === "kw" && t.v === "sizeof") {
         this.next();
         if (this.is("(") && this.isTypeStart(1)) { this.next(); const ty = this.parseType(); const c = this.expect(")"); return { t: "sizeofT", ty, line: t.line, s: t.s, en: c.e }; }
@@ -277,8 +277,13 @@
     }
     parseDeclInit(ty) {
       const items = [];
+      let first = true;
       do {
-        let ptr = ty.ptr; while (this.accept("*")) ptr++;
+        // Only the first declarator inherits the type's own leading *(s) (parseType already consumed
+        // them, e.g. "int *p"): C requires every later declarator in the same statement to repeat its
+        // own *, so "int *p, q;" declares q as a plain int, and "int *p, *q;" declares both as int *.
+        let ptr = (first ? ty.ptr : 0); while (this.accept("*")) ptr++;
+        first = false;
         const nameTok = this.next();
         if (nameTok.t !== "id") this.fail("Expected a variable name.", nameTok);
         let dims = [], hasBrackets = false;
@@ -400,6 +405,7 @@
         do {
           const pt = this.parseType(); const pn = this.next();
           if (pn.t !== "id") this.fail("Expected a parameter name.", pn);
+          if (pt.ptr > 1) this.fail("A pointer to a pointer (" + "*".repeat(pt.ptr) + ") is not supported in this simulator; only a single level of indirection is.", pn);
           let isArray = false;
           if (this.is("[")) {
             this.next();
@@ -458,7 +464,7 @@
     return (neg ? "-" : "") + s;
   }
 
-  function formatPrintf(fmt, args, line, readStr) {
+  function formatPrintf(fmt, args, line, readStr, addrOf) {
     let out = "", ai = 0;
     for (let i = 0; i < fmt.length; i++) {
       const c = fmt[i];
@@ -521,6 +527,11 @@
           }
           break;
         }
+        case "p": {
+          if (a.t !== "ref") throw new CError("ub", "%p expects a pointer, but the value is " + describeType(a) + ".", line);
+          body = a.cell === null ? "(nil)" : addrOf(a);
+          break;
+        }
         default:
           throw new CError("unsupported", "The printf conversion %" + conv + " is not supported in this simulator.", line);
       }
@@ -538,6 +549,7 @@
     if (a.t === "int") return "an int";
     if (a.t === "str") return "a string";
     if (a.t === "arr") return "an array";
+    if (a.t === "ref") return "an address";
     return "another kind of value";
   }
 
@@ -586,7 +598,13 @@
     let scope = globalScope;
     const scopes = [globalScope];
     const pushScope = () => { scope = new Map(); scopes.push(scope); };
-    const popScope = () => { scopes.pop(); scope = scopes[scopes.length - 1]; };
+    // Marking a leaving block's own cells `dead` is how a dangling pointer (one that still refers to a
+    // variable whose { } block has ended) is caught: refCheckLive() rejects a dereference of a dead cell,
+    // exactly like this interpreter already rejects every other undefined behavior with an explanatory
+    // error instead of a wrong answer. A function call resets the whole scope stack around its own call
+    // (see doCall) rather than using popScope, so a pointer to a function's local is not covered by this -
+    // the source material this simulator teaches never does that.
+    const popScope = () => { for (const cell of scope.values()) cell.dead = true; scopes.pop(); scope = scopes[scopes.length - 1]; };
     const lookup = (name, line) => {
       for (let i = scopes.length - 1; i >= 0; i--) { const c = scopes[i].get(name); if (c) return c; }
       throw new CError("syntax", "'" + name + "' is not declared. Declare it first, for example: int " + name + ";", line);
@@ -602,13 +620,24 @@
 
     // ---- values
     const V = (t, v) => ({ t, v });
+    // A synthetic, deterministic, per-run "address" for %p - never a real machine address, and never
+    // compared against gcc's actual (unpredictable) one. Lazily assigned per cell the first time it is
+    // printed, and derived for an array element from its cell's own address plus its byte offset, so a
+    // printed run of addresses looks the same as the source's own "boxes in memory" diagrams.
+    let nextAddr = 0x1000;
+    const addrOf = (r) => {
+      const cell = r.cell;
+      if (cell.addr === undefined) { cell.addr = nextAddr; nextAddr += Math.max(4, typeSize(cell.ty.base, 0)) * (cell.arr ? cell.val.a.length : 1) + 4; }
+      const off = r.idx ? r.idx * typeSize(cell.ty.base, 0) : 0;
+      return "0x" + (cell.addr + off).toString(16);
+    };
     const readStr = (a) => {
       if (a.t === "str") return a.v;
       const arr = a.v.a; let s = "";
       for (let i = 0; i < arr.length; i++) { const c = arr[i]; if (c === UNINIT) throw new CError("ub", "The string uses characters that were never set (undefined behavior).", 0); if (c === 0) break; s += String.fromCharCode(c & 255); }
       return s;
     };
-    const truthy = (a) => (a.t === "str" ? true : a.t === "arr" ? true : a.v !== 0);
+    const truthy = (a) => (a.t === "str" ? true : a.t === "arr" ? true : a.t === "ref" ? a.cell !== null : a.v !== 0);
     const toInt32 = (x) => { if (!Number.isFinite(x) || x >= 2147483648 || x < INT_MIN) return INT_MIN; return Math.trunc(x) | 0; };
     const convertTo = (a, base, line) => {
       if (base === "void") return a;
@@ -627,10 +656,49 @@
       const ty = cell.ty;
       if (ty.ptr) {
         if (ty.base === "char" && (a.t === "str" || a.t === "arr")) return a.t === "arr" ? V("str", readStr(a)) : a;
-        if (a.t === "int" && a.v === 0) return V("str", null);
-        throw new CError("unsupported", "Pointers are only supported as char * strings in this simulator.", line);
+        if (ty.base === "char" && a.t === "int" && a.v === 0) return V("str", null);
+        // A pointer to a single scalar (&x) or into an array (&a[i], or a bare array name decaying
+        // to a pointer at its first element) - see the "ref" value shape near refRead/refWrite below.
+        if (a.t === "ref") {
+          if (a.cell && ty.base !== a.cell.ty.base && ty.base !== "void" && a.cell.ty.base !== "void") throw new CError("unsupported", "This pointer's type (" + ty.base + " *) does not match the type of what it would point to (" + a.cell.ty.base + " " + (a.cell.arr ? "[]" : "") + "). Real C allows this with a warning, but reading through it would misread the value, so this simulator treats it as unsupported.", line);
+          return a;
+        }
+        if (a.t === "arr") return { t: "ref", cell: a.cell, idx: 0 };
+        if (a.t === "int" && a.v === 0) return { t: "ref", cell: null };   // NULL
+        throw new CError("unsupported", "Pointers are only supported as char * strings, or as a pointer to a variable or an array in this simulator.", line);
       }
       return convertTo(a, ty.base, line);
+    };
+    // ---- pointers: a "ref" value ({t:"ref", cell, idx}) never models a real machine address. `cell` is the
+    // interpreter's own cell object for the pointed-to variable (or the array that owns the pointed-to element);
+    // `idx` is present (a plain number) only when the pointer is into an array, and is what p++ / p + n / p - n
+    // move. `cell === null` means a NULL pointer. A cell can be marked `.dead` when its scope ends (see popScope),
+    // which is how a dangling pointer (Pointer12) is caught: dereferencing it is treated exactly like any other
+    // undefined behavior this interpreter already catches (uninitialized reads, out-of-bounds indexes, ...).
+    const refBaseKind = (ty) => (ty.base === "float" || ty.base === "double" ? ty.base : "int");
+    const refCheckLive = (r, line) => {
+      if (!r.cell) throw new CError("ub", "This pointer is NULL: it does not point to any variable (undefined behavior).", line);
+      if (r.cell.dead) throw new CError("ub", "This pointer's target has gone out of scope (a dangling pointer): the variable it pointed to no longer exists (undefined behavior).", line);
+    };
+    const refRead = (r, line) => {
+      refCheckLive(r, line);
+      if (r.idx !== undefined) {
+        const a = r.cell.val.a;
+        if (r.idx < 0 || r.idx >= a.length) throw new CError("ub", "Pointer arithmetic moved outside the array (valid positions are 0 to " + (a.length - 1) + "). Real C would read outside the array (undefined behavior).", line);
+        const v = a[r.idx];
+        if (v === UNINIT) throw new CError("ub", "The element this pointer refers to was never set (undefined behavior).", line);
+        return V(refBaseKind(r.cell.ty), v);
+      }
+      if (r.cell.val === UNINIT) throw new CError("ub", "The variable this pointer refers to was never given a value (undefined behavior).", line);
+      return V(refBaseKind(r.cell.ty), r.cell.val);
+    };
+    const refWrite = (r, v, line) => {
+      refCheckLive(r, line);
+      if (r.idx !== undefined) {
+        const a = r.cell.val.a;
+        if (r.idx < 0 || r.idx >= a.length) throw new CError("ub", "Pointer arithmetic moved outside the array (valid positions are 0 to " + (a.length - 1) + "). Real C would write outside the array (undefined behavior).", line);
+        a[r.idx] = v;
+      } else r.cell.val = v;
     };
     const rank = (t) => (t === "double" ? 3 : t === "float" ? 2 : 1);
 
@@ -649,6 +717,11 @@
           return "[" + parts.join(", ") + "]";
         };
         return render(0, 0);
+      }
+      if (v && v.t === "ref") {
+        if (v.cell === null) return "NULL";
+        if (v.cell.dead) return "invalid (dangling)";
+        try { return addrOf(v) + " (-> " + refRead(v, 0).v + ")"; } catch (e) { return addrOf(v); }
       }
       if (v && v.t === "str") return v.v === null ? "NULL" : '"' + v.v.replace(/\n/g, "\\n") + '"';
       if (cell.ty.base === "char") return "'" + (v === 10 ? "\\n" : v === 0 ? "\\0" : String.fromCharCode(v & 255)) + "' (" + v + ")";
@@ -672,7 +745,7 @@
     const builtins = {
       printf(args, line) {
         if (!args.length || args[0].t !== "str") throw new CError("runtime", "printf needs a format string in double quotes as its first argument.", line);
-        const s = formatPrintf(args[0].v, args.slice(1), line, readStr);
+        const s = formatPrintf(args[0].v, args.slice(1), line, readStr, addrOf);
         emit(s, line); return V("int", s.length);
       },
       puts(args, line) { const s = readStr(args[0]) + "\n"; emit(s, line); return V("int", s.length); },
@@ -795,6 +868,23 @@
     };
 
     const arith = (op, l, r, line) => {
+      if (l.t === "ref") {
+        // pointer arithmetic: p + n / p - n move a pointer that points into an array by n elements
+        // (bounds are only checked when the result is actually read or written, exactly like real C
+        // allows computing a one-past-the-end pointer as long as it is never dereferenced)
+        if (op !== "+" && op !== "-") throw new CError("unsupported", "Only + and - are supported on a pointer in this simulator.", line);
+        if (r.t !== "int") throw new CError("syntax", "A pointer can only be moved by a whole number of elements.", line);
+        if (l.idx === undefined) throw new CError("unsupported", "This pointer does not point into an array, so it cannot be moved with + or - in this simulator.", line);
+        refCheckLive(l, line);
+        return { t: "ref", cell: l.cell, idx: l.idx + (op === "+" ? r.v : -r.v) };
+      }
+      if (l.t === "str" && r.t === "int" && (op === "+" || op === "-")) {
+        // char * pointer arithmetic: this simulator represents a char * as the text still ahead of it,
+        // so p + n drops n characters from the front. Only forward movement is used by this curriculum.
+        if (l.v === null) throw new CError("ub", "Arithmetic on a NULL pointer (undefined behavior).", line);
+        if (op === "-") throw new CError("unsupported", "Moving a char * pointer backward (p - n) is not supported in this simulator.", line);
+        return V("str", l.v.slice(Math.min(r.v, l.v.length)));
+      }
       const rk = Math.max(rank(l.t), rank(r.t));
       if (l.t === "str" || r.t === "str" || l.t === "arr" || r.t === "arr") throw new CError("runtime", "Operator " + op + " cannot be used with strings.", line);
       if (rk === 1) { // int
@@ -843,6 +933,24 @@
         cell = lookup(target.name, node.line);
         if (cell.arr) throw new CError("runtime", "You cannot use ++ or -- on a whole array.", node.line);
         readCell(cell, target.name, node.line);
+        if (cell.ty.ptr) {
+          const cur = cell.val, delta = op === "++" ? 1 : -1;
+          if (cur && cur.t === "ref") {
+            if (cur.idx === undefined) throw new CError("unsupported", "This pointer does not point into an array, so it cannot be moved with ++ or -- in this simulator.", node.line);
+            refCheckLive(cur, node.line);
+            const nv = { t: "ref", cell: cur.cell, idx: cur.idx + delta };
+            cell.val = nv;
+            return { old: cur, nu: nv };
+          }
+          if (cur && cur.t === "str") {
+            if (cur.v === null) throw new CError("ub", "Moving a NULL pointer (undefined behavior).", node.line);
+            if (delta < 0) throw new CError("unsupported", "Moving a char * pointer backward (p--) is not supported in this simulator.", node.line);
+            const nv = V("str", cur.v.length ? cur.v.slice(1) : cur.v);
+            cell.val = nv;
+            return { old: cur, nu: nv };
+          }
+          throw new CError("unsupported", "This pointer cannot be moved with ++ or -- in this simulator.", node.line);
+        }
         get = () => cell.val; set = (nv) => { cell.val = nv; };
       } else {
         const el = getElement(target, true); cell = el.cell;
@@ -882,8 +990,17 @@
         }
         case "addr": {
           if (n.e.t === "id") { const cell = lookup(n.e.name, n.line); return { t: "ref", cell }; }
-          if (n.e.t === "index") { const el = getElement(n.e, true); return { t: "ref", cell: { ty: el.cell.ty, get val() { return el.a[el.arrIdx]; }, set val(x) { el.a[el.arrIdx] = x; } } }; }
-          throw new CError("unsupported", "& can only be applied to a variable in this simulator.", n.line);
+          if (n.e.t === "index") { const el = getElement(n.e, true); return { t: "ref", cell: el.cell, idx: el.arrIdx }; }
+          throw new CError("unsupported", "& can only be applied to a variable or an array element in this simulator.", n.line);
+        }
+        case "deref": {
+          const v = evalE(n.e);
+          if (v.t === "str") {
+            if (v.v === null) throw new CError("ub", "Dereferencing a NULL pointer (undefined behavior).", n.line);
+            return V("int", v.v.length ? v.v.charCodeAt(0) : 0);   // char * traversal: '\0' once the string is used up
+          }
+          if (v.t !== "ref") throw new CError("runtime", "* can only be used to dereference a pointer.", n.line);
+          return refRead(v, n.line);
         }
         case "un": {
           const v = evalE(n.e);
@@ -905,6 +1022,11 @@
               const isNull = (l.t === "str" ? l.v : r.v) === null; // comparing a char * with NULL (what strchr returns when it finds nothing)
               return V("int", (n.op === "==") === isNull ? 1 : 0);
             }
+            if ((n.op === "==" || n.op === "!=") && ((l.t === "ref" && r.t === "int" && r.v === 0) || (r.t === "ref" && l.t === "int" && l.v === 0))) {
+              const isNull = (l.t === "ref" ? l : r).cell === null;   // comparing a pointer with NULL
+              return V("int", (n.op === "==") === isNull ? 1 : 0);
+            }
+            if (l.t === "ref" || r.t === "ref") throw new CError("unsupported", "Only comparing a pointer with NULL is supported in this simulator.", n.line);
             if (l.t === "str" || r.t === "str" || l.t === "arr" || r.t === "arr") throw new CError("unsupported", "Comparing strings with " + n.op + " compares addresses in real C. Use strcmp instead.", n.line);
             let a = l.v, b = r.v, res;
             switch (n.op) { case "<": res = a < b; break; case "<=": res = a <= b; break; case ">": res = a > b; break; case ">=": res = a >= b; break; case "==": res = a === b; break; case "!=": res = a !== b; break; }
@@ -923,7 +1045,12 @@
         }
         case "cast": {
           const v = evalE(n.e);
-          if (n.ty.ptr) throw new CError("unsupported", "Pointer casts are not supported in this simulator.", n.line);
+          if (n.ty.ptr) {
+            // (void*) applied to an existing pointer is a no-op here (its only real use in this curriculum is
+            // printf("%p", (void*)p);): every other pointer cast stays unsupported.
+            if (n.ty.base === "void" && n.ty.ptr === 1 && (v.t === "ref" || v.t === "str")) return v;
+            throw new CError("unsupported", "Pointer casts are not supported in this simulator.", n.line);
+          }
           return convertTo(v, n.ty.base, n.line);
         }
         case "sizeofT": return V("int", typeSize(n.ty.base, n.ty.ptr));
@@ -942,6 +1069,21 @@
     }
 
     function doAssign(n) {
+      if (n.l.t === "deref") {
+        const r = evalE(n.l.e);
+        if (r.t !== "ref") throw new CError("runtime", "* can only be used to dereference a pointer.", n.line);
+        refCheckLive(r, n.line);
+        const base = r.cell.ty.base, isF = base === "float" || base === "double";
+        if (n.op === "=") {
+          const conv = convertTo(evalE(n.r), base, n.line);
+          refWrite(r, conv.v, n.line);
+          return conv;
+        }
+        const cur = refRead(r, n.line);   // refRead already rejects an uninitialized/out-of-bounds target
+        const res = convertTo(arith(n.op.slice(0, -1), cur, evalE(n.r), n.line), base, n.line);
+        refWrite(r, res.v, n.line);
+        return V(isF ? base : "int", res.v);
+      }
       const isId = n.l.t === "id";
       let cell, el = null;
       if (isId) {
@@ -959,6 +1101,15 @@
         return isId && cell.ty.ptr ? conv : V(isF ? base : "int", conv.v);
       }
       const opc = n.op.slice(0, -1);
+      if (isId && cell.ty.ptr) {
+        // p += n / p -= n: move the pointer itself (p = p + n / p = p - n), reusing the same arithmetic
+        // that + and - already use on a pointer value.
+        const curp = cell.val;
+        if (curp === UNINIT) throw new CError("ub", "The pointer is used in " + n.op + " before it was given a value (undefined behavior).", n.line);
+        const res = arith(opc, curp, evalE(n.r), n.line);
+        cell.val = res;
+        return res;
+      }
       if (cur() === UNINIT) throw new CError("ub", "The variable is used in " + n.op + " before it was given a value (undefined behavior).", n.line);
       const lv = V(isF ? base : "int", cur());
       const rv = evalE(n.r);
@@ -1036,6 +1187,7 @@
       if (ty.base === "void" && !ty.ptr) throw new CError("syntax", "A variable cannot have the type void.", d.line);
       for (const it of d.items) {
         tick(it.line);
+        if (it.ptr > 1) throw new CError("unsupported", "A pointer to a pointer (" + "*".repeat(it.ptr) + ") is not supported in this simulator; only a single level of indirection is.", it.line);
         const cty = { base: ty.base, isConst: ty.isConst, ptr: it.ptr };
         const cell = { ty: cty, arr: false, val: UNINIT };
         if (it.hasBrackets) {

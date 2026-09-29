@@ -1029,6 +1029,150 @@
     "Checking a Prime Number",
     "Prime Number Recap"
    ]
+  },
+  "CH0103": {
+   "stage": "STG011",
+   "stage_no": 12,
+   "title": "Pointer Basics",
+   "headings": [
+    "What Is a Pointer?",
+    "Pointer Declaration",
+    "Accessing Value Using a Pointer",
+    "Pointer and Variable",
+    "Pointer Basics Recap"
+   ]
+  },
+  "CH0104": {
+   "stage": "STG011",
+   "stage_no": 12,
+   "title": "Declaring & Initializing Pointers",
+   "headings": [
+    "Declaring a Pointer",
+    "Initializing a Pointer",
+    "Understanding & and *",
+    "Different Ways to Initialize",
+    "Pointer Type Must Match"
+   ]
+  },
+  "CH0105": {
+   "stage": "STG011",
+   "stage_no": 12,
+   "title": "Address Operator &",
+   "headings": [
+    "What Is the Address Operator?",
+    "How & Works",
+    "& with Pointers",
+    "& in scanf()",
+    "Address Operator Recap"
+   ]
+  },
+  "CH0106": {
+   "stage": "STG011",
+   "stage_no": 12,
+   "title": "Dereference Operator *",
+   "headings": [
+    "What Is the Dereference Operator?",
+    "Accessing the Value Using *",
+    "Changing a Value Using *",
+    "Using the Dereference Operator in C",
+    "Dereference Operator Recap"
+   ]
+  },
+  "CH0107": {
+   "stage": "STG011",
+   "stage_no": 12,
+   "title": "Pointers and Data Types",
+   "headings": [
+    "What Are Pointers and Data Types?",
+    "Pointers with Different Data Types",
+    "Accessing Values With Different Pointer Types",
+    "Pointer Type Must Match",
+    "Pointers and Data Types Recap"
+   ]
+  },
+  "CH0108": {
+   "stage": "STG011",
+   "stage_no": 12,
+   "title": "Pointers and Variables",
+   "headings": [
+    "What Is a Pointer and Variable?",
+    "Pointer Pointing to a Variable",
+    "Using a Pointer to Access a Variable",
+    "Changing a Variable Using a Pointer",
+    "Pointers and Variables Recap"
+   ]
+  },
+  "CH0109": {
+   "stage": "STG011",
+   "stage_no": 12,
+   "title": "Pointer Arithmetic",
+   "headings": [
+    "What Is Pointer Arithmetic?",
+    "Moving a Pointer",
+    "Moving Backward",
+    "Pointer + Number",
+    "Pointer Arithmetic Recap"
+   ]
+  },
+  "CH0110": {
+   "stage": "STG011",
+   "stage_no": 12,
+   "title": "Pointers and Arrays",
+   "headings": [
+    "What Are Pointers and Arrays?",
+    "Accessing Array Elements Using a Pointer",
+    "Pointers and Array Indexes",
+    "Using Pointers to Traverse an Array",
+    "Pointers and Arrays Recap"
+   ]
+  },
+  "CH0111": {
+   "stage": "STG011",
+   "stage_no": 12,
+   "title": "Pointers and Strings",
+   "headings": [
+    "What Are Pointers and Strings?",
+    "Accessing String Characters",
+    "Using *(p+i) With Strings",
+    "Traversing a String Using a Pointer",
+    "Pointers and Strings Recap"
+   ]
+  },
+  "CH0112": {
+   "stage": "STG011",
+   "stage_no": 12,
+   "title": "Pointers with Functions",
+   "headings": [
+    "Why Use Pointers with Functions?",
+    "Passing an Address to a Function",
+    "Changing a Variable Inside a Function",
+    "Using Pointers to Modify Two Variables",
+    "Pointers with Functions Recap"
+   ]
+  },
+  "CH0113": {
+   "stage": "STG011",
+   "stage_no": 12,
+   "title": "Pointers with Structures",
+   "headings": [
+    "What Is a Pointer to a Structure?",
+    "Accessing Structure Members Using a Pointer",
+    "The Arrow Operator ->",
+    "Changing Structure Data Using a Pointer",
+    "Pointers with Structures Recap"
+   ]
+  },
+  "CH0114": {
+   "stage": "STG011",
+   "stage_no": 12,
+   "title": "Common Pointer Problems",
+   "headings": [
+    "What Can Go Wrong With Pointers?",
+    "Uninitialized Pointer",
+    "NULL Pointer",
+    "Dangling Pointer",
+    "Common Pointer Problems Recap"
+   ]
   }
  }
 }
