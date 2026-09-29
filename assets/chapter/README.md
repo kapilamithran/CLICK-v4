@@ -101,11 +101,13 @@ The number Home prints ("Stage N") is `stages.stage_no`, and the backend sorts s
 `stage_id` / `chapter_id`, which never change. The order is: Foundations 0, Datatypes 1, Operators 2, Input 3, Decision Making 4,
 Loops 5, **NUMBER CRUNCHING 6** (STG012, 7 chapter slots CH0117-CH0123), **PATTERNS 7** (STG013, 5 slots CH0124-CH0128), ARRAYS 8,
 STRINGS 9, SEARCHING & SORTING 10, FUNCTIONS 11, POINTERS 12 (`supabase/migrations/20260929000000_structure_number_crunching_patterns.sql`).
-PATTERNS has its content now (CH0124-CH0128, from assets/Contents/Patterns; content migration 20260929010000, unlock migration 20260929020000).
-Number Crunching is still structure only: its chapters are titled "Content coming soon", have no learn text or questions, and the
-stage carries the usual self-referencing lock row so it shows as locked and can never complete.
-When the real Number Crunching content arrives: (1) a content migration that sets the real chapter titles and adds learn_content,
-questions, options, hints and glossary (as for STRINGS or FUNCTIONS), (2) decks in `defs/` and activities in `assets/learn/defs/`,
-(3) an unlock migration that removes the self-lock row and adds the stage-to-stage rules (Number Crunching after Loops,
-PATTERNS after Number Crunching, ARRAYS after Patterns), then `node tests/fixtures/build-production-content.mjs` and update the
-`CURRICULUM` list in `tests/home/structure-app.js`.
+NUMBER CRUNCHING and PATTERNS both have their content now. Number Crunching (CH0117-CH0123, from
+`assets/Contents/Number Crunching`; content migration `20260930000000`, unlock migration `20260930010000`) teaches accessing,
+counting and reversing digits, then checking a palindrome, Armstrong, perfect and prime number -- CH0119 (Reversing a Number) has
+6 questions instead of 5, because its own source repeats "3" in its quiz numbering, so it also sets `chapters.question_limit = 6`
+(the same column already used for CH0036-38, CH0056-58 and CH0061). Patterns (CH0124-CH0128, from `assets/Contents/Patterns`;
+content migration `20260929010000`, unlock migration `20260929020000`) teaches star, number, spacing, hollow and combined
+patterns. Neither unlock migration adds a stage-to-stage rule (Number Crunching after Loops, Patterns after Number Crunching):
+with no rule at all a stage defaults to unlocked (see the Arrays unlock migration's own comment), so removing just the
+self-referencing row is enough, exactly like Stages 6-9. POINTERS keeps its self-lock (real titles already assigned, but not
+yet through the unified-chapter QA process), so it is still the one populated stage that cannot complete.

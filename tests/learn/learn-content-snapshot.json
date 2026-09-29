@@ -948,6 +948,87 @@
     "How to Analyze Any Pattern",
     "Pattern Problem-Solving Framework"
    ]
+  },
+  "CH0117": {
+   "stage": "STG012",
+   "stage_no": 6,
+   "title": "Accessing Digits",
+   "headings": [
+    "What Is Number Crunching?",
+    "Accessing a Digit",
+    "Removing the Last Digit",
+    "Accessing All the Digits"
+   ]
+  },
+  "CH0118": {
+   "stage": "STG012",
+   "stage_no": 6,
+   "title": "Counting Digits",
+   "headings": [
+    "What Is Counting Digits?",
+    "How Do We Count the Digits?",
+    "Counting Digits Using a Loop"
+   ]
+  },
+  "CH0119": {
+   "stage": "STG012",
+   "stage_no": 6,
+   "title": "Reversing a Number",
+   "headings": [
+    "What Is Reversing a Number?",
+    "Getting Digits for Reversing",
+    "Building the Reverse",
+    "Reversing a Number Using a Loop",
+    "Reversing a Number Recap"
+   ]
+  },
+  "CH0120": {
+   "stage": "STG012",
+   "stage_no": 6,
+   "title": "Checking a Palindrome Number",
+   "headings": [
+    "What Is a Palindrome Number?",
+    "Reversing the Number",
+    "Comparing Original and Reverse",
+    "Checking a Palindrome in C",
+    "Palindrome Recap"
+   ]
+  },
+  "CH0121": {
+   "stage": "STG012",
+   "stage_no": 6,
+   "title": "Checking an Armstrong Number",
+   "headings": [
+    "What Is an Armstrong Number?",
+    "Getting the Digits",
+    "Cubing Each Digit",
+    "Checking Armstrong in C",
+    "Armstrong Number Recap"
+   ]
+  },
+  "CH0122": {
+   "stage": "STG012",
+   "stage_no": 6,
+   "title": "Checking a Perfect Number",
+   "headings": [
+    "What Is a Perfect Number?",
+    "Finding the Factors",
+    "Adding the Factors",
+    "Checking a Perfect Number",
+    "Perfect Number Recap"
+   ]
+  },
+  "CH0123": {
+   "stage": "STG012",
+   "stage_no": 6,
+   "title": "Checking a Prime Number",
+   "headings": [
+    "What Is a Prime Number?",
+    "Checking for Factors",
+    "Counting Factors",
+    "Checking a Prime Number",
+    "Prime Number Recap"
+   ]
   }
  }
 }

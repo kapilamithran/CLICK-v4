@@ -1,5 +1,5 @@
-// Curriculum STRUCTURE tests: Number Crunching (Stage 6, 7 chapter slots) and Patterns (Stage 7, 5 chapter slots) sit between
-// Loops and Arrays, with no learning content yet, and nothing that already exists moved, was renamed or lost.
+// Curriculum STRUCTURE tests: Number Crunching (Stage 6, 7 chapters) and Patterns (Stage 7, 5 chapters) sit between
+// Loops and Arrays, both with real content now, and nothing that already exists moved, was renamed or lost.
 //   node --test tests/home/structure.test.js
 // The data comes from tests/fixtures/curriculum-structure.json: every active stage/chapter/prerequisite row after applying
 // supabase/migrations to the CSV seed (rebuild with `node tests/fixtures/build-production-content.mjs`). The live prerequisite rows
@@ -47,18 +47,17 @@ test("existing chapters keep their number and order inside their stage", () => {
   }
 });
 
-// ---- the placeholder state of Number Crunching: structure only, no invented content, nothing that can award or complete anything
-test("the 7 Number Crunching slots carry a neutral status text, not an invented title", () => {
-  for (const c of chaptersOf("STG012")) assert.strictEqual(c.title, "Content coming soon", c.chapter_id);
+// ---- Number Crunching has its real content (from assets/Contents/Number Crunching) and is unlocked like Stages 6-9
+test("Number Crunching: the seven chapters carry the titles of the Number Crunching source PDFs, each with one learn text and its own question count", () => {
+  const want = CURRICULUM.find((c) => c.id === "STG012").titles;
+  assert.deepStrictEqual(chaptersOf("STG012").map((c) => c.title), want);
+  const list = chaptersOf("STG012");
+  for (const c of list) assert.strictEqual(S.content[c.chapter_id].learn, 1, c.chapter_id);
+  // every chapter has 5 questions except Reversing a Number, whose own source repeats "3" in its quiz numbering and has 6
+  assert.deepStrictEqual(list.map((c) => S.content[c.chapter_id].questions), [5, 5, 6, 5, 5, 5, 5]);
 });
-test("the Number Crunching slots have no learning content and no questions (nothing invented, nothing that can award XP or hearts)", () => {
-  for (const c of chaptersOf("STG012")) assert.deepStrictEqual(S.content[c.chapter_id], { learn: 0, questions: 0 }, c.chapter_id);
-});
-test("Number Crunching is locked by the same self-referencing rule every content-less stage uses, so it can never complete", () => {
-  const own = S.prerequisites.filter((p) => p.target_id === "STG012");
-  assert.deepStrictEqual(own.map((p) => p.prerequisite_id), ["STG012"]);
-  assert.ok(own[0].active && /content is coming soon/i.test(own[0].description));
-  assert.ok(S.prerequisites.some((p) => p.target_id === "STG011" && p.prerequisite_id === "STG011"), "Pointers is still locked the same way");
+test("Number Crunching is unlocked the same way as the other populated stages: no self-lock, and the chapters keep their slot-to-slot chain", () => {
+  assert.strictEqual(S.prerequisites.filter((p) => p.target_id === "STG012").length, 0);
 });
 // ---- Patterns has its real content (from assets/Contents/Patterns) and is unlocked like Stages 6-9
 test("Patterns: the five chapters carry the titles of the Patterns source PDFs, each with one learn text and five questions", () => {
@@ -68,6 +67,9 @@ test("Patterns: the five chapters carry the titles of the Patterns source PDFs, 
 });
 test("Patterns is unlocked the same way as the other populated stages: no self-lock, and the Patterns chapters keep their slot-to-slot chain", () => {
   assert.strictEqual(S.prerequisites.filter((p) => p.target_id === "STG013").length, 0);
+});
+test("Pointers keeps its self-lock (not yet through the unified-chapter QA process), so it is still the one populated stage that cannot complete", () => {
+  assert.ok(S.prerequisites.some((p) => p.target_id === "STG011" && p.prerequisite_id === "STG011" && p.active), "Pointers is still locked the same way");
 });
 test("the existing chapter unlock mechanism is ready: each new slot requires the previous slot", () => {
   for (const sid of ["STG012", "STG013"]) {
@@ -90,26 +92,35 @@ test("Home: a student who finished Loops sees Loops, then Number Crunching, then
   const model = HP.build(appFor(S.prerequisites, through(5)));
   assert.deepStrictEqual(model.stages.map((s) => [s.stageNo, s.title]), CURRICULUM.map((c) => [c.no, c.title]));
   assert.strictEqual(stageOf(model, "Loops").status, "completed");
+  // Number Crunching and Patterns both have real content and no self-lock: they open like every other populated stage, chapter by chapter
   const nc = stageOf(model, "NUMBER CRUNCHING");
-  assert.strictEqual(nc.status, "locked");
-  assert.match(nc.lockReason, /content is coming soon/i);
-  assert.ok(nc.nodes.every((n) => n.state === "locked" && !n.tested && !n.learned && n.xp === 0), "Number Crunching nodes stay locked and award nothing");
-  assert.strictEqual(nc.done, 0); assert.strictEqual(nc.percent, 0);
   assert.strictEqual(nc.total, 7);
-  // Patterns has real content and no self-lock: it opens like every other populated stage, chapter by chapter
+  assert.notStrictEqual(nc.status, "locked");
+  assert.strictEqual(nc.done, 0);
+  assert.deepStrictEqual(nc.nodes.map((n) => n.title), CURRICULUM.find((c) => c.id === "STG012").titles);
   const pt = stageOf(model, "PATTERNS");
   assert.strictEqual(pt.total, 5);
   assert.notStrictEqual(pt.status, "locked");
   assert.strictEqual(pt.done, 0);
   assert.deepStrictEqual(pt.nodes.map((n) => n.title), CURRICULUM.find((c) => c.id === "STG013").titles);
 });
-test("Home: Patterns chapters open one at a time (chapter n needs chapter n-1)", () => {
-  const ch = CURRICULUM.find((c) => c.id === "STG013").chapters;
+test("Home: Number Crunching chapters open one at a time (chapter n needs chapter n-1)", () => {
+  const ch = CURRICULUM.find((c) => c.id === "STG012").chapters;
   let model = HP.build(appFor(S.prerequisites, through(5)));
-  assert.deepStrictEqual(stageOf(model, "PATTERNS").nodes.map((n) => n.state), ["current", "locked", "locked", "locked", "locked"]);
+  assert.deepStrictEqual(stageOf(model, "NUMBER CRUNCHING").nodes.map((n) => n.state), ["current", "locked", "locked", "locked", "locked", "locked", "locked"]);
   model = HP.build(appFor(S.prerequisites, [...through(5), ch[0], ch[1]]));
-  assert.deepStrictEqual(stageOf(model, "PATTERNS").nodes.map((n) => n.state), ["completed", "completed", "current", "locked", "locked"]);
+  assert.deepStrictEqual(stageOf(model, "NUMBER CRUNCHING").nodes.map((n) => n.state), ["completed", "completed", "current", "locked", "locked", "locked", "locked"]);
   model = HP.build(appFor(S.prerequisites, [...through(5), ...ch]));
+  assert.strictEqual(stageOf(model, "NUMBER CRUNCHING").status, "completed");
+});
+test("Home: Patterns chapters open one at a time (chapter n needs chapter n-1)", () => {
+  const nc = CURRICULUM.find((c) => c.id === "STG012").chapters, ch = CURRICULUM.find((c) => c.id === "STG013").chapters;
+  const base = [...through(5), ...nc];   // Number Crunching finished too, so Patterns becomes the highlighted "current" stage
+  let model = HP.build(appFor(S.prerequisites, base));
+  assert.deepStrictEqual(stageOf(model, "PATTERNS").nodes.map((n) => n.state), ["current", "locked", "locked", "locked", "locked"]);
+  model = HP.build(appFor(S.prerequisites, [...base, ch[0], ch[1]]));
+  assert.deepStrictEqual(stageOf(model, "PATTERNS").nodes.map((n) => n.state), ["completed", "completed", "current", "locked", "locked"]);
+  model = HP.build(appFor(S.prerequisites, [...base, ...ch]));
   assert.strictEqual(stageOf(model, "PATTERNS").status, "completed");
 });
 test("Home: Arrays, Strings, Searching & Sorting and Functions behave exactly as before (not locked by the new stages)", () => {
@@ -117,12 +128,11 @@ test("Home: Arrays, Strings, Searching & Sorting and Functions behave exactly as
   for (const t of ["ARRAYS", "STRINGS", "SEARCHING & SORTING", "FUNCTIONS"]) assert.notStrictEqual(stageOf(model, t).status, "locked", t);
   assert.strictEqual(stageOf(model, "POINTERS").status, "locked");
 });
-test("Home: the Number Crunching placeholder never appears completed, even for a student who has finished everything else", () => {
-  const allReal = CURRICULUM.filter((c) => !c.pending).flatMap((c) => c.chapters);
-  const model = HP.build(appFor(S.prerequisites, allReal));
-  assert.strictEqual(stageOf(model, "NUMBER CRUNCHING").status, "locked"); assert.strictEqual(stageOf(model, "NUMBER CRUNCHING").done, 0);
+test("Home: a student who finished everything through Patterns has Number Crunching and Patterns both complete", () => {
+  const model = HP.build(appFor(S.prerequisites, through(7)));
+  assert.strictEqual(stageOf(model, "NUMBER CRUNCHING").status, "completed"); assert.strictEqual(stageOf(model, "NUMBER CRUNCHING").done, 7);
   assert.strictEqual(stageOf(model, "PATTERNS").status, "completed");
-  assert.strictEqual(model.allComplete, false);
+  assert.notStrictEqual(stageOf(model, "ARRAYS").status, "locked");
 });
 test("Home markup lists the stages in curriculum order with Stage 6 and Stage 7 for the new ones", () => {
   const html = HP.modelHTML(HP.build(appFor(S.prerequisites, through(5))));

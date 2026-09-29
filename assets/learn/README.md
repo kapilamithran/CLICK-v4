@@ -142,7 +142,7 @@ character is still there (copying and screen readers are unchanged). Use it only
 In graded questions, a multi-line output choice of a `PREDICT_OUTPUT` question is drawn as preformatted monospace text, so the choices
 keep their spaces and line breaks (a right-aligned and a left-aligned triangle differ only in spaces).
 
-## Future chapters (Number Crunching, Pointers)
+## Future chapters (Pointers)
 
 Stage numbers are display metadata (`stages.stage_no`) and changed when NUMBER CRUNCHING (Stage 6) and PATTERNS (Stage 7) were
 added between Loops and Arrays, so this section names stages instead of numbering them. ARRAYS (CH0062-CH0072 and CH0116) now has full activity defs - see `defs/ch0062.js` onward for the
@@ -155,10 +155,15 @@ with `noRun: true` for plain-English steps. SEARCHING & SORTING (CH0079-CH0093) 
 linear/binary search and bubble/selection/insertion sort, `assign`/`reveal`/`builder`/`order`/`predict` for the
 concept work (`order` activities that sequence plain-English algorithm steps set `noRun: true`). FUNCTIONS
 (CH0094-CH0102) has full activity defs as well: `assign`/`lab`/`trace` (with the two extras above) for define-call-execute,
-parameters versus arguments, return values, local versus global variables and recursion. PATTERNS (CH0124-CH0128) has full
-activity defs too: nested-loop `trace`/`lab` with `spaces: true` for alignment, hollow shapes, the X and the diamond. NUMBER CRUNCHING
-(7 slots, CH0117-CH0123) exists as structure only, titled "Content coming soon", and POINTERS still has no Learn content. Nothing here needs to change for them: when their Learn pages exist, add `defs/chNNNN.js` files
-that point at the real page headings and reuse the same kinds (`trace` for sorting steps, `lab`/`run` for
-small experiments, `order`/`fill` for structure). Kinds for those topics can be added to `kinds-visual.js`
-by registering `ClickLearn.kind(name, {...})`. Do not write activities for chapters whose Learn text does
-not exist yet.
+parameters versus arguments, return values, local versus global variables and recursion. NUMBER CRUNCHING (CH0117-CH0123) has
+full activity defs too: `tracetable` fills in the round-by-round values of the % 10 / / 10 loops that get, count, reverse and
+check digits (digit access, digit count, reversing, palindrome, Armstrong, perfect and prime all reuse the exact same loop
+shape); `order` with `noRun: true` sequences each check's GET/CUBE/ADD/REMOVE/COMPARE-style steps; `assign` sorts a chapter's
+own statements into the step they belong to; `builder` assembles the `rev * 10 + digit` and `digit * digit * digit`
+expressions; and `lab` reruns each chapter's program on a few different numbers (only the numbers the source itself uses or
+directly implies, such as its own quiz options). PATTERNS (CH0124-CH0128) has full activity defs too: nested-loop `trace`/`lab`
+with `spaces: true` for alignment, hollow shapes, the X and the diamond. POINTERS still has no Learn content. Nothing here
+needs to change for it: when its Learn pages exist, add `defs/chNNNN.js` files that point at the real page headings and reuse
+the same kinds (`trace` for pointer/array steps, `lab`/`run` for small experiments, `order`/`fill` for structure). Kinds for
+those topics can be added to `kinds-visual.js` by registering `ClickLearn.kind(name, {...})`. Do not write activities for
+chapters whose Learn text does not exist yet.
