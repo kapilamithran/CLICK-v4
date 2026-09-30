@@ -81,16 +81,20 @@ body[data-page="home"]{overflow-x:clip}
 /* Progressive curriculum-position lighting: a soft halo behind the node, sized by how far the chapter sits in the
  * WHOLE curriculum (--chapter-light-intensity, 0.15..1, set per node in path.js from the flattened stage/chapter
  * order -- never hardcoded per chapter). It is purely decorative: state (locked/current/completed) is still shown
- * by the existing icon/background/border/label above, so the halo is never the only signal. --lp-glow-mult tunes
- * how much of that intensity actually shows for each state, so a locked chapter stays subtle regardless of how
- * far along the curriculum it is, and a completed one keeps a steady glow with no extra motion. */
-.lp-face::after{content:"";position:absolute;inset:-15px;z-index:-1;border-radius:30px;pointer-events:none;
-  background:radial-gradient(circle,var(--lp-glow,var(--accent)) 0%,transparent 72%);
-  opacity:calc(var(--chapter-light-intensity,.15) * var(--lp-glow-mult,.45));filter:blur(7px)}
-.lp-step[data-state="locked"] .lp-face::after{--lp-glow:var(--lp-future);--lp-glow-mult:.2}
-.lp-step[data-state="available"] .lp-face::after{--lp-glow-mult:.45}
-.lp-step[data-state="current"] .lp-face::after{--lp-glow-mult:.7}
-.lp-step[data-state="completed"] .lp-face::after{--lp-glow:var(--lp-done);--lp-glow-mult:.6}
+ * by the existing icon/background/border/label above, so the halo is never the only signal.
+ * The glow uses --brutal-yellow (the app's existing "further along" accent -- already the current-chapter ring and
+ * the completed-chapter fill) rather than --accent: --accent is the same hue as the page's own background wash, so
+ * a same-hue glow was invisible however far the opacity was raised. --lp-glow-floor/--lp-glow-range turn intensity
+ * into a visible opacity per state (floor + range*intensity), so even the curriculum's very first chapter shows a
+ * faint glow rather than none, a locked chapter stays clearly the dimmest regardless of its curriculum position,
+ * and the increase from chapter to chapter actually reads on screen. */
+.lp-face::after{content:"";position:absolute;inset:-16px;z-index:-1;border-radius:32px;pointer-events:none;
+  background:radial-gradient(circle,var(--lp-glow,var(--brutal-yellow)) 0%,transparent 70%);
+  opacity:calc(var(--lp-glow-floor,.14) + var(--lp-glow-range,.5) * var(--chapter-light-intensity,.15));filter:blur(9px)}
+.lp-step[data-state="locked"] .lp-face::after{--lp-glow:var(--lp-future);--lp-glow-floor:.05;--lp-glow-range:.12}
+.lp-step[data-state="available"] .lp-face::after{--lp-glow-floor:.14;--lp-glow-range:.5}
+.lp-step[data-state="current"] .lp-face::after{--lp-glow-floor:.22;--lp-glow-range:.68}
+.lp-step[data-state="completed"] .lp-face::after{--lp-glow:var(--lp-done);--lp-glow-floor:.18;--lp-glow-range:.55}
 
 .lp-step[data-state="completed"] .lp-face{background:var(--brutal-yellow);color:#000}
 .lp-step[data-state="current"] .lp-face{background:var(--accent);color:var(--lp-on-accent)}

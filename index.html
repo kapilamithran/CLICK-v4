@@ -1070,6 +1070,11 @@ table.staff-table tr.staff-row-clickable:hover{background:rgba(255,255,255,.04)}
 <script src="assets/chapter/explorer.js?v=1"></script>
 <script src="assets/chapter/chapter.js?v=1"></script>
 </head><body data-page="home"><script>(function(){try{if(localStorage.getItem('clickTheme')==='light')document.documentElement.setAttribute('data-theme','light')}catch(e){}})()</script><script>
+// Fixed, server-mirrored XP paid for one graded visualizing-activity completion (assets/learn/).
+// Activities were previously ungraded, no-XP 'learning interactions, not assessments' (assets/learn/README.md);
+// this is the one client-side place that value is defined -- keep it in sync with supabase/functions/click-backend/index.ts's
+// ACTIVITY_XP and assets/learn/engine.js's DEFAULT_ACTIVITY_XP if it ever changes.
+const ACTIVITY_XP=1;
 function toast(message,kind){
   kind=kind||'info';
   var stack=document.getElementById('toastStack');
@@ -1617,6 +1622,16 @@ function demoAction(action,b){
     d.user.accuracy_percent=d.user.questions_attempted?Math.round(d.user.correct_answers*10000/d.user.questions_attempted)/100:0;
     saveDemo(d);
     return{ok:true,correct,correct_answer:done&&!correct?q.answer:'',explanation:q.explanation||'',hint:q.hint||'',hearts:d.user.hearts,pending_xp:testState.demoPending,failed:d.user.hearts<=0&&heartLost,heart_lost:heartLost,recovery_chapter_id:heartLost?testState.chapter_id:'',question_done:done,retry_allowed:!correct&&attempt<3,attempt_number:attempt,attempts_remaining:Math.max(0,3-attempt)}
+  }
+
+  if(action==='saveActivityAttempt'){
+    // Mirrors supabase/functions/click-backend/index.ts's saveActivityAttempt: a fixed, server-defined XP
+    // amount per activity completion (never a client-sent number), paid once per activity per run.
+    testState.demoActivityDone=testState.demoActivityDone||{};
+    if(testState.demoActivityDone[b.activity_id])return{ok:true,pending_xp:testState.demoPending};
+    testState.demoActivityDone[b.activity_id]=true;
+    testState.demoPending=(testState.demoPending||0)+ACTIVITY_XP;
+    return{ok:true,pending_xp:testState.demoPending}
   }
 
   if(action==='finishTest'){
@@ -2755,6 +2770,31 @@ function queueTestAttempt(q,answer){
   testState.syncChain.catch(()=>{});
   return testState.syncChain
 }
+function queueActivityAttempt(activityId){
+  const payload={
+    session_token:session.token,
+    test_run_id:testState.test_run_id,
+    activity_id:activityId,
+    response_ms:0,
+    device:navigator.userAgent
+  };
+  // Same serialized-sync pattern as queueTestAttempt, so an activity save can never race a question save
+  // (or another activity save) for the same test run.
+  testState.syncChain=(testState.syncChain||Promise.resolve()).then(async()=>{
+    const r=await post('saveActivityAttempt',payload);
+    if(testState&&String(testState.test_run_id)===String(payload.test_run_id)){
+      testState.pending=r.pending_xp;
+      if($('testPendingText'))$('testPendingText').textContent=r.pending_xp
+    }
+    return r
+  }).catch(err=>{
+    if(testState)testState.syncError=err;
+    console.error('Activity attempt sync failed',err);
+    throw err
+  });
+  testState.syncChain.catch(()=>{});
+  return testState.syncChain
+}
 async function waitForTestSync(){
   if(testState?.syncChain){
     try{await testState.syncChain}catch(e){}
@@ -2887,14 +2927,22 @@ function renderActivitySlide(s){
   $("testQuestionTitle").textContent=s.title;
   $("testQuestionExplain").textContent=s.objective?"You will learn: "+s.objective:"";
   btn.textContent="CONTINUE";btn.disabled=true;btn.onclick=nextTestRound;
-  const finish=()=>{if(testState.slideDone)return;testState.slideDone=true;btn.disabled=false;$("testSkip").hidden=true;slideTakeaway(s)};
+  const review=testState.mode==='review';
+  const finish=()=>{
+    if(testState.slideDone)return;testState.slideDone=true;btn.disabled=false;$("testSkip").hidden=true;slideTakeaway(s);
+    // A review has nothing at stake, exactly like a reviewed question: no XP, nothing sent to the server.
+    // A graded run pays this activity's fixed XP once, through the same test-run pipeline a question uses
+    // (queueActivityAttempt -> saveActivityAttempt -> test_runs.pending_xp), so it is committed by the same
+    // finishTest call and shows up in the same running total.
+    if(!review){testState.pending=Number(testState.pending||0)+ACTIVITY_XP;$("testPendingText").textContent=testState.pending;animateTestXP();queueActivityAttempt(s.activity)}
+  };
   const ready=window.ClickLearn&&ClickLearn.mountActivity;
   const sec=ready?ClickLearn.mountActivity(box,s.activity,{userId:app.user.user_id,onDone:finish}):null;
   if(!sec){
     // never let a missing/unloadable activity trap a student inside a chapter
     box.innerHTML='<p class="meta">This activity could not load. You can keep going.</p>';testState.slideDone=true;btn.disabled=false;return
   }
-  // The activity is a teaching aid, not an assessment (no hearts, no XP): once the student has really tried it, offer a way past it.
+  // Once the student has really tried it (or completed it, on a fast graded kind), offer a way past it.
   const engaged=()=>{if(!testState.slideDone)$("testSkip").hidden=false};
   box.addEventListener("pointerdown",engaged,{once:true});box.addEventListener("keydown",engaged,{once:true});
   $("testSkip").onclick=()=>{testState.slideDone=true;btn.disabled=false;$("testSkip").hidden=true}

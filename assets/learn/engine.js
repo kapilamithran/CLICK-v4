@@ -3,7 +3,12 @@
  *
  * The existing Learn pages stay the source of truth. Activities are configuration
  * (assets/learn/defs/*.js) that this engine draws underneath the page text, keyed by
- * chapter + page. Nothing here touches XP, hearts, progress, Take Test or Next/Back.
+ * chapter + page. This file still does not award XP itself, or touch hearts, progress
+ * or Next/Back -- that happens in index.html's renderActivitySlide, through the same
+ * test-run pipeline a graded question uses (see queueActivityAttempt/saveActivityAttempt).
+ * CL.DEFAULT_ACTIVITY_XP/CL.xpFor below are the single source of truth for HOW MUCH,
+ * shared by the runtime award (mirrored in index.html and click-backend/index.ts, since
+ * neither can literally import this browser-only file) and by any static XP inventory/report.
  *
  * Kinds in this file need no code execution:
  *   mcq, predict, fill, order, error, assign, builder, reveal
@@ -20,6 +25,12 @@
   CL.version = "1.0.0";
   CL.defs = new Map();
   CL.kinds = {};
+  // Every graded activity completion earns this fixed amount -- matching the only XP value the
+  // curriculum's 520 existing questions actually use today (`Math.min(2, Math.max(1, xp||1))` never
+  // resolves to anything but 1 in current content), per the "reuse the existing value" policy rather
+  // than inventing a new tier system. An activity definition may set its own `xp` to override this.
+  CL.DEFAULT_ACTIVITY_XP = 1;
+  CL.xpFor = function (def) { var n = Number(def && def.xp); return n > 0 ? n : CL.DEFAULT_ACTIVITY_XP; };
   CL.invalid = [];
   var byPage = {};
 

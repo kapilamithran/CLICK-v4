@@ -813,6 +813,42 @@ async function startTest(b: any) {
   return { ok: true, test_run_id: runId, unified, test: { stage_id: sid, chapter_id: cid, title: `${chapter.title || "Chapter"} Test`, chapter_title: chapter.title }, questions, hearts: Number(user.hearts) };
 }
 
+// Visualizing activities (assets/learn/) were "learning interactions, not assessments" -- no XP, ever, by
+// design (see assets/learn/README.md). This constant is the one place that reward is now defined: every
+// graded activity completion earns the same fixed amount, matching the value already used by every one of
+// the curriculum's 520 existing questions (`Math.min(2, Math.max(1, xp||1))` never actually resolves to
+// anything but 1 in the current content). Mirrored client-side in assets/learn/engine.js's DEFAULT_ACTIVITY_XP
+// and in index.html's demo-mode post() -- keep all three in sync if this ever changes.
+const ACTIVITY_XP = 1;
+
+async function saveActivityAttempt(b: any) {
+  required(b, ["session_token", "test_run_id", "activity_id"]);
+  const settings = await settingsMap();
+  const s = await requireSession(b.session_token, settings);
+  const uid = s.user_id;
+
+  const { data: run } = await supabase.from("test_runs").select("*").eq("test_run_id", b.test_run_id).eq("user_id", uid).maybeSingle();
+  if (!run || String(run.status) !== "active") throw new Error("This test run is not active.");
+
+  const { data: priorRows } = await supabase.from("activity_attempts").select("attempt_id").eq("test_run_id", run.test_run_id).eq("activity_id", String(b.activity_id));
+  if ((priorRows || []).length > 0) throw new Error("This activity is already complete.");
+
+  const pending = Number(run.pending_xp || 0) + ACTIVITY_XP;
+
+  const { error: insertError } = await supabase.from("activity_attempts").insert({
+    attempt_id: newId("AA", 14), user_id: uid, stage_id: run.stage_id, chapter_id: run.chapter_id,
+    activity_id: String(b.activity_id), test_run_id: run.test_run_id, xp: ACTIVITY_XP, xp_committed: false,
+  });
+  // The unique index on (test_run_id, activity_id) is the real, race-proof guard (mirrors the pattern used
+  // for chapter-completion XP in finishTest below); the priorRows check above just gives a friendlier error
+  // in the common, non-racing case.
+  if (insertError) { if (insertError.code === "23505") throw new Error("This activity is already complete."); throw new Error(insertError.message); }
+
+  await supabase.from("test_runs").update({ pending_xp: pending }).eq("test_run_id", run.test_run_id);
+
+  return { ok: true, pending_xp: pending };
+}
+
 async function saveTestAnswer(b: any) {
   required(b, ["session_token", "test_run_id", "question_id", "answer"]);
   const settings = await settingsMap();
@@ -936,6 +972,10 @@ async function finishTest(b: any) {
   const { data: runAttempts } = await supabase.from("attempts").select("attempt_id,question_xp").eq("test_run_id", run.test_run_id);
   for (const a of runAttempts || []) {
     await supabase.from("attempts").update({ xp_earned: isFirstCompletion ? a.question_xp : 0, xp_committed: true }).eq("attempt_id", a.attempt_id);
+  }
+  const { data: runActivityAttempts } = await supabase.from("activity_attempts").select("attempt_id,xp").eq("test_run_id", run.test_run_id);
+  for (const a of runActivityAttempts || []) {
+    await supabase.from("activity_attempts").update({ xp_committed: true }).eq("attempt_id", a.attempt_id);
   }
 
   const { data: allChapters } = await supabase.from("chapters").select("chapter_id,stage_id").eq("active", true);
@@ -1850,6 +1890,7 @@ Deno.serve(async (req: Request) => {
       case "completeLearn": return json(await completeLearn(b));
       case "startTest": return json(await startTest(b));
       case "saveTestAnswer": return json(await saveTestAnswer(b));
+      case "saveActivityAttempt": return json(await saveActivityAttempt(b));
       case "finishTest": return json(await finishTest(b));
       case "createPracticePairing": return json(await createPracticePairing(b));
       case "practicePairingStatus": return json(await practicePairingStatus(b));
