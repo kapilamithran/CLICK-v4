@@ -336,6 +336,30 @@ async function main() {
     await ctx.close();
   }
 
+  // ---------------------------------------------------------------- G2. progressive chapter lighting (visual QA)
+  section("G2. Progressive chapter lighting actually reaches the DOM and visibly progresses across stages");
+  for (const theme of ["dark", "light"]) {
+    const { ctx, page, errors } = await L.open({ ...MID, theme }, { width: 390, height: 844 }, {});
+    await page.evaluate(() => document.querySelectorAll(".lp-toggle[aria-expanded=false]").forEach((b) => b.click()));
+    await t(theme + ": every rendered chapter node carries a real --chapter-light-intensity value, increasing end to end", async () => {
+      const vals = await page.locator(".lp-step").evaluateAll((els) => els.map((el) => parseFloat(getComputedStyle(el).getPropertyValue("--chapter-light-intensity"))));
+      assert.ok(vals.length > 10, "sanity: many chapter nodes are on screen");
+      for (const v of vals) assert.ok(v >= 0.15 && v <= 1, "intensity out of range: " + v);
+      for (let i = 1; i < vals.length; i++) assert.ok(vals[i] >= vals[i - 1] - 1e-9, "intensity dropped between node " + (i - 1) + " and " + i);
+      assert.ok(vals[vals.length - 1] > vals[0], "the last on-screen chapter must read brighter than the first");
+    });
+    await t(theme + ": the halo is a decorative pseudo-element behind the face icon, never covering the label text", async () => {
+      const z = await page.locator(".lp-face").first().evaluate((el) => getComputedStyle(el, "::after").zIndex);
+      assert.equal(z, "-1");
+    });
+    await t(theme + ": locked chapters stay visually subtle regardless of how far along the curriculum they sit", async () => {
+      const mult = await page.locator('.lp-step[data-state="locked"]').first().evaluate((el) => getComputedStyle(el.querySelector(".lp-face"), "::after").getPropertyValue("opacity"));
+      assert.ok(parseFloat(mult) <= 0.2 + 1e-6, "locked chapter glow opacity too strong: " + mult);
+    });
+    await t(theme + ": no JS errors", async () => noErrors(errors));
+    await ctx.close();
+  }
+
   // ---------------------------------------------------------------- I. theme contrast
   section("I. Theme contrast (WCAG)");
   for (const theme of ["dark", "light"]) {

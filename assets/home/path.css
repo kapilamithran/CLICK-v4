@@ -75,8 +75,22 @@ body[data-page="home"]{overflow-x:clip}
 .lp-node{position:absolute;top:0;left:calc(var(--x) - var(--lp-node) / 2);width:var(--lp-node);height:var(--lp-node);z-index:2;padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .lp-node:focus{outline:none}
 .lp-node:focus-visible .lp-face{outline:3px solid var(--accent);outline-offset:5px}
-.lp-face{display:grid;place-items:center;width:100%;height:100%;border-radius:22px;border:3px solid var(--brutal);background:var(--bg);color:var(--accent);box-shadow:0 6px 0 var(--brutal)}
+.lp-face{position:relative;display:grid;place-items:center;width:100%;height:100%;border-radius:22px;border:3px solid var(--brutal);background:var(--bg);color:var(--accent);box-shadow:0 6px 0 var(--brutal)}
 .lp-face svg{width:46%;height:46%}
+
+/* Progressive curriculum-position lighting: a soft halo behind the node, sized by how far the chapter sits in the
+ * WHOLE curriculum (--chapter-light-intensity, 0.15..1, set per node in path.js from the flattened stage/chapter
+ * order -- never hardcoded per chapter). It is purely decorative: state (locked/current/completed) is still shown
+ * by the existing icon/background/border/label above, so the halo is never the only signal. --lp-glow-mult tunes
+ * how much of that intensity actually shows for each state, so a locked chapter stays subtle regardless of how
+ * far along the curriculum it is, and a completed one keeps a steady glow with no extra motion. */
+.lp-face::after{content:"";position:absolute;inset:-15px;z-index:-1;border-radius:30px;pointer-events:none;
+  background:radial-gradient(circle,var(--lp-glow,var(--accent)) 0%,transparent 72%);
+  opacity:calc(var(--chapter-light-intensity,.15) * var(--lp-glow-mult,.45));filter:blur(7px)}
+.lp-step[data-state="locked"] .lp-face::after{--lp-glow:var(--lp-future);--lp-glow-mult:.2}
+.lp-step[data-state="available"] .lp-face::after{--lp-glow-mult:.45}
+.lp-step[data-state="current"] .lp-face::after{--lp-glow-mult:.7}
+.lp-step[data-state="completed"] .lp-face::after{--lp-glow:var(--lp-done);--lp-glow-mult:.6}
 
 .lp-step[data-state="completed"] .lp-face{background:var(--brutal-yellow);color:#000}
 .lp-step[data-state="current"] .lp-face{background:var(--accent);color:var(--lp-on-accent)}

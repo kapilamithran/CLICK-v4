@@ -15,7 +15,7 @@ const CURRICULUM = [
   { no: 3, id: "STG004", title: "Input", chapters: range("CH0046", "CH0050") },
   { no: 4, id: "STG005", title: "Decision Making", chapters: [...range("CH0051", "CH0055"), "CH0115"] },
   { no: 5, id: "STG006", title: "Loops", chapters: range("CH0056", "CH0061") },
-  { no: 6, id: "STG012", title: "NUMBER CRUNCHING", chapters: range("CH0117", "CH0123"), titles: ["Accessing Digits", "Counting Digits", "Reversing a Number", "Checking a Palindrome Number", "Checking an Armstrong Number", "Checking a Perfect Number", "Checking a Prime Number"] },
+  { no: 6, id: "STG012", title: "NUMBER CRUNCHING", chapters: ["CH0118", "CH0117", ...range("CH0119", "CH0123")], titles: ["Counting Digits", "Accessing Digits", "Reversing a Number", "Checking a Palindrome Number", "Checking an Armstrong Number", "Checking a Perfect Number", "Checking a Prime Number"] },
   { no: 7, id: "STG013", title: "PATTERNS", chapters: range("CH0124", "CH0128"), titles: ["Pattern Basics & Simple Patterns", "Number & Character Patterns", "Spaces, Alignment & Pyramids", "Hollow Patterns & Conditions", "Combining Patterns & Problem Solving"] },
   { no: 8, id: "STG007", title: "ARRAYS", chapters: [...range("CH0062", "CH0072"), "CH0116"] },
   { no: 9, id: "STG008", title: "STRINGS", chapters: range("CH0073", "CH0078") },

@@ -48,6 +48,19 @@ test("existing chapters keep their number and order inside their stage", () => {
 });
 
 // ---- Number Crunching has its real content (from assets/Contents/Number Crunching) and is unlocked like Stages 6-9
+test("Number Crunching: Chapter 1 is Counting Digits (CH0118) and Chapter 2 is Accessing Digits (CH0117), by the canonical order/chapter_no columns, not just by displayed text", () => {
+  const list = chaptersOf("STG012");
+  assert.deepStrictEqual(list.slice(0, 2).map((c) => [c.chapter_no, c.chapter_id, c.title]), [
+    [1, "CH0118", "Counting Digits"],
+    [2, "CH0117", "Accessing Digits"],
+  ]);
+});
+test("Number Crunching: Chapter 1 -> Chapter 2 -> Chapter 3 progression still works after the swap (no broken chain, no stale prerequisite edge)", () => {
+  assert.deepStrictEqual(S.prerequisites.filter((p) => p.target_id === "CH0117" && p.active).map((p) => p.prerequisite_id), ["CH0118"], "CH0117 (now slot 2) requires CH0118 (now slot 1)");
+  assert.strictEqual(S.prerequisites.filter((p) => p.target_id === "CH0118" && p.active).length, 0, "CH0118 (now slot 1) has no chapter prerequisite of its own (only the stage gate)");
+  assert.deepStrictEqual(S.prerequisites.filter((p) => p.target_id === "CH0119" && p.active).map((p) => p.prerequisite_id), ["CH0117"], "CH0119 (slot 3, unchanged) now requires slot 2's real chapter, CH0117");
+  assert.strictEqual(S.prerequisites.some((p) => p.target_id === "CH0118" && p.prerequisite_id === "CH0117" && p.active), false, "the old, now-backwards edge is gone");
+});
 test("Number Crunching: the seven chapters carry the titles of the Number Crunching source PDFs, each with one learn text and its own question count", () => {
   const want = CURRICULUM.find((c) => c.id === "STG012").titles;
   assert.deepStrictEqual(chaptersOf("STG012").map((c) => c.title), want);
@@ -169,4 +182,45 @@ test("projection: with real content the chain Loops -> Number Crunching -> Patte
   assert.strictEqual(stageOf(m, "ARRAYS").status, "locked", "Patterns not finished: Arrays stays locked");
   m = HP.build(appFor(rules, [...through(5), ...nc, ...pt]));
   assert.strictEqual(stageOf(m, "PATTERNS").status, "completed"); assert.strictEqual(stageOf(m, "ARRAYS").status, "current", "Patterns finished: Arrays unlocks");
+});
+
+// ---- progressive chapter lighting (a purely visual journey cue -- see applyLighting() in assets/home/path.js).
+// Derived from the flattened, real stage/chapter order every time build() runs, never a hardcoded per-chapter table.
+test("lighting: every chapter across every stage gets an intensity in range, and the curriculum's first chapter is dimmest, its last is brightest", () => {
+  const model = HP.build(appFor(S.prerequisites, through(5)));
+  const flat = model.stages.flatMap((s) => s.nodes);
+  assert.ok(flat.length > 50, "sanity: the full curriculum has many chapters");
+  for (const n of flat) {
+    assert.ok(typeof n.lightIntensity === "number" && !Number.isNaN(n.lightIntensity), n.chapterId + " has no lighting metadata");
+    assert.ok(n.lightIntensity >= 0.15 && n.lightIntensity <= 1, n.chapterId + " intensity out of range: " + n.lightIntensity);
+  }
+  assert.strictEqual(flat[0].lightIntensity, 0.15, "the very first chapter of the whole curriculum is at the dimmest end");
+  assert.strictEqual(flat[flat.length - 1].lightIntensity, 1, "the very last chapter of the whole curriculum is at the brightest end");
+  assert.ok(flat[0].lightIntensity < flat[flat.length - 1].lightIntensity);
+});
+test("lighting: intensity is monotonically non-decreasing end to end, including across every stage boundary (no reset)", () => {
+  const model = HP.build(appFor(S.prerequisites, through(5)));
+  const flat = model.stages.flatMap((s) => s.nodes);
+  for (let i = 1; i < flat.length; i++) assert.ok(flat[i].lightIntensity >= flat[i - 1].lightIntensity, flat[i - 1].chapterId + " -> " + flat[i].chapterId + " went backwards");
+  // specifically check a real stage boundary: Loops' last chapter -> Number Crunching's first chapter
+  const loopsLast = stageOf(model, "Loops").nodes.at(-1), ncFirst = stageOf(model, "NUMBER CRUNCHING").nodes[0];
+  assert.ok(ncFirst.lightIntensity > loopsLast.lightIntensity, "Number Crunching Ch.1 must continue brighter than Loops' last chapter, not reset to the curriculum's dim end");
+});
+test("lighting: adding/removing chapters recomputes intensity dynamically (no hardcoded table)", () => {
+  const full = HP.build(appFor(S.prerequisites, through(5))).stages.flatMap((s) => s.nodes);
+  const appShort = appFor(S.prerequisites, through(5));
+  appShort.chapters = appShort.chapters.filter((c) => c.stage_id !== "STG011"); // drop the last stage entirely
+  const short = HP.build(appShort).stages.flatMap((s) => s.nodes);
+  assert.ok(short.length < full.length);
+  assert.notStrictEqual(short[short.length - 1].lightIntensity, full[short.length - 1].lightIntensity, "the new shorter total must shift what 'brightest' means, proving intensity is recomputed from the live registry, not read off a fixed table");
+  assert.strictEqual(short[short.length - 1].lightIntensity, 1);
+});
+test("lighting: is visual only -- state (locked/current/completed) stays the real source of truth, unaffected by intensity", () => {
+  const model = HP.build(appFor(S.prerequisites, through(5)));
+  const nc = stageOf(model, "NUMBER CRUNCHING");
+  assert.strictEqual(nc.nodes[0].state, "current");
+  assert.ok(nc.nodes.slice(1).every((n) => n.state === "locked"), "a bright (high-intensity) far-future chapter is still locked");
+  const html = HP.modelHTML(model);
+  assert.match(html, /--chapter-light-intensity:[\d.]+/, "the intensity reaches the rendered markup as a CSS custom property");
+  assert.ok(!/data-state="current"[^>]*--chapter-light-intensity:0\.15/.test(html.replace(/\n/g, "")), "sanity: current-chapter rendering still carries real per-position intensity, not a stub");
 });

@@ -99,7 +99,22 @@
     }
     for (const s of stages) for (let i = 0; i < s.nodes.length - 1; i++) s.nodes[i].link = linkState(s.nodes[i], s.nodes[i + 1]);
 
+    applyLighting(stages);
     return { course: COURSE_TITLE, stages, current, allComplete: stages.length > 0 && stages.every((s) => s.status === "completed") };
+  }
+
+  // Progressive lighting: a purely visual "journey" cue -- NOT a claim that later chapters are better, and never a
+  // second unlock signal (state/lockReason above remain the only source of truth for locked/current/completed).
+  // The curriculum order already comes from `stages` (backend stage.order) and each stage's own chapter `order`
+  // (see stageChapters() above), so flattening that existing sequence -- rather than a hardcoded table -- means a
+  // newly added stage or chapter is automatically included next time build() runs.
+  const LIGHT_MIN = 0.15, LIGHT_MAX = 1;
+  function lightCurve(t) { return LIGHT_MIN + (LIGHT_MAX - LIGHT_MIN) * Math.pow(Math.max(0, Math.min(1, t)), 0.85); }
+  function applyLighting(stages) {
+    const flat = [];
+    for (const s of stages) for (const n of s.nodes) flat.push(n);
+    const last = flat.length - 1;
+    flat.forEach((n, gi) => { n.globalIndex = gi; n.lightIntensity = Math.round(lightCurve(last > 0 ? gi / last : 1) * 1000) / 1000; });
   }
 
   function nodeSub(n) {
@@ -141,7 +156,7 @@
   function nodeHTML(n, nextLane) {
     const link = nextLane ? '<span class="lp-link lk-' + n.lane + nextLane + " is-" + n.link + '" aria-hidden="true"></span>' : "";
     const locked = n.state === "locked";
-    return '<li class="lp-step lp-' + n.lane + '" data-state="' + n.state + '">' + link +
+    return '<li class="lp-step lp-' + n.lane + '" data-state="' + n.state + '" style="--chapter-light-intensity:' + n.lightIntensity + '">' + link +
       '<button type="button" class="lp-node" data-lp="node" data-stage="' + esc(n.stageId) + '" data-chapter="' + esc(n.chapterId) + '" data-phase="' + n.phase + '"' +
       (locked ? ' aria-disabled="true"' : "") + (n.state === "current" ? ' aria-current="step"' : "") +
       ' aria-label="' + esc(nodeAria(n)) + '">' +
