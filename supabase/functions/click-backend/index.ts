@@ -745,7 +745,7 @@ async function startTest(b: any) {
 
   const { data: user } = await supabase.from("users").select("*").eq("user_id", uid).single();
   if (!user) throw new Error("User not found.");
-  if (Number(user.hearts || 0) <= 0) {
+  if (Number(user.hearts || 0) <= 0 && !truthy(b.mastery)) {
     const owed = await outstandingHeartRecoveryChapters(uid);
     const content = await publicContent();
     const chapterTitleById = new Map(content.chapters.map((c: any) => [normalizeId(c.chapter_id), c.title]));
@@ -782,19 +782,30 @@ async function startTest(b: any) {
   // here, never by the client, and per-question XP is untouched.
   if (unified) count = Math.min(count, Math.max(1, Number(settings.UNIFIED_MAX_QUESTIONS || 8)));
   pool = pool.sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0));
-  const selected = pool.slice(0, count);
+  const mastery = unified && truthy(b.mastery);
+  let selected = mastery ? pool : pool.slice(0, count);
+  let resume: any = null;
+  if (b.resume_run_id) {
+    const { data: existing } = await supabase.from("test_runs").select("*").eq("test_run_id", b.resume_run_id).eq("user_id", uid).maybeSingle();
+    if (!existing || existing.chapter_id !== cid || existing.stage_id !== sid || !existing.mastery || existing.status !== "active") throw new Error("This saved chapter is no longer active.");
+    resume = existing;
+    selected = (existing.question_ids || []).map((id: string) => pool.find((q: any) => q.question_id === id));
+    if (!selected.length || selected.some((q: any) => !q)) throw new Error("A saved question is unavailable. Ask your teacher to restore the chapter content.");
+  }
 
-  const runId = newId("TR", 14);
+  const runId = resume ? resume.test_run_id : newId("TR", 14);
   const { count: attemptCount } = await supabase.from("test_runs").select("*", { count: "exact", head: true }).eq("user_id", uid).eq("chapter_id", cid);
   const attemptNo = (attemptCount || 0) + 1;
 
-  await supabase.from("test_runs").insert({
+  const { error: startError } = resume ? { error: null } : await supabase.from("test_runs").insert({
     test_run_id: runId, user_id: uid, stage_id: sid, chapter_id: cid,
     started_at: new Date().toISOString(), status: "active",
     hearts_start: Number(user.hearts), hearts_end: Number(user.hearts),
     pending_xp: 0, committed_xp: 0, correct_count: 0, question_count: selected.length, attempt_no: attemptNo,
+    mastery, question_ids: selected.map((q: any) => q.question_id),
   });
 
+  if (startError) throw new Error("Could not start chapter: " + startError.message);
   const allOptions = testBank.options;
   const allHints = testBank.hints || [];
   const questions = selected.map((q: any) => {
@@ -810,7 +821,8 @@ async function startTest(b: any) {
     };
   });
 
-  return { ok: true, test_run_id: runId, unified, test: { stage_id: sid, chapter_id: cid, title: `${chapter.title || "Chapter"} Test`, chapter_title: chapter.title }, questions, hearts: Number(user.hearts) };
+  const { data: savedAttempts } = resume ? await supabase.from("attempts").select("question_id,correct,question_attempt_no").eq("test_run_id", runId) : { data: [] };
+  return { ok: true, test_run_id: runId, unified, mastery, pending_xp: resume?.pending_xp || 0, saved_attempts: savedAttempts || [], test: { stage_id: sid, chapter_id: cid, title: `${chapter.title || "Chapter"} Test`, chapter_title: chapter.title }, questions, hearts: Number(resume?.hearts_end ?? user.hearts) };
 }
 
 // Visualizing activities (assets/learn/) were "learning interactions, not assessments" -- no XP, ever, by
@@ -820,6 +832,17 @@ async function startTest(b: any) {
 // anything but 1 in the current content). Mirrored client-side in assets/learn/engine.js's DEFAULT_ACTIVITY_XP
 // and in index.html's demo-mode post() -- keep all three in sync if this ever changes.
 const ACTIVITY_XP = 1;
+
+// Derive mastery rewards from persisted completions, including after a lost response.
+async function masteryTotals(run: any) {
+  const { data: answers, error: answerError } = await supabase.from("attempts").select("*").eq("test_run_id", run.test_run_id);
+  const { data: activities, error: activityError } = await supabase.from("activity_attempts").select("*").eq("test_run_id", run.test_run_id);
+  if (answerError || activityError) throw new Error("Could not restore saved chapter rewards.");
+  const done = new Map<string, number>();
+  for (const a of answers || []) if (truthy(a.correct) && (run.question_ids || []).includes(a.question_id)) done.set(a.question_id, Number(a.question_xp || 0));
+  const pending = [...done.values()].reduce((n, xp) => n + xp, 0) + (activities || []).reduce((n: number, a: any) => n + Number(a.xp || 0), 0);
+  return { pending_xp: pending, correct_count: done.size };
+}
 
 async function saveActivityAttempt(b: any) {
   required(b, ["session_token", "test_run_id", "activity_id"]);
@@ -831,7 +854,10 @@ async function saveActivityAttempt(b: any) {
   if (!run || String(run.status) !== "active") throw new Error("This test run is not active.");
 
   const { data: priorRows } = await supabase.from("activity_attempts").select("attempt_id").eq("test_run_id", run.test_run_id).eq("activity_id", String(b.activity_id));
-  if ((priorRows || []).length > 0) throw new Error("This activity is already complete.");
+  if ((priorRows || []).length > 0) {
+    if (truthy(run.mastery)) return { ok: true, ...(await masteryTotals(run)) };
+    throw new Error("This activity is already complete.");
+  }
 
   const pending = Number(run.pending_xp || 0) + ACTIVITY_XP;
 
@@ -860,27 +886,39 @@ async function saveTestAnswer(b: any) {
 
   const { data: q } = await supabase.from("questions").select("*").eq("question_id", b.question_id).eq("chapter_id", run.chapter_id).maybeSingle();
   if (!q) throw new Error("Question not found.");
+  const mastery = truthy(run.mastery);
+  if (mastery && !(run.question_ids || []).includes(q.question_id)) throw new Error("Question is not part of this test.");
+  if (b.client_attempt_id) {
+    const { data: duplicate } = await supabase.from("attempts").select("*").eq("test_run_id", run.test_run_id).eq("client_attempt_id", b.client_attempt_id).maybeSingle();
+    if (duplicate) return { ok: true, correct: truthy(duplicate.correct), hearts: run.hearts_end, ...(mastery ? await masteryTotals(run) : { pending_xp: run.pending_xp }), failed: false };
+  }
+
 
   const { data: hintRows } = await supabase.from("test_hints").select("*").eq("question_id", b.question_id);
   const answerHint = (hintRows || []).sort((a: any, b: any) => Number(a.order || 0) - Number(b.order || 0))[0];
 
   const { data: priorRowsRaw } = await supabase.from("attempts").select("*").eq("test_run_id", run.test_run_id).eq("question_id", q.question_id);
   const priorRows = priorRowsRaw || [];
-  if (priorRows.some((a: any) => truthy(a.correct))) throw new Error("This question is already complete.");
-  if (priorRows.length >= 3) throw new Error("All three attempts for this question have been used.");
+  if (priorRows.some((a: any) => truthy(a.correct))) {
+    if (mastery) return { ok: true, correct: true, already_complete: true, hearts: run.hearts_end, ...(await masteryTotals(run)), failed: false };
+    throw new Error("This question is already complete.");
+  }
+  if (!mastery && priorRows.length >= 3) throw new Error("All three attempts for this question have been used.");
 
   const questionAttemptNo = priorRows.length + 1;
   const correct = isAnswerCorrect(q, String(b.answer));
-  const questionDone = correct || questionAttemptNo >= 3;
+  const cycleAttempt = mastery ? (questionAttemptNo - 1) % 3 + 1 : questionAttemptNo;
+  const questionDone = correct || (!mastery && questionAttemptNo >= 3);
   const qxp = Math.min(2, Math.max(1, Number(q.xp || 1)));
 
   const heartsBefore = Number(run.hearts_end ?? run.hearts_start ?? defaultHearts(settings));
-  const heartLost = !correct && questionAttemptNo >= 3;
+  const heartLost = !mastery && !correct && questionAttemptNo >= 3;
   const heartsAfter = heartLost ? Math.max(0, heartsBefore - 1) : heartsBefore;
   const pending = Number(run.pending_xp || 0) + (correct ? qxp : 0);
   const correctCount = Number(run.correct_count || 0) + (correct ? 1 : 0);
 
-  await supabase.from("attempts").insert({
+  const { error: attemptError } = await supabase.from("attempts").insert({
+    client_attempt_id: b.client_attempt_id || null,
     attempt_id: newId("A", 14), user_id: uid, stage_id: run.stage_id, chapter_id: run.chapter_id,
     question_id: q.question_id, question_attempt_no: questionAttemptNo, answer: String(b.answer), correct,
     hearts_before: heartsBefore, hearts_after: heartsAfter, xp_earned: 0, response_ms: Number(b.response_ms || 0),
@@ -888,6 +926,7 @@ async function saveTestAnswer(b: any) {
     question_xp: correct ? qxp : 0, xp_committed: false,
   });
 
+  if (attemptError) throw new Error("Could not save answer: " + attemptError.message);
   await supabase.from("test_runs").update({ hearts_end: heartsAfter, pending_xp: pending, correct_count: correctCount }).eq("test_run_id", run.test_run_id);
 
   const { data: user } = await supabase.from("users").select("*").eq("user_id", uid).single();
@@ -911,8 +950,8 @@ async function saveTestAnswer(b: any) {
     explanation: String(q.explanation || ""), hint: answerHint ? String(answerHint.hint_text || "") : "",
     hearts: heartsAfter, pending_xp: pending, failed, heart_lost: heartLost,
     recovery_chapter_id: heartLost ? run.chapter_id : "", question_done: questionDone,
-    retry_allowed: !correct && questionAttemptNo < 3 && !failed, attempt_number: questionAttemptNo,
-    attempts_remaining: Math.max(0, 3 - questionAttemptNo),
+    retry_allowed: !correct && !failed && (mastery || questionAttemptNo < 3), deferred: mastery && !correct && cycleAttempt === 3, attempt_number: cycleAttempt,
+    attempts_remaining: Math.max(0, 3 - cycleAttempt),
   };
 }
 
@@ -935,9 +974,12 @@ async function finishTest(b: any) {
   const { data: attempts } = await supabase.from("attempts").select("*").eq("test_run_id", run.test_run_id);
   const grouped: Record<string, any[]> = {};
   (attempts || []).forEach((a: any) => { (grouped[String(a.question_id)] ||= []).push(a); });
-  const finishedQuestionCount = Object.values(grouped).filter((list: any[]) => list.some((a) => truthy(a.correct)) || list.length >= 3).length;
+  const mastery = truthy(run.mastery);
+  const finishedQuestionCount = mastery
+    ? (run.question_ids || []).filter((id: string) => (grouped[id] || []).some((a: any) => truthy(a.correct))).length
+    : Object.values(grouped).filter((list: any[]) => list.some((a) => truthy(a.correct)) || list.length >= 3).length;
   if (finishedQuestionCount < Number(run.question_count || 0)) throw new Error("Finish every question before completing the test.");
-  if (Number(run.hearts_end || 0) <= 0) throw new Error("The test cannot be completed with zero hearts.");
+  if (!mastery && Number(run.hearts_end || 0) <= 0) throw new Error("The test cannot be completed with zero hearts.");
 
   const content = await publicContent();
   const factsBefore = await prerequisiteFacts(uid, content);
@@ -947,7 +989,7 @@ async function finishTest(b: any) {
     ? prerequisiteStatus("PRACTICE", firstPracticeBefore.stage_id, firstPracticeBefore.practice_id, content, factsBefore).unlocked
     : false;
 
-  const xp = Number(run.pending_xp || 0);
+  const xp = mastery ? (await masteryTotals(run)).pending_xp : Number(run.pending_xp || 0);
   const finishedAt = new Date().toISOString();
 
   // Chapter-completion XP is awarded at most once per (user, chapter). A

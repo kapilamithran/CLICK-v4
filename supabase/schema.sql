@@ -247,6 +247,8 @@ create table test_runs (
   committed_xp    integer not null default 0,
   correct_count   integer not null default 0,
   question_count  integer not null default 0,
+  mastery         boolean not null default false,
+  question_ids    jsonb not null default '[]'::jsonb,
   attempt_no      integer not null default 1
 );
 create index idx_test_runs_user_chapter on test_runs(user_id, chapter_id);
@@ -257,6 +259,7 @@ create table attempts (
   stage_id            text not null,
   chapter_id          text not null,
   question_id         text not null,
+  client_attempt_id text,
   question_attempt_no integer not null default 1,
   answer              text,
   correct             boolean not null default false,
@@ -324,3 +327,5 @@ begin
     execute format('alter table %I enable row level security;', t);
   end loop;
 end $$;
+
+create unique index attempts_client_request_unique on attempts(test_run_id, client_attempt_id) where client_attempt_id is not null;
