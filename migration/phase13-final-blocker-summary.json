@@ -1,0 +1,47 @@
+{
+  "phase": "13",
+  "date": "2026-10-03",
+  "baseline_main": "455bded",
+  "old": {"ref": "jnxevalckgitxuunjcvv", "status": "LIVE", "click_backend_version": 52, "deployed_source_commit": "71059e2b6c58d936fb7e8391235cd533acfeb75a", "freeze_executed": false},
+  "snapshot": "NOT CAPTURED",
+  "student_migration": "NOT EXECUTED",
+  "new": {"ref": "eyevmykfavooeiklzebe", "student_data_changed": false, "curriculum_changed": false},
+  "production": {"frontend": "OLD (unchanged)", "host": "UNKNOWN", "worker_puc_v2_on_account": false, "pages_projects_on_account": 0},
+  "cloudflare_test": {"result": "PASS (Phase 12, unchanged)"},
+  "browser_s0_s9": "NOT RUN (login-dependent; user-assisted)",
+  "extension": {"result": "PASS", "tests": "14/14"},
+  "learn_content": {"resolution": "ALREADY SATISFIED IN NEW", "chapters_exact_equal_after_migration": 7, "rows_changed": 0},
+  "clear_test_accounts": {
+    "recorded_on_old": true,
+    "statements_recorded_all_26": true,
+    "protected_joined": "2026-09-03",
+    "earliest_nonprotected_joined": "2026-09-16T09:08:32Z",
+    "historical_effect": "NOT PROVABLE from read-only evidence; bounded: if effective, it ran no later than 2026-09-16 09:08:32 UTC",
+    "roll_no_continuity": "inconclusive (30 standard 10-digit roll numbers)",
+    "action_taken": "none"
+  },
+  "freeze": {
+    "preflight": "migration/phase13-old-freeze-preflight.md",
+    "source_commit": "71059e2b6c58d936fb7e8391235cd533acfeb75a",
+    "patch": "migration/phase13-old-freeze-build.patch (v52 to freeze): 5 hunks, 0 DDL, 0 project refs",
+    "rollback_source": "migration/phase13-old-click-backend-v52.index.ts",
+    "reads_served": 13,
+    "writes_refused_actions_in_v52": 24,
+    "freeze_test": "PASS on v52-based build (1/1); control FAIL on unmodified v52",
+    "deployed": false,
+    "authorization": "REQUIRED (written, from owner)"
+  },
+  "frozen_snapshot": "NOT CAPTURED",
+  "blockers": [
+    "OLD freeze not authorized",
+    "production host unknown",
+    "browser login checks user-assisted",
+    "clear_test_accounts rollout-date uncertainty",
+    "verify_jwt on OLD to confirm in Dashboard before freeze deployment",
+    "frozen snapshot and checksums not captured",
+    "owner confirmation of protected-account policy and freeze window"
+  ],
+  "final_status": "NOT READY",
+  "secrets_recorded": false,
+  "password_hashes_recorded": false
+}

@@ -1,0 +1,71 @@
+--- /c/Users/Andry/AppData/Local/Temp/claude/c--Users-Andry-Click-NewTrial/dc8f2ec2-006f-4250-b0f0-d75eb07d9122/scratchpad/old-deployed/supabase/functions/click-backend/index.ts	2026-10-03 11:58:27.820349600 +0530
++++ /c/Users/Andry/AppData/Local/Temp/claude/c--Users-Andry-Click-NewTrial/dc8f2ec2-006f-4250-b0f0-d75eb07d9122/scratchpad/freeze-old-repo/supabase/functions/click-backend/index.ts	2026-10-03 11:58:43.115996300 +0530
+@@ -10,6 +10,15 @@
+   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+ );
+ 
++// ---- FREEZE BUILD (migration window) ------------------------------------------
++// true = read-only: only the actions below are served; every write is refused; session helpers stop updating rows.
++const FROZEN_READ_ONLY = true;
++const FROZEN_READ_ACTIONS = new Set([
++  "session", "bootstrap", "preloadTestData", "practiceWebSync", "practiceConnectionState", "practiceExtensionSync",
++  "adminGetMaxIds", "staffSession", "staffDashboardSummary", "staffSections", "staffStudents", "staffStudentDetail", "staffUnseenReplies",
++]);
++// ---------------------------------------------------------------------------------
++
+ const CORS: Record<string, string> = {
+   "Access-Control-Allow-Origin": "*",
+   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+@@ -197,11 +206,11 @@
+   const hours = Number(settings.SESSION_HOURS || 168);
+   const last = new Date(s.last_seen || s.login_time).getTime();
+   if (isNaN(last) || Date.now() - last > hours * 3600000) {
+-    await supabase.from("sessions").update({ active: false }).eq("session_id", s.session_id);
++    if (!FROZEN_READ_ONLY) await supabase.from("sessions").update({ active: false }).eq("session_id", s.session_id);
+     throw new Error("Session expired. Please log in again.");
+   }
+   if (Date.now() - last > 15 * 60 * 1000) {
+-    await supabase.from("sessions").update({ last_seen: new Date().toISOString() }).eq("session_id", s.session_id);
++    if (!FROZEN_READ_ONLY) await supabase.from("sessions").update({ last_seen: new Date().toISOString() }).eq("session_id", s.session_id);
+   }
+   return s;
+ }
+@@ -1074,7 +1083,7 @@
+   const hash = await practiceTokenHash(String(token));
+   const { data: row } = await supabase.from("practice_pairings").select("*").eq("status", "connected").eq("device_token_hash", hash).maybeSingle();
+   if (!row) throw new Error("This CLICK VS Code connection is no longer valid. Pair it again.");
+-  await supabase.from("practice_pairings").update({ last_seen: new Date().toISOString() }).eq("pairing_id", row.pairing_id);
++  if (!FROZEN_READ_ONLY) await supabase.from("practice_pairings").update({ last_seen: new Date().toISOString() }).eq("pairing_id", row.pairing_id);
+   return row;
+ }
+ 
+@@ -1326,16 +1335,16 @@
+   const hours = 168; // same 7-day idle lifetime as student sessions
+   const last = new Date(s.last_seen || s.login_time).getTime();
+   if (isNaN(last) || Date.now() - last > hours * 3600000) {
+-    await supabase.from("staff_sessions").update({ active: false }).eq("session_id", s.session_id);
++    if (!FROZEN_READ_ONLY) await supabase.from("staff_sessions").update({ active: false }).eq("session_id", s.session_id);
+     throw new Error("Staff session expired. Please log in again.");
+   }
+   const { data: staff } = await supabase.from("staff_users").select("*").eq("staff_id", s.staff_id).maybeSingle();
+   if (!staff || !truthy(staff.active)) {
+-    await supabase.from("staff_sessions").update({ active: false }).eq("session_id", s.session_id);
++    if (!FROZEN_READ_ONLY) await supabase.from("staff_sessions").update({ active: false }).eq("session_id", s.session_id);
+     throw new Error("This staff account is no longer active.");
+   }
+   if (Date.now() - last > 15 * 60 * 1000) {
+-    await supabase.from("staff_sessions").update({ last_seen: new Date().toISOString() }).eq("session_id", s.session_id);
++    if (!FROZEN_READ_ONLY) await supabase.from("staff_sessions").update({ last_seen: new Date().toISOString() }).eq("session_id", s.session_id);
+   }
+   return staff;
+ }
+@@ -1798,6 +1807,9 @@
+   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
+   try {
+     const b = await req.json().catch(() => ({}));
++    if (FROZEN_READ_ONLY && !FROZEN_READ_ACTIONS.has(String(b.action || ""))) {
++      return json({ ok: false, error: "CLICK is read-only during a data migration. Please try again later." });
++    }
+     switch (String(b.action || "")) {
+       case "signup": return json(await signup(b));
+       case "login": return json(await login(b));
