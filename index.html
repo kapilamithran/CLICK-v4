@@ -1731,7 +1731,7 @@ $('signupForm').onsubmit=async e=>{e.preventDefault();$('signupError').textConte
     // actually saved - so the tour is deliberately NOT started from here.
     onboardingAutoTourChecked=false;
     await loadApp(true)}catch(x){$('signupError').textContent=x.message}}
-$('logoutBtn').onclick=async()=>{persistMastery();testState=null;ClickExperience.setCount(0);try{await withVideoOverlay('after-logout.mp4',()=>post('logout',{session_token:session?.token}))}catch(e){}localStorage.removeItem('clickSession');session=null;$('authGate').classList.remove('hidden');switchAuth('login')}
+$('logoutBtn').onclick=async()=>{persistMastery();testState=null;try{await withVideoOverlay('after-logout.mp4',()=>post('logout',{session_token:session?.token}))}catch(e){}localStorage.removeItem('clickSession');session=null;$('authGate').classList.remove('hidden');switchAuth('login')}
 function setUserMenuOpen(open){
   const trigger=$('userMenuTrigger'),menu=$('userMenu');
   if(!trigger||!menu)return;
@@ -1758,7 +1758,7 @@ document.querySelectorAll('[data-user-menu]').forEach(btn=>btn.onclick=e=>{
   else if(action==='reset-password')toast("Password reset isn't available in the app yet. Please ask an administrator to reset your password for now.")
   else if(action==='logout')$('logoutBtn').click()
 });
-document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));function showPage(id){if(id==='home'&&testState?.finished)ClickExperience.setCount(0);document.body.dataset.page=id;document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));/* Learn is no longer a tab: it is entered from a Home chapter node, so Home stays highlighted while a chapter is open */document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.page===(id==='learn'?'home':id)));if(id==='learn'&&window.__learnPendingMount){const f=window.__learnPendingMount;window.__learnPendingMount=null;f()}if(id==='practice'){$('practiceSetupBody')?.classList.add('hidden');$('practiceSetupToggle')?.setAttribute('aria-expanded','false');if($('practiceSetupChevron'))$('practiceSetupChevron').textContent='▾';renderPractice()}if(id==='progress')renderProgress();if(id==='leadership')renderLeaderboard();if(id==='announcements'){renderAnnouncements();markAnnouncementsSeen()}if(id==='about')renderAbout()}
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));function showPage(id){document.body.dataset.page=id;document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));/* Learn is no longer a tab: it is entered from a Home chapter node, so Home stays highlighted while a chapter is open */document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.page===(id==='learn'?'home':id)));if(id==='learn'&&window.__learnPendingMount){const f=window.__learnPendingMount;window.__learnPendingMount=null;f()}if(id==='practice'){$('practiceSetupBody')?.classList.add('hidden');$('practiceSetupToggle')?.setAttribute('aria-expanded','false');if($('practiceSetupChevron'))$('practiceSetupChevron').textContent='▾';renderPractice()}if(id==='progress')renderProgress();if(id==='leadership')renderLeaderboard();if(id==='announcements'){renderAnnouncements();markAnnouncementsSeen()}if(id==='about')renderAbout()}
 function applyAppState(r){app=r;if(!testState)ClickExperience.restoreAtmosphere(r.user.user_id);session.user=r.user;localStorage.setItem('clickSession',JSON.stringify(session));renderHeader();renderHome();renderProgress();renderLeaderboard();renderAnnouncements();renderPractice()/* (the old Learn page is no longer reachable: a chapter is one run, see runChapter, so it is not re-rendered on every refresh) */}
 async function preloadTestData(forceRefresh=false){
   if(!session?.token)return null;
@@ -2555,7 +2555,7 @@ function enterTestPage(){
   window.scrollTo({top:0,behavior:"instant"})
 }
 function leaveTestPage(destination="home"){
-  persistMastery();if(testState?.finished)ClickExperience.setCount(0);
+  persistMastery();
   $("testPage").classList.add("hidden");
   document.querySelector(".shell")?.classList.remove("hidden");
   document.querySelector(".mobiletabs")?.classList.remove("hidden");
@@ -2811,7 +2811,7 @@ async function runChapter(sid,cid,mode){
       for(const a of run.saved_attempts||[]){if(a.correct)testState.solved[a.question_id]=true;}
       if(testState.answered && (testState.deferred || (currentSlide()?.q && testState.solved[currentSlide().q.question_id]))){testState.index=Math.min(testState.index+1,testState.slides.length);}
     }
-    ClickExperience.setCount(ClickExperience.solvedCount(testState));persistMastery();
+    ClickExperience.restoreAtmosphere(app.user.user_id);persistMastery();
     enterTestPage();
     if(testState.index>=testState.slides.length){await nextTestRound()}else renderTest();
     if(testState.outbox.length)syncMastery(testState);
@@ -3018,7 +3018,7 @@ async function checkTestAnswer(){
   $("testHeartsText").textContent=testState.hearts;
   $("testPendingText").textContent=testState.pending;
 
-  if(correct){ClickExperience.solve(testState,qid);ClickExperience.setCount(ClickExperience.solvedCount(testState),true);}
+  if(correct){const firstSolve=ClickExperience.solve(testState,qid);if(firstSolve)ClickExperience.advance(true);}
   else if(attemptNo>=3){ClickExperience.defer(testState);}
   persistMastery();
   if(!review)queueTestAttempt(q,answer);
