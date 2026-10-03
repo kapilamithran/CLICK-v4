@@ -4,6 +4,7 @@
 // so the frontend's post() function barely has to change.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { practiceSLabel } from "./practice-label.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -586,7 +587,7 @@ async function bootstrap(b: any) {
   const practiceRows = content.practice.map((r: any, i: number) => {
     const pid = String(r.practice_id || `PRACTICE-${i + 1}`);
     const gate = prerequisiteStatus("PRACTICE", r.stage_id, pid, content, facts);
-    return { ...r, unlocked: gate.unlocked, lock_reason: gate.lock_reason || "" };
+    return { ...r, practice_stage_label: practiceSLabel(pid), unlocked: gate.unlocked, lock_reason: gate.lock_reason || "" };
   });
 
   // Per-student targeted messages from staff (the "Notify" feature). Kept
@@ -1175,6 +1176,8 @@ function normalizePracticeQuestion(r: any, index: number, practiceTests: any[], 
   return {
     practice_id: pid, stage_id: String(r.stage_id || ""),
     stage_title: String(stage?.title || ""), stage_no: stage ? Number(stage.stage_no ?? stage.order ?? 0) : null,
+    // Practice S-number from practice_id (S0..S9). Use this for Practice labels, not stage_no.
+    practice_stage_label: practiceSLabel(pid),
     title: String(r.title || r.question || `Practice ${index + 1}`),
     objective: String(r.objective || ""), problem_statement: String(r.problem_statement || r.scenario || r.instructions || r.question || ""),
     constraints: String(r.constraints || ""), sample_input: String(r.sample_input || ""), sample_output: String(r.sample_output || ""),
@@ -1189,7 +1192,7 @@ function normalizePracticeQuestion(r: any, index: number, practiceTests: any[], 
     order: Number(r.order || index + 1),
     // Additive optional fields (originally added for the now-removed Experiments
     // feature; difficulty/marks/time+memory limits/workspace_folder/input+output
-    // format are also used by Stage 0-5 practice questions, so they stay).
+    // format are also used by the S0-S9 Practice questions, so they stay).
     // Null/undefined for any practice_bank row that doesn't set them.
     difficulty: r.difficulty ? String(r.difficulty) : null,
     marks: r.marks === null || r.marks === undefined ? null : Number(r.marks),
@@ -1247,7 +1250,7 @@ async function practiceWebSync(b: any) {
   const practiceRows = content.practice.map((r: any, i: number) => {
     const pid = String(r.practice_id || `PRACTICE-${i + 1}`);
     const gate = prerequisiteStatus("PRACTICE", r.stage_id, pid, content, facts);
-    return { ...r, unlocked: gate.unlocked, lock_reason: gate.lock_reason || "" };
+    return { ...r, practice_stage_label: practiceSLabel(pid), unlocked: gate.unlocked, lock_reason: gate.lock_reason || "" };
   });
   return { ok: true, practice: practiceRows, practice_progress: practiceProgress, connection: await practiceConnectionState({ session_token: b.session_token }) };
 }

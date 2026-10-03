@@ -218,10 +218,11 @@ ${body}
 
     const questionText = [q.objective, q.problem_statement].filter((v) => v && v.trim()).map((v) => `<p>${mdInline(v!)}</p>`).join("");
 
-    const eyebrow =
-      q.stage_title && q.stage_title.trim()
-        ? `<div class="eyebrow">Stage ${typeof q.stage_no === "number" ? q.stage_no : 0} · ${escapeHtml(q.stage_title)}</div>`
-        : "";
+    // Practice S-number (S0-S9) from the server, never the curriculum stage_no.
+    const eyebrowParts = [q.practice_stage_label, q.stage_title && q.stage_title.trim() ? q.stage_title : ""]
+      .filter((v) => v && v.trim())
+      .map((v) => escapeHtml(v!));
+    const eyebrow = eyebrowParts.length ? `<div class="eyebrow">${eyebrowParts.join(" · ")}</div>` : "";
 
     const timeLimitSeconds = q.time_limit_seconds ?? Math.round((q.visible_tests?.[0]?.timeout_ms ?? q.hidden_tests?.[0]?.timeout_ms ?? 0) / 1000);
     const timeLimitBadge = timeLimitSeconds ? `<span class="badge">${timeLimitSeconds}s limit</span>` : "";
