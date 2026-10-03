@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const ROOT=path.resolve(__dirname,'../..'),html=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
 const E=require('../../assets/experience/experience.js');
-test('levels advance after every unique correct answer and cap at ten',()=>{const s={};for(let i=0;i<25;i++){E.solve(s,'Q'+i);assert.equal(E.levelFor(E.solvedCount(s)),Math.min(10,2+i));}assert.equal(E.solve(s,'Q0'),false);assert.equal(E.solvedCount(s),25);});
+test('levels advance after every unique correct answer and loop after ten',()=>{const s={};for(let i=0;i<25;i++){E.solve(s,'Q'+i);assert.equal(E.levelFor(E.solvedCount(s)),1+((i+1)%10));}assert.equal(E.solve(s,'Q0'),false);assert.equal(E.solvedCount(s),25);});
 test('all inline scripts parse',()=>{let count=0;for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){new vm.Script(m[1]);count++;}assert.ok(count>3);});
 function section(start,end){return html.slice(html.indexOf(start),html.indexOf(end,html.indexOf(start)));}
 function world(){
@@ -29,5 +29,6 @@ test('audio manager loops all ten assets at matching phase, crossfades, and obey
  class Audio{constructor(){this.currentTime=12;this.state='running';this.destination={};}resume(){return Promise.resolve()}createGain(){const g={gain:param(),connect(){}};gains.push(g);return g}createDynamicsCompressor(){return{connect(){}}}decodeAudioData(){return Promise.resolve({duration:30})}createBufferSource(){const s={connect(){},start(t,offset){this.offset=offset},stop(){this.stopped=true}};sources.push(s);return s}}
  const c={console,performance,AudioContext:Audio,fetch:async url=>{fetches.push(url);return{ok:true,arrayBuffer:async()=>new ArrayBuffer(1)}},localStorage:{getItem:()=>null,setItem(){}},document:{readyState:'loading',hidden:false,documentElement:{dataset:{}},querySelectorAll:()=>[],addEventListener:(n,fn)=>handlers[n]=fn,getElementById:elem,createElement:()=>({setAttribute(){}}),body:{appendChild(){}}},matchMedia:()=>({matches:true})};c.window=c;vm.createContext(c);vm.runInContext(fs.readFileSync(path.join(ROOT,'assets/experience/experience.js'),'utf8'),c);handlers.DOMContentLoaded();await c.ClickExperience.unlock();assert.equal(sources[0].loop,true);assert.equal(sources[0].offset,0);
  for(let n=2;n<=10;n++){c.ClickExperience.setCount(n-1);await new Promise(r=>setImmediate(r));assert.equal(c.document.documentElement.dataset.level,String(n));assert.equal(sources.at(-1).loop,true);assert.equal(sources.at(-2).stopped,true);assert.equal(sources.at(-1).offset,0);}
+ c.ClickExperience.setCount(10);await new Promise(r=>setImmediate(r));assert.equal(c.document.documentElement.dataset.level,'1');assert.equal(sources.at(-1).loop,true);assert.equal(sources.at(-2).stopped,true);
  assert.ok(fetches.includes('assets/experience/music/level-10.wav'));elem('experienceMusic').onclick();assert.equal(gains[1].gain.value,0);assert.equal(elem('experienceMusic').textContent,'Music off');
 });

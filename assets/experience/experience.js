@@ -1,7 +1,7 @@
 /* Shared mastery policy, persistence, and coordinated audiovisual feedback. */
 (function(root){
   'use strict';
-  const levelFor=n=>Math.min(10,1+Math.floor(Math.max(0,n)));
+  const levelFor=n=>1+(Math.max(0,Math.floor(n))%10);
   const solvedCount=s=>Object.keys(s.solved||{}).length;
   function solve(s,qid){s.solved=s.solved||{};const fresh=!s.solved[qid];s.solved[qid]=true;return fresh;}
   function defer(s){const slide=s.slides[s.index];const qid=slide.q.question_id;s.questionAttempts[qid]=0;
@@ -26,8 +26,8 @@
   function tone(freq,delay=0,type='sine',length=.13){if(!ctx||!prefs.sfx||ctx.state!=='running')return;const t=ctx.currentTime+delay,o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(freq*.7,t+length);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.65,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+length);o.connect(g);g.connect(sfxBus);o.start(t);o.stop(t+length+.01);}
   function bloop(){const now=performance.now();if(now-lastBloop<90)return;lastBloop=now;tone(480+level*14);}
   function bounce(el,big=false){if(!el||matchMedia('(prefers-reduced-motion: reduce)').matches||!el.animate)return;el.animate([{scale:'1'},{scale:big?'1.05':'.96',offset:.3},{scale:big?'1.02':'1.025',offset:.7},{scale:'1'}],{duration:big?430:260,easing:'cubic-bezier(.2,.8,.25,1)'});}
-  function status(){const badge=document.getElementById('experienceBadge');if(badge)badge.textContent='Level '+level+(level===10?' · Maximum':' · next correct answer');const m=document.getElementById('experienceMusic');if(m){m.textContent=prefs.music?(started?'Music on':'Enable music'):'Music off';m.setAttribute('aria-pressed',String(!!prefs.music));}const f=document.getElementById('experienceSfx');if(f){f.textContent=prefs.sfx?'Effects on':'Effects off';f.setAttribute('aria-pressed',String(!!prefs.sfx));}}
-  api.setCount=function(n,celebrate=false){count=Math.max(0,Math.min(9,Number(n)||0));const next=levelFor(count),changed=level!==next;level=next;document.documentElement.dataset.level=String(level);status();if(changed){track();if(celebrate){[523,659,784,1047].forEach((f,i)=>tone(f,i*.09,'triangle',.22));bounce(document.getElementById('experienceBadge'),true);}}};
+  function status(){const badge=document.getElementById('experienceBadge');if(badge)badge.textContent='Level '+level+(level===10?' · next: Level 1':' · next correct answer');const m=document.getElementById('experienceMusic');if(m){m.textContent=prefs.music?(started?'Music on':'Enable music'):'Music off';m.setAttribute('aria-pressed',String(!!prefs.music));}const f=document.getElementById('experienceSfx');if(f){f.textContent=prefs.sfx?'Effects on':'Effects off';f.setAttribute('aria-pressed',String(!!prefs.sfx));}}
+  api.setCount=function(n,celebrate=false){count=Math.max(0,Math.floor(Number(n)||0));const next=levelFor(count),changed=level!==next;level=next;document.documentElement.dataset.level=String(level);status();if(changed){track();if(celebrate){[523,659,784,1047].forEach((f,i)=>tone(f,i*.09,'triangle',.22));bounce(document.getElementById('experienceBadge'),true);}}};
   api.advance=function(celebrate=true){const before=count;api.setCount(count+1,celebrate);if(currentUser&&count!==before)try{localStorage.setItem('clickExperienceLevel:'+currentUser,String(count));}catch(e){}};
   api.unlock=unlock;
   api.feedback=function(kind){const notes=kind==='correct'?[659,784,1047]:kind==='complete'?[523,659,784,1047]:[240];notes.forEach((f,i)=>tone(f,i*.085,'sine',.18));};
