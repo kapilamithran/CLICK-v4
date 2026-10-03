@@ -1,0 +1,82 @@
+{
+  "phase": "12",
+  "date": "2026-10-03",
+  "baseline_main": "2e136c3",
+  "status": "NOT READY FOR FINAL SNAPSHOT + STUDENT MIGRATION",
+  "cloudflare_test": {
+    "worker": "click-test",
+    "version": "ffd66774-79e1-4a06-b942-8e17f8a85922",
+    "url": "https://click-test.clickv2-new.workers.dev",
+    "http_status": 200,
+    "new_ref_present": true,
+    "old_ref_absent": true,
+    "new_backend_url_present": true,
+    "migration_path_served": false,
+    "result": "PASS"
+  },
+  "production_worker": {"name": "puc-v2", "exists_on_account": false, "deployed_by_phase": false},
+  "browser_test": {
+    "page_load": "PASS",
+    "old_supabase_requests": 0,
+    "console_errors": 0,
+    "page_errors": 0,
+    "new_backend_cors_probe": "PASS",
+    "login_tests": "NOT RUN (no test credentials available to session)",
+    "practice_s0_s9_in_browser": "NOT RUN",
+    "practice_s0_s9_backend": "PASS (70 questions in S0-S9, backend tests)"
+  },
+  "learn_content": {
+    "L_CH0035_p5": "already corrected, no action",
+    "L_CH0061_p2": "already corrected (substring artifact), no action",
+    "L_CH0031_p2": "NOT APPLIED: expected text cannot be established; migration would duplicate block",
+    "L_CH0035_p4": "NOT APPLIED: expected text cannot be established; migration would duplicate block and remove Memory Trick heading",
+    "rows_changed_on_new": 0
+  },
+  "new_curriculum": {
+    "stages": 13, "chapters": 98, "learn_content": 98,
+    "orphans": 0, "stg000_present": false,
+    "practice_questions": 70, "practice_tests": 402, "hidden_tests": 332, "public_tests": 70,
+    "practice_prerequisites": 0, "migrations_recorded": 45
+  },
+  "extension": {
+    "compile": "clean", "tests": "14/14 pass",
+    "default_backend": "OLD (CUTOVER TASK - NOT YET EXECUTED)",
+    "vsix": "built locally in scratch earlier; not published"
+  },
+  "old_freeze": {
+    "supported_mechanism_exists": false,
+    "procedure_file": "migration/phase12-old-freeze-procedure.md",
+    "executed": false
+  },
+  "live_source_counts_not_final": {
+    "users_total": 354, "test_runs": 954, "attempts": 5080, "learn_progress": 539,
+    "practice_progress": 5, "student_section_assignments": 352,
+    "sessions_excluded": 754, "practice_pairings_excluded": 32, "staff_messages_excluded": 4
+  },
+  "dry_run_counts": {
+    "selected_students": 352,
+    "selected": {"users": 352, "test_runs": 835, "attempts": 4894, "learn_progress": 465, "practice_progress": 5, "student_section_assignments": 352},
+    "protected_excluded": {"users": 2, "test_runs": 119, "attempts": 186, "learn_progress": 74, "stg000_test_runs": 92, "stg000_learn_progress": 60},
+    "reconciles_to_live_totals": true,
+    "orphans": 0,
+    "missing_credentials_selected": 0,
+    "duplicate_roll_email_username_selected": 0,
+    "stg007_011_rows_selected": 0,
+    "stg000_rows_selected": 0
+  },
+  "protected_accounts": {"ids": ["U1A8B0A6D8810", "U485B9DDDA04E"], "on_old": true, "on_new": false, "excluded": true, "deleted": false},
+  "new_test_account": {"user_id": "U5AF199A50E56", "on_old": false, "roll_no_collision_on_old": false, "excluded_from_collision_handling": true, "deleted": false, "truncated": false},
+  "blockers": [
+    "OLD freeze not approved; first step needs read-only click-backend deploy to OLD",
+    "browser login, session, progress, and Practice S0-S9 browser checks not run (no test credentials)",
+    "two learn-content pages need owner decision",
+    "production host unknown: puc-v2 not on this Cloudflare account",
+    "snapshot export and checksums not captured (must follow freeze)",
+    "clear_test_accounts effect on OLD unresolved (recorded as applied)"
+  ],
+  "production_changed": false,
+  "old_modified": false,
+  "student_data_modified": false,
+  "migration_executed": false,
+  "secrets_recorded": false
+}

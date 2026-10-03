@@ -10,3 +10,4 @@ desktop-app/node_modules/
 CLICK - Google Play package/
 admin-tools/.admin-key
 migration/.local-migration-output/
+migration/.local-student-snapshot/
