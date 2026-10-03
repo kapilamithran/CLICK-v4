@@ -1,0 +1,71 @@
+{
+  "phase": "11C",
+  "date": "2026-10-03",
+  "repository": "Andryandurai/Click-NewTrial",
+  "main_head_before_docs": "fd91039",
+  "ci_gating_commit": "fd91039",
+  "ci_gating": {
+    "files": [
+      ".github/workflows/cloudflare-frontend.yml",
+      ".github/workflows/supabase-functions.yml",
+      ".github/workflows/supabase-migrations.yml"
+    ],
+    "mechanism": "credentials job sets output enabled from secret presence; deploy/migrate job needs credentials and runs only when enabled == 'true'",
+    "insertions": 68,
+    "deletions": 0,
+    "latest_cloudflare_run": {"id": "37099510325", "credentials": "success", "deploy": "skipped", "overall": "success"},
+    "deployment_performed": false
+  },
+  "old_project_ref": "jnxevalckgitxuunjcvv",
+  "new_project_ref": "eyevmykfavooeiklzebe",
+  "old_migration_history": {
+    "method": "SELECT on supabase_migrations.schema_migrations via supabase db query --linked (guarded, read-only)",
+    "recorded_count": 26,
+    "local_file_count": 45,
+    "recorded_not_local": 0,
+    "pending_local_count": 19,
+    "clear_test_accounts": {
+      "file": "20260924000000_clear_test_accounts.sql",
+      "recorded_on_old": true,
+      "status": "APPLIED (recorded); effect not established",
+      "history_has_timestamp": false
+    }
+  },
+  "old_users_aggregate": {
+    "total": 354,
+    "status_values": {"active": 354},
+    "role_values": {"student": 354},
+    "protected_accounts_present": 2,
+    "joined_range": ["2026-09-03", "2026-10-02"],
+    "joined_before_2026_09_25": 248
+  },
+  "pending_on_old": [
+    "20260910130000_add_missing_legacy_glossary_terms.sql",
+    "20260926150000_learn_content_corrections.sql",
+    "20260927000000_content_stage6_arrays.sql",
+    "20260928000000_unlock_stage6_arrays.sql",
+    "20260928020000_content_stage8_searching_sorting.sql",
+    "20260928030000_unlock_stage8_searching_sorting.sql",
+    "20260928040000_content_stage7_strings.sql",
+    "20260928050000_unlock_stage7_strings.sql",
+    "20260928060000_content_stage9_functions.sql",
+    "20260928070000_unlock_stage9_functions.sql",
+    "20260929000000_structure_number_crunching_patterns.sql",
+    "20260929010000_content_stage7_patterns.sql",
+    "20260929020000_unlock_stage7_patterns.sql",
+    "20260930000000_content_stage6_number_crunching.sql",
+    "20260930010000_unlock_stage6_number_crunching.sql",
+    "20261001000000_content_stage12_pointers.sql",
+    "20261001010000_unlock_stage12_pointers.sql",
+    "20261001020000_fix_stage6_chapter_order.sql",
+    "20261001030000_activity_attempts.sql"
+  ],
+  "prerequisite_deleting_pending": 8,
+  "test_click_html": "untracked, left untouched",
+  "tmp_free_check_txt": "not found at /tmp-free-check.txt; nothing to delete",
+  "secrets_added": false,
+  "migrations_run_or_repaired": false,
+  "supabase_writes": false,
+  "deployments_run": false,
+  "student_data_modified": false
+}
