@@ -10,7 +10,7 @@
 # Confirmed 2026-09 to be the actual CLICK production project (see
 # supabase_details.md "Which project is production" for how this was
 # verified against another, unrelated project that was connected by mistake).
-project_id = "jnxevalckgitxuunjcvv"
+project_id = "lbdujjrwmfpnqemwpctt"
 
 [api]
 enabled = true
