@@ -1,0 +1,69 @@
+{
+  "phase": "14",
+  "date": "2026-10-03",
+  "baseline_main": "30f8382",
+  "old": {
+    "ref": "jnxevalckgitxuunjcvv",
+    "state": "FROZEN",
+    "click_backend_version_before": 52,
+    "click_backend_version_after": 53,
+    "verify_jwt": false,
+    "verify_jwt_confirmed_before_deploy": true,
+    "freeze_timestamp_utc": "2026-10-03T06:50:51.093Z",
+    "pre_freeze_counts_db_clock": "2026-10-03T06:50:14Z",
+    "schema_changed": false,
+    "migrations_run": false
+  },
+  "freeze_verification": {
+    "read_actions_verified": ["session", "bootstrap"],
+    "write_actions_checked": 24,
+    "write_actions_refused_read_only": 24,
+    "deployed_bytes_equal_build": true
+  },
+  "counts_stable_across_freeze_and_capture": true,
+  "snapshot": {
+    "captured": true,
+    "location": "migration/.local-migration-output/phase14-snapshot (gitignored, read-only)",
+    "tables": {
+      "users": {"frozen_source": 354, "selected": 352, "exported": 352, "excluded": 2},
+      "test_runs": {"frozen_source": 954, "selected": 835, "exported": 835, "excluded": 119},
+      "attempts": {"frozen_source": 5080, "selected": 4894, "exported": 4894, "excluded": 186},
+      "learn_progress": {"frozen_source": 539, "selected": 465, "exported": 465, "excluded": 74},
+      "practice_progress": {"frozen_source": 5, "selected": 5, "exported": 5, "excluded": 0},
+      "student_section_assignments": {"frozen_source": 352, "selected": 352, "exported": 352, "excluded": 0}
+    },
+    "checksums": "migration/phase14-snapshot-manifest.md",
+    "internal_validation": "PASS",
+    "per_student_reconciliation": "PASS (352 students, 0 mismatches)",
+    "stg000_rows_for_selected": 0,
+    "password_hash_salt_complete": "352 of 352"
+  },
+  "new_cross_check": {
+    "test_account_preserved": true,
+    "test_account_selected": false,
+    "user_id_collision": false,
+    "username_or_email_collision": false,
+    "roll_no_collision": true,
+    "roll_no_collision_count": 1,
+    "unique_roll_no_enforced_on_new": true,
+    "record_ids_collision": false,
+    "curriculum": {"stages": 13, "chapters": 98, "learn_content": 98, "practice_questions": 70, "practice_tests": 402, "hidden_tests": 332, "public_tests": 70, "practice_prerequisites": 0, "stg000": 0}
+  },
+  "student_migration": {
+    "dry_run": "BLOCKED by roll_no collision",
+    "sql_generated": false,
+    "executed": false
+  },
+  "protected_accounts": {"excluded": true, "deleted": false, "modified": false},
+  "production": {"state": "OLD", "changed": false},
+  "final_status": "NOT READY",
+  "snapshot_validation": "FAIL (internal PASS; NEW roll_no cross-check FAIL)",
+  "open_decisions": [
+    "roll_no collision resolution (change NEW test-account roll, remap OLD student, exclude one student, or confirm same person)",
+    "keep OLD frozen vs unfreeze (students currently cannot save progress)",
+    "production host unknown",
+    "clear_test_accounts rollout-date uncertainty"
+  ],
+  "secrets_recorded": false,
+  "password_hashes_recorded": false
+}
