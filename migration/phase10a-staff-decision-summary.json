@@ -1,0 +1,10 @@
+{
+  "staff_strategy": "A_FRESH_PROVISIONING",
+  "staff_strategy_source": "explicit_user_decision_this_phase",
+  "staff_users_count": 1,
+  "staff_messages_count": 4,
+  "student_section_assignments_count": 352,
+  "assigned_by_non_null_count": 0,
+  "student_migration_staff_dependency": "NONE",
+  "staff_migration_executed": false
+}

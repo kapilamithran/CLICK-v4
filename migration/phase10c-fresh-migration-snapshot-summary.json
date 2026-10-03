@@ -1,0 +1,70 @@
+{
+  "old_supabase_ref": "jnxevalckgitxuunjcvv",
+  "new_supabase_ref": "eyevmykfavooeiklzebe",
+
+  "old_users": 354,
+  "protected_accounts": 2,
+  "approved_students": 352,
+
+  "snapshot_strategy": "sequential_per_table_extraction_with_in_memory_fk_self_consistency_check",
+  "single_cross_table_transaction_achieved": false,
+  "single_cross_table_transaction_limitation": "supabase db query --file executes multiple statements in one transaction but returns only the last statement's result set -- confirmed directly with a safe two-SELECT test. No multi-result-set retrieval is available through this CLI.",
+
+  "snapshot_captured_this_phase": false,
+  "sql_generated_this_phase": false,
+  "sql_executed": false,
+  "reason_not_captured": "Fetching the real users table (even without printing it) was blocked twice in earlier phases by this environment's Credential Leakage protection. Per the established handling rules for that denial, this agent did not attempt it a third time. The generator is updated and ready for the human operator to run themselves.",
+
+  "generator_changes": [
+    "Removed stale Phase 10B hardcoded expected-counts for test_runs/attempts/learn_progress/practice_progress/student_section_assignments (these tables grow continuously on live OLD; kept the hard users=352 check, a population-identity rule, not an activity count)",
+    "Added snapshotStartedAt/snapshotFinishedAt timestamp capture bracketing extraction",
+    "Added in-memory foreign-key self-consistency check against the captured data itself (not a live re-query), excluding any orphaned child rows from the generated SQL",
+    "Added a post-extraction lightweight live drift re-check (informational; hard-stops only if the users population count itself changes)",
+    "Added a non-sensitive metadata header to the generated SQL (source ref, snapshot timestamps, approved count, captured counts, orphan-exclusion counts, strategy note) -- no credentials",
+    "Moved output to a new migration/.local-migration-output/ directory"
+  ],
+
+  "validation_performed_this_phase": [
+    "Multi-statement/single-transaction limitation confirmed directly with a safe two-SELECT aggregate query",
+    "Orphan-detection algorithm validated against synthetic data with deliberately planted orphans -- all correctly identified, no false positives",
+    ".gitignore coverage for the new output directory confirmed via git check-ignore on a dummy non-sensitive file, then removed",
+    "Drift-recheck aggregate query shape re-confirmed (same pattern used throughout Phase 10C)"
+  ],
+
+  "exclusion_scope_unchanged": true,
+  "excluded_tables": ["sessions", "practice_pairings", "activity_attempts", "staff_users", "staff_messages"],
+  "excluded_curriculum_scopes": ["STG000", "STG007", "STG008", "STG009", "STG010", "STG011", "E-prefix practice rows"],
+  "staff_strategy": "A_FRESH",
+
+  "new_database": {
+    "users": 0,
+    "learn_progress": 0,
+    "test_runs": 0,
+    "attempts": 0,
+    "practice_progress": 0,
+    "student_section_assignments": 0,
+    "stages": 13,
+    "chapters": 98,
+    "stg000_present": false
+  },
+
+  "old_database_unchanged": true,
+  "new_database_unchanged": true,
+  "schema_modified": false,
+  "frontend_modified": false,
+  "edge_functions_modified": false,
+  "authentication_modified": false,
+
+  "files_modified_this_phase": [
+    "migration/phase10c-generate-migration-sql.js",
+    ".gitignore",
+    "migration/phase10c-fresh-migration-snapshot.md",
+    "migration/phase10c-fresh-migration-snapshot-summary.json"
+  ],
+  "credential_bearing_sql_in_repository": false,
+  "commit": false,
+  "push": false,
+
+  "final_gate": "BLOCKED",
+  "final_gate_reason": "Conditions requiring an actually-captured source snapshot and actually-generated migration SQL are not met this phase, because this agent did not (and will not retry to) fetch the real users table. Not a data-integrity, scope, or safety failure -- every condition this phase could test did pass."
+}

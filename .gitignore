@@ -9,3 +9,4 @@ desktop-app/node_modules/
 .wrangler/
 CLICK - Google Play package/
 admin-tools/.admin-key
+migration/.local-migration-output/

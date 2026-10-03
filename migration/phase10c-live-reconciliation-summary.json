@@ -1,0 +1,109 @@
+{
+  "old_supabase_ref": "jnxevalckgitxuunjcvv",
+  "new_supabase_ref": "eyevmykfavooeiklzebe",
+
+  "old_users": 354,
+  "protected_accounts": 2,
+  "approved_students": 352,
+
+  "phase10b_snapshot": {
+    "users": 352,
+    "learn_progress": 450,
+    "test_runs": 805,
+    "attempts": 4688,
+    "practice_progress": 5,
+    "student_section_assignments": 352
+  },
+  "current_old_counts": {
+    "users": 352,
+    "learn_progress": 450,
+    "test_runs": 807,
+    "attempts": 4720,
+    "practice_progress": 5,
+    "student_section_assignments": 352
+  },
+  "deltas_from_phase10b": {
+    "users": 0,
+    "learn_progress": 0,
+    "test_runs": 2,
+    "attempts": 32,
+    "practice_progress": 0,
+    "student_section_assignments": 0
+  },
+  "attempts_count_still_increasing_live": true,
+  "attempts_count_observations_this_session": [4688, 4707, 4720],
+
+  "drift_explained": true,
+  "drift_explanation": "New test_runs/attempts rows are all on STG001/CH0035 (a real, in-scope, already-migratable chapter), with today's timestamps, valid status values, valid question_id references, and belong to 5-6 distinct students among the approved 352 who were actively using the live app during this reconciliation. users/learn_progress/practice_progress/student_section_assignments are unchanged (0 delta).",
+  "recent_activity_window_hours": 6,
+  "recent_test_runs": 14,
+  "recent_attempts": 132,
+  "recent_distinct_students": "5-6 (test_runs: 5, attempts: 6)",
+
+  "per_student_distribution": {
+    "test_runs": {"min": 0, "max": 85, "avg": 2.29, "students_with_zero": 264},
+    "attempts": {"min": 0, "max": 372, "avg": 13.41, "students_with_zero": 269},
+    "learn_progress": {"min": 0, "max": 32, "avg": 1.28, "students_with_zero": 253},
+    "practice_progress": {"min": 0, "max": 4, "avg": 0.01, "students_with_zero": 350},
+    "student_section_assignments": {"min": 1, "max": 1, "avg": 1.0, "students_with_zero": 0}
+  },
+
+  "unexplained_differences": 0,
+
+  "exclusion_checks": {
+    "stg000_learn_progress_rows": 0,
+    "stg007_to_stg011_test_runs_rows": 0,
+    "e_prefix_practice_rows": 0,
+    "invalid_practice_references": 0,
+    "max_stage_used": "STG006",
+    "max_chapter_used": "CH0115"
+  },
+
+  "foreign_key_checks": {
+    "duplicate_user_id": 0,
+    "duplicate_roll_no": 0,
+    "duplicate_email": 0,
+    "duplicate_username": 0,
+    "orphan_attempt_test_run": 0,
+    "orphan_attempt_question": 0,
+    "orphan_section_assignment_section": 0,
+    "non_null_assigned_by": 0,
+    "duplicate_section_assignment_per_student": 0
+  },
+
+  "auth_data": {
+    "hash_present": 352,
+    "salt_present": 352,
+    "missing_either": 0
+  },
+
+  "new_database": {
+    "users": 0,
+    "learn_progress": 0,
+    "test_runs": 0,
+    "attempts": 0,
+    "practice_progress": 0,
+    "student_section_assignments": 0,
+    "stages": 13,
+    "chapters": 98,
+    "stg000_present": false
+  },
+
+  "old_database_unchanged": true,
+  "new_database_unchanged": true,
+  "schema_modified": false,
+  "frontend_modified": false,
+  "edge_functions_modified": false,
+  "migrations_modified": false,
+  "authentication_modified": false,
+
+  "files_modified_this_phase": [
+    "migration/phase10c-live-reconciliation.md",
+    "migration/phase10c-live-reconciliation-summary.json"
+  ],
+  "commit": false,
+  "push": false,
+
+  "final_gate": "READY FOR MIGRATION SNAPSHOT REFRESH",
+  "caveat": "attempts (and likely test_runs) continue to grow between queries since OLD is live production. A future migration-SQL generator should re-query counts immediately before generating rather than relying on this snapshot's exact numbers, and should treat small further upward drift as expected, not a failure."
+}

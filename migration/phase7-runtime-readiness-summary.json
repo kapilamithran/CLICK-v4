@@ -1,0 +1,83 @@
+{
+  "new_supabase_ref": "eyevmykfavooeiklzebe",
+  "old_supabase_ref": "jnxevalckgitxuunjcvv",
+
+  "new_runtime_target_confirmed": false,
+  "runtime_target_finding": "Frontend (index.html:1276-1277) and repo's committed supabase/config.toml:13 both hardcode OLD. CI deploy target is an opaque GitHub secret (SUPABASE_PROJECT_ID) not readable by this audit.",
+
+  "old_runtime_references_count": 7,
+  "old_runtime_references_classification": {
+    "runtime": 2,
+    "historical_audit": 2,
+    "migration_tooling": 2,
+    "documentation_or_other_product": 1
+  },
+
+  "edge_functions_count": 1,
+  "edge_function_name": "click-backend",
+  "edge_function_dispatch_actions_count": 36,
+  "edge_function_deployed_to_old": true,
+  "edge_function_deployed_to_old_version": 52,
+  "edge_function_deployed_to_new": false,
+  "edge_function_hardcoded_project_ref": false,
+  "edge_function_new_ready_codewise": true,
+
+  "auth_model": "Custom (no Supabase Auth): SHA-256(salt|password), single round, hex-encoded, random per-user salt via crypto.randomUUID(); session tokens are two concatenated crypto.randomUUID() values stored in plaintext in sessions/staff_sessions, compared by exact match.",
+  "auth_compatibility": "directly_compatible_conditional",
+  "auth_compatibility_condition": "Conditioned on OLD's click-backend using the identical salt|password SHA-256 scheme -- asserted by an earlier phase's byte-for-byte diff claim, not re-verified in this phase (no OLD source checkout available). Recommend one independent confirmation (diff OLD source, or a single test-account login attempt) before relying on this for a migration go/no-go decision.",
+  "auth_schema_mismatches_found": 0,
+
+  "student_tables_identified": 9,
+  "student_tables_list": ["users", "sessions", "learn_progress", "test_runs", "attempts", "practice_progress", "practice_pairings", "student_section_assignments", "activity_attempts"],
+  "tables_proposed_for_future_migration": ["users", "learn_progress", "test_runs", "attempts", "practice_progress", "student_section_assignments"],
+  "tables_excluded": ["sessions", "practice_pairings", "activity_attempts (nothing to migrate -- zero rows on OLD)"],
+  "excluded_accounts": ["U1A8B0A6D8810", "U485B9DDDA04E"],
+
+  "id_mapping_required": false,
+  "id_mapping_note": "Schema-wise IDs are preserved unchanged (identical create table statements on both projects). chapter_id/stage_id on progress tables have no FK constraint, so dangling legacy references are a soft/display issue, not a migration blocker.",
+
+  "curriculum_stages": 13,
+  "curriculum_chapters": 98,
+  "stg000_present_on_new": false,
+
+  "old_migrations_applied": 26,
+  "old_migrations_total_local": 45,
+  "old_migrations_count_discrepancy_resolved": true,
+  "old_migrations_count_discrepancy_note": "Earlier phase document said 28 of a then-46 total; live re-check this phase confirms 26 of 45 is current and authoritative.",
+
+  "new_users": 0,
+  "new_student_progress": 0,
+  "new_migrations_applied": 45,
+
+  "old_database_unchanged": true,
+  "old_database_operations_this_phase": ["supabase migration list (read-only)", "supabase secrets list (read-only, names only)", "supabase functions list (read-only)"],
+
+  "source_code_modified": false,
+  "database_modified": false,
+  "edge_functions_deployed_this_phase": false,
+  "frontend_deployed_this_phase": false,
+  "commit": false,
+  "push": false,
+
+  "open_unknowns": [
+    "Whether any of the other 352 real students (beyond the 2 protected dev/QA accounts) have STG000/CH0001-CH0030-era progress -- requires a live row-level query against OLD, not performed in this audit-only phase.",
+    "Whether any real student has progressed into STG007-STG011 on OLD -- requires a live row-level query against OLD.",
+    "Current value of the SUPABASE_PROJECT_ID / SUPABASE_ACCESS_TOKEN / SUPABASE_DB_PASSWORD GitHub Actions secrets -- not readable by this audit.",
+    "Whether OLD's click-backend source is byte-identical to this repo's (the auth-compatibility condition) -- not re-verified this phase, no OLD source checkout available."
+  ],
+
+  "blockers_for_next_phase": [
+    "ADMIN_RESET_KEY secret not set on NEW",
+    "click-backend not deployed to NEW",
+    "index.html hardcodes OLD's URL and anon key with no build-time override mechanism",
+    "SUPABASE_PROJECT_ID GitHub secret value unknown -- must be confirmed/repointed before any CI-driven deploy to NEW",
+    "STG000 and STG007-011 real-student-progress scope unresolved pending live OLD queries"
+  ],
+
+  "files_created_this_phase": [
+    "migration/phase7-runtime-readiness-audit.md",
+    "migration/phase7-auth-compatibility-audit.md",
+    "migration/phase7-student-migration-mapping.md",
+    "migration/phase7-runtime-readiness-summary.json"
+  ]
+}

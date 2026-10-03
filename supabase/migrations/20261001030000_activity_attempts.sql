@@ -25,3 +25,11 @@ create table if not exists activity_attempts (
 );
 create index if not exists idx_activity_attempts_test_run on activity_attempts(test_run_id);
 create unique index if not exists uq_activity_attempts_run_activity on activity_attempts(test_run_id, activity_id);
+
+-- Matches the RLS posture of every other table in this schema (enabled, zero policies: service_role,
+-- used exclusively by the Edge Function, bypasses RLS; anon/authenticated are denied by omission --
+-- see e.g. 20260914120000_staff_monitoring.sql's equivalent lines). Missing from this migration's
+-- original version; added here before this migration is ever applied to any environment (confirmed:
+-- absent from both the OLD and NEW live Supabase projects, and this repo's own migration history, at
+-- the time of this correction), so this is completing an unapplied migration, not rewriting history.
+alter table activity_attempts enable row level security;

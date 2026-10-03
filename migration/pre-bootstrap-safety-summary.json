@@ -1,0 +1,72 @@
+{
+  "new_project_ref": "eyevmykfavooeiklzebe",
+  "old_project_ref": "jnxevalckgitxuunjcvv",
+  "old_database_modified": false,
+  "new_database_modified": false,
+  "cli_linked_to_at_end_of_phase": "eyevmykfavooeiklzebe",
+
+  "new_remote_migrations": 0,
+  "local_migrations": 44,
+
+  "activity_attempts_rls": "FIXED",
+  "activity_attempts_rls_before": "GAP",
+  "activity_attempts_rls_after": "READY",
+  "activity_attempts_fix_method": "edited_existing_unapplied_migration",
+  "activity_attempts_fix_file": "supabase/migrations/20261001030000_activity_attempts.sql",
+  "activity_attempts_fix_reason": "Migration had never been applied to any environment (not OLD, not NEW) -- safe to correct in place rather than add a corrective migration",
+
+  "clear_test_accounts_migration": "supabase/migrations/20260924000000_clear_test_accounts.sql",
+  "clear_test_accounts_sql": "delete from users where user_id not in ('U1A8B0A6D8810', 'U485B9DDDA04E');",
+  "clear_test_accounts_decision": "OPTION_A_KEEP_UNCHANGED_WITH_PERMANENT_DOCUMENTATION_FLAG",
+  "clear_test_accounts_decision_reason": "Already applied to OLD -- editing it would violate historical-record integrity. Safe to apply once more to NEW (table is empty); Supabase's apply-once-per-version tracking prevents automatic replay afterward. Residual risk is human manual misuse, mitigated by explicit documentation, not a code change.",
+  "clear_test_accounts_retained_ids_are_legitimate": true,
+  "clear_test_accounts_retained_ids_found_in": ["CSVs/CLICK v2 - Users.csv", "CSVs/CLICK v2 - Attempts.csv", "CSVs/CLICK v2 - LearnProgress.csv", "CSVs/CLICK v2 - PracticePairings.csv", "CSVs/CLICK v2 - Sessions.csv", "CSVs/CLICK v2 - TestRuns.csv"],
+  "clear_test_accounts_must_never_run_again_after": "real_student_migration_into_new",
+
+  "destructive_migrations_found": 12,
+  "destructive_migrations_affecting_student_identity": 1,
+  "destructive_migrations_affecting_student_progress": 0,
+  "destructive_migrations_requiring_code_action": 0,
+  "truncate_statements_found": 0,
+  "drop_table_or_column_statements_found": 0,
+  "update_users_statements_found": 0,
+  "insert_into_student_tables_found": 0,
+
+  "student_data_destructive_migrations_found": 1,
+  "student_data_destructive_migrations_require_fix": false,
+  "student_data_destructive_migrations_require_documentation": true,
+
+  "stg000_created_by_any_migration": false,
+  "stg000_note": "STG000 exists only as pre-migration-history hand-created data on OLD; the baseline migration has no stage seed inserts at all, and the only migration referencing STG000 (20260910120000_content_stage0_foundations.sql) deactivates it, never creates it. On NEW, STG000 will not exist at all, not even inactive.",
+  "curriculum_stages_expected": 13,
+  "curriculum_chapters_expected": 98,
+
+  "dry_run_rerun_after_fix": true,
+  "dry_run_rerun_result": "PASS",
+  "new_database_still_empty_after_phase": true,
+  "new_users_after_phase": 0,
+
+  "safe_to_bootstrap": true,
+  "safe_to_bootstrap_conditions": [
+    "activity_attempts RLS gap fixed (done this phase)",
+    "clear_test_accounts finding reviewed and accepted by a human decision-maker (documented, not yet explicitly signed off)"
+  ],
+  "recommended_next_command": "supabase db push",
+  "recommended_next_command_target": "eyevmykfavooeiklzebe",
+  "recommended_next_command_executed_this_phase": false,
+
+  "student_migration_performed": false,
+  "edge_functions_deployed": false,
+  "frontend_deployed": false,
+  "commit": false,
+  "push": false,
+
+  "files_created_this_phase": [
+    "migration/migration-destructive-operation-audit.md",
+    "migration/pre-bootstrap-safety-report.md",
+    "migration/pre-bootstrap-safety-summary.json"
+  ],
+  "files_modified_this_phase": [
+    "supabase/migrations/20261001030000_activity_attempts.sql"
+  ]
+}

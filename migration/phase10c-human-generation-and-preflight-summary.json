@@ -1,0 +1,64 @@
+{
+  "phase": "10C-E",
+  "old_supabase_ref": "jnxevalckgitxuunjcvv",
+  "new_supabase_ref": "eyevmykfavooeiklzebe",
+  "agent_local_generation_performed": false,
+  "agent_generation_block_reason": "generator fetches full users rows including credential columns; that fetch was blocked by credential-leakage protection on three earlier occasions and was not retried",
+  "human_generation_status": "PENDING",
+  "population": {
+    "old_users": 354,
+    "protected_accounts": 2,
+    "approved_students": 352,
+    "population_check_passed": true
+  },
+  "observed_source_counts_aggregate_only": {
+    "users_approved": 352,
+    "test_runs": 828,
+    "attempts": 4840,
+    "learn_progress": 464,
+    "practice_progress": 5,
+    "student_section_assignments": 352
+  },
+  "snapshot_captured_by_agent": false,
+  "snapshot_consistency_established": false,
+  "generated_sql_produced_by_agent": false,
+  "generated_sql_local_path_expected": "migration/.local-migration-output/phase10c-migration-data.sql",
+  "generated_sql_executed": false,
+  "generated_sql_committed": false,
+  "auth_availability_last_confirmed_phase": "10C live reconciliation: 352/352 hash, 352/352 salt",
+  "auth_availability_reverified_this_phase": false,
+  "exclusion_checks_from_live_reconciliation": {
+    "stg000_learn_progress": 0,
+    "stg007_stg011_test_runs": 0,
+    "e_prefix_practice": 0
+  },
+  "new_database_preflight": {
+    "users": 0,
+    "learn_progress": 0,
+    "test_runs": 0,
+    "attempts": 0,
+    "practice_progress": 0,
+    "student_section_assignments": 0,
+    "stages": 13,
+    "chapters": 98,
+    "stg000_present": false
+  },
+  "git": {
+    "head": "ab090063b059d892c619192b5d654a767d73fe20",
+    "head_unchanged": true,
+    "diff_check_clean": true,
+    "output_path_ignored": true,
+    "ignore_rule": ".gitignore:12 migration/.local-migration-output/",
+    "unexpected_files_changed": false,
+    "commit": "NONE",
+    "push": "NONE"
+  },
+  "credential_safety": {
+    "credential_values_printed": false,
+    "credential_values_in_reports": false,
+    "users_rows_fetched_by_agent": false,
+    "generated_sql_contents_displayed": false
+  },
+  "final_gate": "BLOCKED",
+  "final_gate_reason": "No generated dataset exists from this session, so READY FOR EXPLICIT EXECUTION conditions 2-7 cannot be satisfied by the agent. Not a data or safety failure. Re-evaluate after the human operator's local run returns aggregate results."
+}

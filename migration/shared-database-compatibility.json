@@ -1,0 +1,118 @@
+{
+  "shared_database": true,
+  "supabase_ref": "jnxevalckgitxuunjcvv",
+  "supabase_ref_confirmed_not": "zwdmredbjktvecvpfurx",
+  "region": "ap-southeast-1",
+  "postgres_version": "17.6.1",
+  "verified_by": [
+    "static_config_both_repos_identical_project_ref",
+    "live_supabase_projects_list",
+    "live_supabase_migration_list_x3",
+    "live_inspect_db_table_stats_and_index_stats",
+    "byte_for_byte_migration_file_diff_both_repos",
+    "byte_for_byte_edge_function_diff_both_repos",
+    "old_side_live_md5_set_hash_fingerprints_not_independently_rerun_by_this_phase"
+  ],
+
+  "old_repo": "C:\\Users\\Andry\\Click\\PUC-V2",
+  "new_repo": "C:\\Users\\Andry\\Click-NewTrial\\Click-V3",
+  "relationship": "same_codebase_lineage_two_points_in_time_not_two_independent_systems",
+
+  "old_users": 354,
+  "new_users": 354,
+  "user_migration_required": false,
+  "user_identity_reconciliation": {
+    "exact_matches": 354,
+    "probable_matches": 0,
+    "ambiguous_matches": 0,
+    "old_unmatched": 0,
+    "new_unmatched": 0,
+    "collisions": 0,
+    "note": "old_user_id == new_user_id for all 354 rows; this is one shared users table read through two codebases, not two populations that happen to match"
+  },
+
+  "total_migrations_new_repo": 46,
+  "total_migrations_old_repo": 27,
+  "migrations_shared_byte_identical": 27,
+  "migrations_applied_live": 28,
+  "pending_migrations_count": 18,
+  "pending_migrations_count_previously_reported_elsewhere": 16,
+  "pending_migration_count_discrepancy_note": "An earlier document in this repo (supabase-new-details.md) reported 16 pending migrations. Recounted fresh via `supabase migration list` three times this phase and independently recounted by two separate sub-audits: the correct figure is 18. The earlier '16' figure should be treated as superseded by this document.",
+
+  "pending_migrations": [
+    { "file": "20260926150000_learn_content_corrections.sql", "type": "DATA_TRANSFORM", "affects_students": true, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20260927000000_content_stage6_arrays.sql", "type": "CURRICULUM_CHANGE", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null, "adds_chapter": "CH0116" },
+    { "file": "20260928000000_unlock_stage6_arrays.sql", "type": "PROGRESS_RELEVANT", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20260928020000_content_stage8_searching_sorting.sql", "type": "CURRICULUM_CHANGE", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20260928030000_unlock_stage8_searching_sorting.sql", "type": "PROGRESS_RELEVANT", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20260928040000_content_stage7_strings.sql", "type": "CURRICULUM_CHANGE", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20260928050000_unlock_stage7_strings.sql", "type": "PROGRESS_RELEVANT", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20260928060000_content_stage9_functions.sql", "type": "CURRICULUM_CHANGE", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20260928070000_unlock_stage9_functions.sql", "type": "PROGRESS_RELEVANT", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20260929000000_structure_number_crunching_patterns.sql", "type": "CURRICULUM_CHANGE", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null, "note": "updates stage_no/order on 5 existing live stage rows (STG007-STG011, +2 shift, display fields only, no FK impact); creates STG012/STG013 stage rows and 12 chapter shells" },
+    { "file": "20260929010000_content_stage7_patterns.sql", "type": "CURRICULUM_CHANGE", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20260929020000_unlock_stage7_patterns.sql", "type": "PROGRESS_RELEVANT", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20260930000000_content_stage6_number_crunching.sql", "type": "CURRICULUM_CHANGE", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20260930010000_unlock_stage6_number_crunching.sql", "type": "PROGRESS_RELEVANT", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20261001000000_content_stage12_pointers.sql", "type": "CURRICULUM_CHANGE", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20261001010000_unlock_stage12_pointers.sql", "type": "PROGRESS_RELEVANT", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null },
+    { "file": "20261001020000_fix_stage6_chapter_order.sql", "type": "CURRICULUM_CHANGE", "affects_students": false, "affects_progress": false, "risk": "LOW", "new_table": null, "note": "only touches CH0117/CH0118, both created in this same pending batch" },
+    { "file": "20261001030000_activity_attempts.sql", "type": "ACTIVITY_SYSTEM", "affects_students": false, "affects_progress": false, "risk": "LOW_DATA_MEDIUM_SECURITY", "new_table": "activity_attempts", "known_issue": "missing 'enable row level security' statement; must be added before/with deployment" }
+  ],
+
+  "curriculum_mapping_required": false,
+  "curriculum_mapping_note": "OLD and NEW use identical STGnnn/CHnnnn IDs; every shared chapter/stage is IDENTICAL_ID (see migration/curriculum-compatibility-report.md). No ID translation table is needed. NEW_ONLY additions (STG012, STG013, CH0116, CH0117-CH0128) are pure additions with no OLD equivalent to map from.",
+
+  "progress_migration_required": false,
+  "progress_migration_note": "No migration needed: OLD and NEW read/write the same live learn_progress/test_runs/attempts rows. Zero existing progress references STG007-STG011 or STG012/STG013 (confirmed: those stages have zero recorded student activity live). Applying the pending curriculum migrations creates no orphaned references.",
+
+  "xp_migration_required": false,
+  "xp_migration_note": "The XP pipeline (pending_xp/committed_xp, partial-unique-index-gated single commit per chapter) is byte-identical shared code, already live, already governing all 354 users' current total_xp. Two known pre-existing data characteristics (43 completed_repeat runs with non-zero historical XP; 2 of 354 accounts with a total_xp/derived-sum mismatch) are not caused by and not affected by the pending migrations, and should not be 'corrected' as part of this work.",
+
+  "hearts_migration_required": false,
+  "hearts_migration_note": "Hearts logic is byte-identical shared code. None of the 18 pending migrations touch users.hearts or heart_recovery fields.",
+
+  "practice_migration_required": false,
+  "sections_migration_required": false,
+
+  "activity_attempts_live": false,
+  "activity_attempts_in_old_repo": false,
+  "activity_attempts_rls_enabled": "UNKNOWN_NOT_YET_LIVE",
+  "activity_attempts_rls_statement_present_in_migration": false,
+
+  "auth_compatible": true,
+  "auth_note": "Auth code (SHA-256(salt|password) hashing, random-UUID session tokens, requireSession idle-timeout check) is byte-identical between OLD and NEW. No Supabase Auth/auth.users usage in either repo. Since both repos run the identical auth code against the same live users/sessions tables, existing students already authenticate identically through either codebase -- no credential migration or hash-scheme decision is required.",
+
+  "edge_function_diff_hunks": 7,
+  "edge_function_diff_summary": [
+    "CRLF-tolerant multi-line answer comparison (bugfix, NEW only)",
+    "completeLearn message wording differs only when unified flag is set (NEW only)",
+    "startTest gains a 'unified' chapter mode (NEW only, caps questions via settings.UNIFIED_MAX_QUESTIONS)",
+    "ACTIVITY_XP constant + saveActivityAttempt function (NEW only)",
+    "finishTest additionally commits activity_attempts.xp_committed (NEW only)",
+    "finishTest auto-completes learn_progress for unified runs (NEW only)",
+    "finishTest message wording differs for unified vs non-unified (NEW only)",
+    "dispatch switch gains case 'saveActivityAttempt' (NEW only)"
+  ],
+  "edge_function_everything_else_byte_identical": true,
+
+  "database_writes": false,
+  "database_writes_note": "Only read-only operations were performed: projects list, link (local config only), migration list, inspect db index-stats/table-stats. No INSERT/UPDATE/DELETE/ALTER/CREATE/DROP of any kind.",
+
+  "unresolved_items": [
+    "Live MD5 set-hash fingerprint evidence for the same-database claim (from the OLD-side audit) was not independently re-run by this phase; all other angles of evidence are independently confirmed and consistent with it.",
+    "2,173 (test_runs.committed_xp sum, completed-only) vs 1,873 (attempts.xp_earned sum, completed-only) -- a ~300-unit gap between two related XP metrics in the OLD-side audit package that is not reconciled anywhere in that package. Flagged, not resolved, by this phase.",
+    "The 2 specific accounts with an XP reconciliation mismatch are intentionally not identified (to avoid exposing which students) -- would require a fresh live query to locate.",
+    "Exact live row-content reconciliation for the 115-row chapters table (which specific rows, beyond the aggregate counts) was confirmed via cross-referencing both repos' independent audits rather than a single direct live SELECT, since no general-purpose read query tool (psql/pg_dump, both requiring Docker, unavailable in this environment) was available this phase."
+  ],
+
+  "files_created_this_phase": [
+    "migration/shared-database-compatibility-report.md",
+    "migration/shared-database-compatibility.json",
+    "migration/curriculum-compatibility-report.md"
+  ],
+
+  "commit": false,
+  "push": false,
+  "deployment": false
+}

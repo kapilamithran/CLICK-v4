@@ -1,0 +1,74 @@
+{
+  "source": "jnxevalckgitxuunjcvv",
+  "destination": "eyevmykfavooeiklzebe",
+
+  "old_users": 354,
+  "protected_accounts": 2,
+  "selected_students": 352,
+
+  "new_users_before": 0,
+  "new_users_after": 0,
+  "new_progress_after": 0,
+
+  "would_insert": {
+    "users": 352,
+    "learn_progress": 450,
+    "test_runs": 805,
+    "attempts": 4688,
+    "practice_progress": 5,
+    "student_section_assignments": 352
+  },
+
+  "auth_hashes_ready": 352,
+  "auth_salts_ready": 352,
+  "auth_data_gaps": 0,
+
+  "collisions": {
+    "user_id": 0,
+    "roll_no": 0,
+    "email": 0,
+    "username": 0,
+    "learn_progress_id": 0,
+    "test_run_id": 0,
+    "attempt_id": 0,
+    "practice_progress_id": 0,
+    "assignment_id": 0
+  },
+
+  "stg000_rows": 0,
+  "stg007_to_stg011_rows": 0,
+  "e_prefix_practice_rows": 0,
+  "invalid_practice_references": 0,
+  "unexplained_exclusions": 0,
+
+  "per_student_differences": {
+    "initial_check_differences_found": 11,
+    "root_cause": "validation query omitted the test_runs.status='completed_repeat' value, which the backend code (index.ts:983) also counts toward tests_completed",
+    "corrected_check_differences_found": 0,
+    "data_altered": false
+  },
+
+  "dry_run_result": "PASS",
+  "actual_migration_executed": false,
+  "old_database_unchanged": true,
+  "new_database_unchanged": true,
+
+  "schema_modified": false,
+  "edge_functions_deployed": false,
+  "frontend_deployed": false,
+  "commit": false,
+  "push": false,
+
+  "final_migration_gate": "READY_FOR_EXPLICIT_EXECUTION",
+  "blockers": [],
+  "required_human_decisions": [
+    "Explicit authorization for a future Phase 10C to run the real --execute migration -- this phase's PASS result is not that authorization."
+  ],
+
+  "files_created_this_phase": [
+    "migration/phase10a-staff-decision.md",
+    "migration/phase10a-staff-decision-summary.json",
+    "migration/phase10b-migration-dry-run.md",
+    "migration/phase10b-migration-dry-run-summary.json"
+  ]
+}

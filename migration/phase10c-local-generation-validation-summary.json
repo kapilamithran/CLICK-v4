@@ -1,0 +1,60 @@
+{
+  "phase": "10C-F",
+  "old_supabase_ref": "jnxevalckgitxuunjcvv",
+  "new_supabase_ref": "eyevmykfavooeiklzebe",
+  "old_users": 354,
+  "protected_accounts": 2,
+  "approved_students": 352,
+  "population_check_passed": true,
+  "source_snapshot_captured_by_agent": false,
+  "generated_sql_exists": false,
+  "generated_sql_executed": false,
+  "generated_row_counts": null,
+  "count_differences": null,
+  "fk_orphan_validation": "not_performed",
+  "auth_availability_verified_this_phase": false,
+  "auth_availability_last_confirmed": "352/352 hash, 352/352 salt (Phase 10C live reconciliation)",
+  "excluded_scope_validation_this_phase": "not_performed_on_generated_dataset",
+  "snapshot_consistency": "not_established",
+  "new_database_preflight": {
+    "users": 0,
+    "test_runs": 0,
+    "attempts": 0,
+    "learn_progress": 0,
+    "practice_progress": 0,
+    "student_section_assignments": 0,
+    "stages": 13,
+    "chapters": 98,
+    "stg000_present": false,
+    "student_free": true
+  },
+  "generator_static_verification": {
+    "spawnSync": true,
+    "output_format_json": true,
+    "exit_status_check": true,
+    "json_presence_check": true,
+    "parse_check": true,
+    "rows_array_check": true,
+    "stale_growing_table_counts_removed": true,
+    "remaining_hardcoded_expected": "users=352 only"
+  },
+  "output_path": "migration/.local-migration-output/phase10c-migration-data.sql",
+  "output_path_gitignored": true,
+  "git": {
+    "head": "ab090063b059d892c619192b5d654a767d73fe20",
+    "head_unchanged": true,
+    "diff_check_clean": true,
+    "non_migration_changes": [".gitignore (one line added)", "migration/ (untracked reports/tooling)", ".gitattributes (untracked, earlier phase)", "supabase-new-details.md (untracked, earlier phase)"],
+    "application_or_schema_or_edge_function_changes": false,
+    "commit": "NONE",
+    "push": "NONE"
+  },
+  "credential_safety": {
+    "credential_values_printed": false,
+    "users_rows_fetched_by_agent": false,
+    "generated_sql_contents_displayed": false
+  },
+  "final_gate": "BLOCKED",
+  "final_gate_reason": "No locally generated dataset exists from this session, so the READY FOR EXPLICIT EXECUTION conditions cannot be met by the agent. Not a data or safety failure.",
+  "next_step": "Human operator runs node migration\\phase10c-generate-migration-sql.js locally, then runs Section A of phase10c-preflight-and-validation.sql, and returns aggregate results only."
+}

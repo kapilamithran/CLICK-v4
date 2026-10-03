@@ -1,0 +1,97 @@
+{
+  "old_supabase_ref": "jnxevalckgitxuunjcvv",
+  "old_supabase_name": "darshansathish2006's Project",
+  "old_supabase_org": "irlfjfrakudsubapedys",
+
+  "new_supabase_ref": "eyevmykfavooeiklzebe",
+  "new_supabase_name": "Click-V2",
+  "new_supabase_org": "bxmtvxlkirixqbqykcxl",
+  "new_supabase_region": "ap-southeast-1",
+  "new_supabase_postgres_version": "17.11.0.002",
+  "new_supabase_status": "ACTIVE_HEALTHY",
+  "new_supabase_created_at": "2026-10-02T13:42:32.416805Z",
+
+  "projects_are_separate": true,
+  "cli_linked_to": "eyevmykfavooeiklzebe",
+  "cli_link_verified": true,
+
+  "new_database_empty": true,
+  "new_database_has_any_tables": false,
+  "new_users": 0,
+  "new_schema_ready": false,
+
+  "local_migrations_total": 44,
+  "new_remote_migrations_applied": 0,
+  "new_remote_migrations_pending": 44,
+  "note_on_pending_count": "The '18 migrations' figure from the prior (OLD vs NEW-repo) audit phase describes drift relative to OLD, which already has the other 26 applied. For NEW, which starts fully empty, all 44 local migrations are pending, not 18.",
+
+  "dry_run_completed": true,
+  "dry_run_result": "PASS",
+  "dry_run_errors": [],
+  "dry_run_proposed_migration_count": 44,
+  "dry_run_seeds": [],
+  "dry_run_roles": [],
+
+  "migration_classifications_present": [
+    "schema_creation", "curriculum", "practice", "sections", "staff_monitoring", "xp", "activity_system", "progress"
+  ],
+  "migration_classifications_absent": ["auth", "hearts", "functions_triggers"],
+
+  "activity_attempts_status": "WILL_BE_CREATED",
+  "activity_attempts_rls_enabled_in_migration": false,
+  "activity_attempts_rls_status": "GAP",
+  "activity_attempts_rls_gap_migration": "supabase/migrations/20261001030000_activity_attempts.sql",
+  "activity_attempts_rls_gap_requires_explicit_approval": true,
+
+  "curriculum_status": "READY",
+  "curriculum_expected_stages": 13,
+  "curriculum_expected_chapters": 98,
+  "stg000_legacy_excluded": true,
+  "stg000_excluded_reason": "No migration in this repository's history ever creates a STG000 stage row; nothing needed to be done to exclude it",
+
+  "destructive_statement_found": true,
+  "destructive_statement_migration": "supabase/migrations/20260924000000_clear_test_accounts.sql",
+  "destructive_statement_sql": "delete from users where user_id not in ('U1A8B0A6D8810', 'U485B9DDDA04E');",
+  "destructive_statement_safe_on_new_because": "NEW's users table is empty at this point in the migration sequence, so zero rows match and zero rows are deleted",
+  "destructive_statement_future_risk": "Must never be manually re-run after real students exist in NEW -- it would delete every student except the two hardcoded IDs",
+
+  "student_data_created_by_migrations": false,
+  "student_migration_performed": false,
+
+  "edge_function_name": "click-backend",
+  "edge_function_deployed_to_new": false,
+  "edge_function_deployed_to_old": false,
+  "edge_function_secrets_configured_for_new": "UNKNOWN_NOT_CHECKED_FROM_REPO",
+
+  "frontend_still_points_to_old": true,
+  "frontend_files_referencing_old_ref": [
+    "index.html",
+    "vscode-extension/package.json",
+    "admin-tools/build-content-migration.js",
+    "admin-tools/reset-student-password.ps1"
+  ],
+  "config_toml_still_points_to_old": true,
+  "frontend_deployed_this_phase": false,
+
+  "old_database_modified": false,
+  "new_database_modified": false,
+  "old_database_writes_this_phase": 0,
+  "new_database_writes_this_phase": 0,
+  "operations_performed_this_phase": [
+    "supabase projects list (read-only)",
+    "supabase link --project-ref eyevmykfavooeiklzebe (local CLI config only)",
+    "supabase inspect db table-stats --linked (read-only, against NEW)",
+    "supabase inspect db index-stats --linked (read-only, against NEW)",
+    "supabase migration list (read-only, against NEW)",
+    "supabase db push --dry-run (no write; dry-run only, against NEW)"
+  ],
+
+  "files_created_this_phase": [
+    "migration/new-supabase-bootstrap-report.md",
+    "migration/new-supabase-bootstrap-summary.json"
+  ],
+
+  "commit": false,
+  "push": false,
+  "deployment": false
+}

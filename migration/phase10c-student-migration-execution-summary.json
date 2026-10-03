@@ -1,0 +1,59 @@
+{
+  "phase": "10C",
+  "status": "BLOCKED",
+  "source_project": "jnxevalckgitxuunjcvv",
+  "destination_project": "eyevmykfavooeiklzebe",
+
+  "protected_accounts": 2,
+  "selected_students": 352,
+
+  "expected_counts": {
+    "users": 352,
+    "learn_progress": 450,
+    "test_runs": 805,
+    "attempts": 4688,
+    "practice_progress": 5,
+    "student_section_assignments": 352
+  },
+  "actual_counts": {
+    "users": 0,
+    "learn_progress": 0,
+    "test_runs": 0,
+    "attempts": 0,
+    "practice_progress": 0,
+    "student_section_assignments": 0
+  },
+
+  "auth_hash_matches": "not_applicable_nothing_inserted",
+  "auth_salt_matches": "not_applicable_nothing_inserted",
+  "collision_counts": "not_applicable_nothing_inserted",
+  "per_student_differences": "not_applicable_nothing_inserted",
+
+  "excluded_data_checks": {
+    "sessions_migrated": 0,
+    "practice_pairings_migrated": 0,
+    "activity_attempts_migrated": 0,
+    "staff_users_migrated": 0,
+    "staff_messages_migrated": 0,
+    "protected_accounts_migrated": 0
+  },
+
+  "block_reason": "Claude Code auto-mode permission classifier blocked the real INSERT against NEW. First attempt: generic 'judged dangerous' denial. After explicit user re-confirmation via direct question, second identical attempt was denied with reason '[Auto-Mode Bypass]' -- the classifier explicitly flagged the ask-then-retry pattern itself, not merely requiring one round of confirmation as an earlier, lower-sensitivity write (schema/curriculum migration push) had. No further attempt was made, per explicit instructions not to pursue the same outcome through another tool, batching, encoding, sub-agent, or later turn.",
+  "execution_steps_completed": 0,
+  "execution_steps_total": 6,
+
+  "old_database_unchanged": true,
+  "new_database_verified": true,
+  "new_database_still_student_free": true,
+
+  "schema_modified": false,
+  "edge_functions_deployed": false,
+  "frontend_deployed": false,
+  "commit_created": false,
+  "push_performed": false,
+
+  "files_created_this_phase": [
+    "migration/phase10c-student-migration-execution.md",
+    "migration/phase10c-student-migration-execution-summary.json"
+  ]
+}

@@ -1,0 +1,1828 @@
+{
+  "_meta": {
+    "purpose": "Template for mapping OLD CLICK curriculum identifiers to NEW CLICK (Click-NewTrial) curriculum identifiers, for a future student-progress migration. The NEW side is fully populated from the live repository/fixture data. The OLD side (old_stage_id, old_chapter_id, old_stage_no, old_chapter_no) is intentionally left null -- it must be filled in by a separate audit of the OLD project/repository, not guessed.",
+    "generated_at": "2026-10-02",
+    "new_repo": "C:UsersAndryClick-NewTrialClick-V3",
+    "mapping_type_values": [
+      "exact_title_match",
+      "renamed",
+      "moved",
+      "split",
+      "merged",
+      "removed_in_new",
+      "no_equivalent",
+      "needs_verification"
+    ],
+    "instructions": [
+      "For each NEW chapter, determine the corresponding OLD chapter_id (if any) by comparing titles and position, not by assuming matching numeric suffixes.",
+      "Stage numbering changed: Number Crunching and Patterns were inserted between Loops and Arrays, shifting Arrays/Strings/Searching & Sorting/Functions stage_no by +2 versus whatever numbering the OLD project used for those same stages.",
+      "Pointers, Number Crunching, and Patterns are confirmed new stages added after the original curriculum -- do not search for an OLD equivalent; mark no_equivalent unless the OLD audit proves otherwise.",
+      "CH0115 (else if) and CH0116 (Capstone Project: Using Arrays) were inserted into pre-existing stages after the fact -- treat them the same way.",
+      "Do not invent a mapping. If the OLD project has no evidence of a chapter, leave old_chapter_id null and mapping_type = no_equivalent or needs_verification."
+    ]
+  },
+  "stages": [
+    {
+      "new_stage_id": "STG001",
+      "new_stage_no": 0,
+      "new_order": 0,
+      "title": "Foundations",
+      "is_new_addition": false,
+      "notes": "Pre-existing stage; stage_no/order may have shifted when Number Crunching/Patterns were inserted between Loops and Arrays -- map by TITLE, not by stage_no.",
+      "old_mapping": {
+        "old_stage_id": null,
+        "old_stage_no": null,
+        "mapping_type": "needs_verification",
+        "confidence": null,
+        "verified_by": null,
+        "verified_at": null
+      },
+      "chapters": [
+        {
+          "new_chapter_id": "CH0031",
+          "new_chapter_no": 1,
+          "new_order": 1,
+          "title": "Intro",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0032",
+          "new_chapter_no": 2,
+          "new_order": 2,
+          "title": "printf",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0033",
+          "new_chapter_no": 3,
+          "new_order": 3,
+          "title": "Comments",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0034",
+          "new_chapter_no": 4,
+          "new_order": 4,
+          "title": "Variables",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0035",
+          "new_chapter_no": 5,
+          "new_order": 5,
+          "title": "Recap & Datatypes Intro",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        }
+      ]
+    },
+    {
+      "new_stage_id": "STG002",
+      "new_stage_no": 1,
+      "new_order": 1,
+      "title": "Datatypes",
+      "is_new_addition": false,
+      "notes": "Pre-existing stage; stage_no/order may have shifted when Number Crunching/Patterns were inserted between Loops and Arrays -- map by TITLE, not by stage_no.",
+      "old_mapping": {
+        "old_stage_id": null,
+        "old_stage_no": null,
+        "mapping_type": "needs_verification",
+        "confidence": null,
+        "verified_by": null,
+        "verified_at": null
+      },
+      "chapters": [
+        {
+          "new_chapter_id": "CH0036",
+          "new_chapter_no": 1,
+          "new_order": 1,
+          "title": "integer",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0037",
+          "new_chapter_no": 2,
+          "new_order": 2,
+          "title": "float & double",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0038",
+          "new_chapter_no": 3,
+          "new_order": 3,
+          "title": "character & boolean",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0039",
+          "new_chapter_no": 4,
+          "new_order": 4,
+          "title": "constants, void",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0040",
+          "new_chapter_no": 5,
+          "new_order": 5,
+          "title": "type casting",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        }
+      ]
+    },
+    {
+      "new_stage_id": "STG003",
+      "new_stage_no": 2,
+      "new_order": 2,
+      "title": "Operators",
+      "is_new_addition": false,
+      "notes": "Pre-existing stage; stage_no/order may have shifted when Number Crunching/Patterns were inserted between Loops and Arrays -- map by TITLE, not by stage_no.",
+      "old_mapping": {
+        "old_stage_id": null,
+        "old_stage_no": null,
+        "mapping_type": "needs_verification",
+        "confidence": null,
+        "verified_by": null,
+        "verified_at": null
+      },
+      "chapters": [
+        {
+          "new_chapter_id": "CH0041",
+          "new_chapter_no": 1,
+          "new_order": 1,
+          "title": "arithmetic & unary operation",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0042",
+          "new_chapter_no": 2,
+          "new_order": 2,
+          "title": "assignment",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0043",
+          "new_chapter_no": 3,
+          "new_order": 3,
+          "title": "relational & logical",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0044",
+          "new_chapter_no": 4,
+          "new_order": 4,
+          "title": "Bitwise",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0045",
+          "new_chapter_no": 5,
+          "new_order": 5,
+          "title": "Precedence",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        }
+      ]
+    },
+    {
+      "new_stage_id": "STG004",
+      "new_stage_no": 3,
+      "new_order": 3,
+      "title": "Input",
+      "is_new_addition": false,
+      "notes": "Pre-existing stage; stage_no/order may have shifted when Number Crunching/Patterns were inserted between Loops and Arrays -- map by TITLE, not by stage_no.",
+      "old_mapping": {
+        "old_stage_id": null,
+        "old_stage_no": null,
+        "mapping_type": "needs_verification",
+        "confidence": null,
+        "verified_by": null,
+        "verified_at": null
+      },
+      "chapters": [
+        {
+          "new_chapter_id": "CH0046",
+          "new_chapter_no": 1,
+          "new_order": 1,
+          "title": "format specifier",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0047",
+          "new_chapter_no": 2,
+          "new_order": 2,
+          "title": "scanf()",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0048",
+          "new_chapter_no": 3,
+          "new_order": 3,
+          "title": "Input validation",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0049",
+          "new_chapter_no": 4,
+          "new_order": 4,
+          "title": "Character & String Input",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0050",
+          "new_chapter_no": 5,
+          "new_order": 5,
+          "title": "Input Buffer & Newline Handling",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        }
+      ]
+    },
+    {
+      "new_stage_id": "STG005",
+      "new_stage_no": 4,
+      "new_order": 4,
+      "title": "Decision Making",
+      "is_new_addition": false,
+      "notes": "Pre-existing stage; stage_no/order may have shifted when Number Crunching/Patterns were inserted between Loops and Arrays -- map by TITLE, not by stage_no.",
+      "old_mapping": {
+        "old_stage_id": null,
+        "old_stage_no": null,
+        "mapping_type": "needs_verification",
+        "confidence": null,
+        "verified_by": null,
+        "verified_at": null
+      },
+      "chapters": [
+        {
+          "new_chapter_id": "CH0051",
+          "new_chapter_no": 1,
+          "new_order": 1,
+          "title": "if Statement",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0052",
+          "new_chapter_no": 2,
+          "new_order": 2,
+          "title": "if-else",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0115",
+          "new_chapter_no": 3,
+          "new_order": 3,
+          "title": "else if",
+          "is_new_addition": true,
+          "notes": "Inserted into an existing stage after the original curriculum was authored; OLD project likely has no equivalent chapter -- confirm, do not assume.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "no_equivalent",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0053",
+          "new_chapter_no": 4,
+          "new_order": 4,
+          "title": "Switch-Case",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0054",
+          "new_chapter_no": 5,
+          "new_order": 5,
+          "title": "Ternary Condition",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0055",
+          "new_chapter_no": 6,
+          "new_order": 6,
+          "title": "Nested if-else",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        }
+      ]
+    },
+    {
+      "new_stage_id": "STG006",
+      "new_stage_no": 5,
+      "new_order": 5,
+      "title": "Loops",
+      "is_new_addition": false,
+      "notes": "Pre-existing stage; stage_no/order may have shifted when Number Crunching/Patterns were inserted between Loops and Arrays -- map by TITLE, not by stage_no.",
+      "old_mapping": {
+        "old_stage_id": null,
+        "old_stage_no": null,
+        "mapping_type": "needs_verification",
+        "confidence": null,
+        "verified_by": null,
+        "verified_at": null
+      },
+      "chapters": [
+        {
+          "new_chapter_id": "CH0056",
+          "new_chapter_no": 1,
+          "new_order": 1,
+          "title": "for loop",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0057",
+          "new_chapter_no": 2,
+          "new_order": 2,
+          "title": "while loop",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0058",
+          "new_chapter_no": 3,
+          "new_order": 3,
+          "title": "do-while loop",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0059",
+          "new_chapter_no": 4,
+          "new_order": 4,
+          "title": "break",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0060",
+          "new_chapter_no": 5,
+          "new_order": 5,
+          "title": "continue",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0061",
+          "new_chapter_no": 6,
+          "new_order": 6,
+          "title": "nested loops",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        }
+      ]
+    },
+    {
+      "new_stage_id": "STG012",
+      "new_stage_no": 6,
+      "new_order": 6,
+      "title": "NUMBER CRUNCHING",
+      "is_new_addition": true,
+      "notes": "Added after the original curriculum; OLD project almost certainly has no equivalent stage. Confirm during OLD audit rather than assuming.",
+      "old_mapping": {
+        "old_stage_id": null,
+        "old_stage_no": null,
+        "mapping_type": "no_equivalent",
+        "confidence": null,
+        "verified_by": null,
+        "verified_at": null
+      },
+      "chapters": [
+        {
+          "new_chapter_id": "CH0118",
+          "new_chapter_no": 1,
+          "new_order": 1,
+          "title": "Counting Digits",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0117",
+          "new_chapter_no": 2,
+          "new_order": 2,
+          "title": "Accessing Digits",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0119",
+          "new_chapter_no": 3,
+          "new_order": 3,
+          "title": "Reversing a Number",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0120",
+          "new_chapter_no": 4,
+          "new_order": 4,
+          "title": "Checking a Palindrome Number",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0121",
+          "new_chapter_no": 5,
+          "new_order": 5,
+          "title": "Checking an Armstrong Number",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0122",
+          "new_chapter_no": 6,
+          "new_order": 6,
+          "title": "Checking a Perfect Number",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0123",
+          "new_chapter_no": 7,
+          "new_order": 7,
+          "title": "Checking a Prime Number",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        }
+      ]
+    },
+    {
+      "new_stage_id": "STG013",
+      "new_stage_no": 7,
+      "new_order": 7,
+      "title": "PATTERNS",
+      "is_new_addition": true,
+      "notes": "Added after the original curriculum; OLD project almost certainly has no equivalent stage. Confirm during OLD audit rather than assuming.",
+      "old_mapping": {
+        "old_stage_id": null,
+        "old_stage_no": null,
+        "mapping_type": "no_equivalent",
+        "confidence": null,
+        "verified_by": null,
+        "verified_at": null
+      },
+      "chapters": [
+        {
+          "new_chapter_id": "CH0124",
+          "new_chapter_no": 1,
+          "new_order": 1,
+          "title": "Pattern Basics & Simple Patterns",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0125",
+          "new_chapter_no": 2,
+          "new_order": 2,
+          "title": "Number & Character Patterns",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0126",
+          "new_chapter_no": 3,
+          "new_order": 3,
+          "title": "Spaces, Alignment & Pyramids",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0127",
+          "new_chapter_no": 4,
+          "new_order": 4,
+          "title": "Hollow Patterns & Conditions",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0128",
+          "new_chapter_no": 5,
+          "new_order": 5,
+          "title": "Combining Patterns & Problem Solving",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        }
+      ]
+    },
+    {
+      "new_stage_id": "STG007",
+      "new_stage_no": 8,
+      "new_order": 8,
+      "title": "ARRAYS",
+      "is_new_addition": false,
+      "notes": "Pre-existing stage; stage_no/order may have shifted when Number Crunching/Patterns were inserted between Loops and Arrays -- map by TITLE, not by stage_no.",
+      "old_mapping": {
+        "old_stage_id": null,
+        "old_stage_no": null,
+        "mapping_type": "needs_verification",
+        "confidence": null,
+        "verified_by": null,
+        "verified_at": null
+      },
+      "chapters": [
+        {
+          "new_chapter_id": "CH0062",
+          "new_chapter_no": 1,
+          "new_order": 1,
+          "title": "Introduction to Array",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0063",
+          "new_chapter_no": 2,
+          "new_order": 2,
+          "title": "Array Indexing and Accessing Element",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0064",
+          "new_chapter_no": 3,
+          "new_order": 3,
+          "title": "Initializing Array",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0065",
+          "new_chapter_no": 4,
+          "new_order": 4,
+          "title": "Combining Loops with Array",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0066",
+          "new_chapter_no": 5,
+          "new_order": 5,
+          "title": "Out-of-Bounds Errors & Safety",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0067",
+          "new_chapter_no": 6,
+          "new_order": 6,
+          "title": "Basic Array Operations- Math & Metric",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0068",
+          "new_chapter_no": 7,
+          "new_order": 7,
+          "title": "Searching in an Array",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0069",
+          "new_chapter_no": 8,
+          "new_order": 8,
+          "title": "Introduction to Multi-Dimensional Arrays",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0070",
+          "new_chapter_no": 9,
+          "new_order": 9,
+          "title": "Working with 2D Array",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0071",
+          "new_chapter_no": 10,
+          "new_order": 10,
+          "title": "Character Array (Introduction to Strings)",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0072",
+          "new_chapter_no": 11,
+          "new_order": 11,
+          "title": "Arrays and Functions",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0116",
+          "new_chapter_no": 12,
+          "new_order": 12,
+          "title": "Capstone Project: Using Arrays",
+          "is_new_addition": true,
+          "notes": "Inserted into an existing stage after the original curriculum was authored; OLD project likely has no equivalent chapter -- confirm, do not assume.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "no_equivalent",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        }
+      ]
+    },
+    {
+      "new_stage_id": "STG008",
+      "new_stage_no": 9,
+      "new_order": 9,
+      "title": "STRINGS",
+      "is_new_addition": false,
+      "notes": "Pre-existing stage; stage_no/order may have shifted when Number Crunching/Patterns were inserted between Loops and Arrays -- map by TITLE, not by stage_no.",
+      "old_mapping": {
+        "old_stage_id": null,
+        "old_stage_no": null,
+        "mapping_type": "needs_verification",
+        "confidence": null,
+        "verified_by": null,
+        "verified_at": null
+      },
+      "chapters": [
+        {
+          "new_chapter_id": "CH0073",
+          "new_chapter_no": 1,
+          "new_order": 1,
+          "title": "String Basics & Declaration",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0074",
+          "new_chapter_no": 2,
+          "new_order": 2,
+          "title": "String Input & Output",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0075",
+          "new_chapter_no": 3,
+          "new_order": 3,
+          "title": "Accessing & Traversing Strings",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0076",
+          "new_chapter_no": 4,
+          "new_order": 4,
+          "title": "String Length & Basic Operations",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0077",
+          "new_chapter_no": 5,
+          "new_order": 5,
+          "title": "String Library Functions",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0078",
+          "new_chapter_no": 6,
+          "new_order": 6,
+          "title": "Basic String Programs",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        }
+      ]
+    },
+    {
+      "new_stage_id": "STG009",
+      "new_stage_no": 10,
+      "new_order": 10,
+      "title": "SEARCHING & SORTING",
+      "is_new_addition": false,
+      "notes": "Pre-existing stage; stage_no/order may have shifted when Number Crunching/Patterns were inserted between Loops and Arrays -- map by TITLE, not by stage_no.",
+      "old_mapping": {
+        "old_stage_id": null,
+        "old_stage_no": null,
+        "mapping_type": "needs_verification",
+        "confidence": null,
+        "verified_by": null,
+        "verified_at": null
+      },
+      "chapters": [
+        {
+          "new_chapter_id": "CH0079",
+          "new_chapter_no": 1,
+          "new_order": 1,
+          "title": "Searching Basics",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0080",
+          "new_chapter_no": 2,
+          "new_order": 2,
+          "title": "Linear Search",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0081",
+          "new_chapter_no": 3,
+          "new_order": 3,
+          "title": "Linear Search Algorithm",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0082",
+          "new_chapter_no": 4,
+          "new_order": 4,
+          "title": "Linear Search with Arrays",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0083",
+          "new_chapter_no": 5,
+          "new_order": 5,
+          "title": "Search Occurrence & Count",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0084",
+          "new_chapter_no": 6,
+          "new_order": 6,
+          "title": "Binary Search Basics",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0085",
+          "new_chapter_no": 7,
+          "new_order": 7,
+          "title": "Binary Search Algorithm",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0086",
+          "new_chapter_no": 8,
+          "new_order": 8,
+          "title": "Binary Search with Arrays",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0087",
+          "new_chapter_no": 9,
+          "new_order": 9,
+          "title": "Linear Search vs Binary Search (Quick Recap)",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0088",
+          "new_chapter_no": 10,
+          "new_order": 10,
+          "title": "Sorting Basics",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0089",
+          "new_chapter_no": 11,
+          "new_order": 11,
+          "title": "Sorting in Ascending & Descending Order",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0090",
+          "new_chapter_no": 12,
+          "new_order": 12,
+          "title": "Bubble Sort",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0091",
+          "new_chapter_no": 13,
+          "new_order": 13,
+          "title": "Selection Sort",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0092",
+          "new_chapter_no": 14,
+          "new_order": 14,
+          "title": "Insertion Sort",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0093",
+          "new_chapter_no": 15,
+          "new_order": 15,
+          "title": "Comparing Sorting Methods",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        }
+      ]
+    },
+    {
+      "new_stage_id": "STG010",
+      "new_stage_no": 11,
+      "new_order": 11,
+      "title": "FUNCTIONS",
+      "is_new_addition": false,
+      "notes": "Pre-existing stage; stage_no/order may have shifted when Number Crunching/Patterns were inserted between Loops and Arrays -- map by TITLE, not by stage_no.",
+      "old_mapping": {
+        "old_stage_id": null,
+        "old_stage_no": null,
+        "mapping_type": "needs_verification",
+        "confidence": null,
+        "verified_by": null,
+        "verified_at": null
+      },
+      "chapters": [
+        {
+          "new_chapter_id": "CH0094",
+          "new_chapter_no": 1,
+          "new_order": 1,
+          "title": "What is a Function?",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0095",
+          "new_chapter_no": 2,
+          "new_order": 2,
+          "title": "Creating and Calling a Function",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0096",
+          "new_chapter_no": 3,
+          "new_order": 3,
+          "title": "Functions with Parameters",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0097",
+          "new_chapter_no": 4,
+          "new_order": 4,
+          "title": "Functions with Return Values",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0098",
+          "new_chapter_no": 5,
+          "new_order": 5,
+          "title": "Types of Functions",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0099",
+          "new_chapter_no": 6,
+          "new_order": 6,
+          "title": "Multiple Parameters and Arguments",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0100",
+          "new_chapter_no": 7,
+          "new_order": 7,
+          "title": "Local and Global Variables",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0101",
+          "new_chapter_no": 8,
+          "new_order": 8,
+          "title": "Functions with Arrays and Strings",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0102",
+          "new_chapter_no": 9,
+          "new_order": 9,
+          "title": "Recursive Functions",
+          "is_new_addition": false,
+          "notes": "",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        }
+      ]
+    },
+    {
+      "new_stage_id": "STG011",
+      "new_stage_no": 12,
+      "new_order": 12,
+      "title": "POINTERS",
+      "is_new_addition": true,
+      "notes": "Added after the original curriculum; OLD project almost certainly has no equivalent stage. Confirm during OLD audit rather than assuming.",
+      "old_mapping": {
+        "old_stage_id": null,
+        "old_stage_no": null,
+        "mapping_type": "no_equivalent",
+        "confidence": null,
+        "verified_by": null,
+        "verified_at": null
+      },
+      "chapters": [
+        {
+          "new_chapter_id": "CH0103",
+          "new_chapter_no": 1,
+          "new_order": 1,
+          "title": "Pointer Basics",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0104",
+          "new_chapter_no": 2,
+          "new_order": 2,
+          "title": "Declaring & Initializing Pointers",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0105",
+          "new_chapter_no": 3,
+          "new_order": 3,
+          "title": "Address Operator &",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0106",
+          "new_chapter_no": 4,
+          "new_order": 4,
+          "title": "Dereference Operator *",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0107",
+          "new_chapter_no": 5,
+          "new_order": 5,
+          "title": "Pointers and Data Types",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0108",
+          "new_chapter_no": 6,
+          "new_order": 6,
+          "title": "Pointers and Variables",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0109",
+          "new_chapter_no": 7,
+          "new_order": 7,
+          "title": "Pointer Arithmetic",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0110",
+          "new_chapter_no": 8,
+          "new_order": 8,
+          "title": "Pointers and Arrays",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0111",
+          "new_chapter_no": 9,
+          "new_order": 9,
+          "title": "Pointers and Strings",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0112",
+          "new_chapter_no": 10,
+          "new_order": 10,
+          "title": "Pointers with Functions",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0113",
+          "new_chapter_no": 11,
+          "new_order": 11,
+          "title": "Pointers with Structures",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        },
+        {
+          "new_chapter_id": "CH0114",
+          "new_chapter_no": 12,
+          "new_order": 12,
+          "title": "Common Pointer Problems",
+          "is_new_addition": false,
+          "notes": "Part of a wholly new stage; no OLD equivalent expected.",
+          "old_mapping": {
+            "old_chapter_id": null,
+            "old_chapter_no": null,
+            "mapping_type": "needs_verification",
+            "confidence": null,
+            "verified_by": null,
+            "verified_at": null
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "old_supabase_ref": "jnxevalckgitxuunjcvv",
+  "new_supabase_ref": "eyevmykfavooeiklzebe",
+
+  "real_student_population": 352,
+  "protected_dev_qa_accounts": 2,
+  "protected_account_ids": ["U1A8B0A6D8810", "U485B9DDDA04E"],
+  "selection_rule": "select * from users where user_id not in ('U1A8B0A6D8810', 'U485B9DDDA04E')",
+
+  "auth_old_source_location": "C:\\Users\\Andry\\Click\\PUC-V2\\supabase\\functions\\click-backend\\index.ts",
+  "auth_old_source_project_id_confirmed": "jnxevalckgitxuunjcvv",
+  "auth_old_source_git_status_clean": true,
+  "auth_diff_hunks_total": 8,
+  "auth_diff_hunks_touching_auth_code": 0,
+  "auth_implementation_old": "independently_verified_via_direct_source_diff",
+  "auth_implementation_new": "sha256(salt|password), single round, hex, utf-8, crypto.randomUUID() salt minus hyphens, no normalization, server-side only",
+  "auth_compatibility": "VERIFIED_DIRECTLY_COMPATIBLE",
+  "auth_synthetic_test_vector_executed": true,
+  "auth_synthetic_test_vector_deterministic": true,
+
+  "password_migration_strategy": "copy_unchanged",
+  "password_migration_strategy_justification": "login() verification is a pure function of submitted password + stored salt + stored hash, no project-specific input; NEW runs byte-identical hashing code to OLD (verified this phase).",
+
+  "table_readiness": {
+    "users": "READY",
+    "learn_progress": "READY",
+    "test_runs": "READY",
+    "attempts": "READY",
+    "practice_progress": "READY",
+    "student_section_assignments": "READY"
+  },
+
+  "staff": "SEPARATE_OPERATIONAL_DECISION",
+  "staff_users_count": 1,
+  "staff_messages_count": 4,
+  "section_assignments_staff_dependency": false,
+
+  "excluded": {
+    "sessions": "EXCLUDED",
+    "practice_pairings": "EXCLUDED",
+    "activity_attempts": "EXCLUDED_ABSENT_ON_OLD",
+    "stg000": "EXCLUDED_ZERO_REAL_STUDENT_ROWS",
+    "stg007_to_stg011": "EXCLUDED_ZERO_REAL_STUDENT_ROWS",
+    "experiment_practice": "EXCLUDED_ZERO_ROWS"
+  },
+
+  "id_translation_required": false,
+
+  "migration_order": ["preflight", "users", "student_section_assignments", "test_runs", "attempts", "learn_progress", "practice_progress", "post_migration_validation"],
+  "migration_order_refinement_note": "attempts must strictly follow test_runs (hard FK on test_run_id); learn_progress has no FK to test_runs and is sequenced after it only for grouping, not due to a schema requirement.",
+
+  "batching_strategy": "per_table_transactions",
+  "historical_values_preserved_not_recomputed": true,
+
+  "migration_specification": "COMPLETE",
+  "future_migration_script": "NOT_CREATED_SPECIFICATION_ONLY",
+
+  "student_migration_gate": "OPEN_WITH_CONDITIONS",
+  "remaining_human_decisions": [
+    "Staff-provisioning approach (Option A: recreate fresh on NEW, loses 4 staff_messages rows for now; Option B: migrate staff_users with identical staff_id, preserves staff_messages) -- does not block student migration."
+  ],
+  "deployment_blockers_not_addressed_this_phase": [
+    "ADMIN_RESET_KEY not set on NEW",
+    "click-backend not deployed to NEW",
+    "index.html hardcodes OLD's URL/anon key",
+    "SUPABASE_PROJECT_ID GitHub secret value unknown"
+  ],
+
+  "new_users": 0,
+  "new_student_progress": 0,
+
+  "old_database_unchanged": true,
+  "old_database_operations_this_phase": [
+    "read-only inspection of a local checkout (C:\\Users\\Andry\\Click\\PUC-V2), not a database operation",
+    "no supabase db query or migration list calls were needed this phase -- Phase 8's live counts were reused, not re-queried"
+  ],
+
+  "source_code_modified": false,
+  "database_modified": false,
+  "edge_functions_deployed": false,
+  "frontend_deployed": false,
+  "commit": false,
+  "push": false,
+
+  "files_created_this_phase": [
+    "migration/phase9-authentication-verification.md",
+    "migration/phase9-final-student-migration-specification.md",
+    "migration/phase9-migration-gate-summary.json"
+  ]
+}

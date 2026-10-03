@@ -1,0 +1,94 @@
+{
+  "old_supabase_ref": "jnxevalckgitxuunjcvv",
+  "new_supabase_ref": "eyevmykfavooeiklzebe",
+
+  "old_migrations_applied": 26,
+  "old_migrations_total_local": 45,
+  "old_migrations_count_discrepancy_resolved": true,
+
+  "old_total_users": 354,
+  "old_active_users": 354,
+  "old_inactive_users": 0,
+  "old_null_critical_identity_fields": 0,
+
+  "real_student_migration_population": 352,
+  "protected_dev_qa_accounts": 2,
+  "protected_account_ids": ["U1A8B0A6D8810", "U485B9DDDA04E"],
+
+  "stg000_real_student_rows": 0,
+  "stg000_real_students": 0,
+  "stg000_note": "253 real students have users.current_stage='STG000' but all 253 have zero rows in learn_progress/test_runs/attempts -- confirmed to be dormant never-active accounts, not legacy-content engagement. Inert default, not a migration blocker.",
+
+  "stg007_to_stg011_real_student_rows": 0,
+  "stg007_to_stg011_real_students": 0,
+
+  "max_stage_referenced_by_real_students": "STG006",
+  "max_chapter_referenced_by_real_students": "CH0115",
+
+  "practice_e_prefix_rows": 0,
+  "practice_invalid_new_references": 0,
+  "practice_progress_total_rows": 5,
+  "practice_progress_distinct_users": 2,
+  "practice_progress_duplicate_combinations": 0,
+
+  "student_section_assignments_total": 352,
+  "student_section_assignments_active": 352,
+  "student_section_assignments_distinct_students": 352,
+  "student_section_assignments_null_assigned_by": 352,
+  "student_section_assignments_dangling_assigned_by": 0,
+
+  "staff_users_count": 1,
+  "staff_messages_count": 4,
+  "staff_messages_dangling_refs": 0,
+
+  "activity_attempts_on_old": "ABSENT",
+  "activity_attempts_rows_on_old": 0,
+
+  "auth_compatibility": "externally_confirmed_but_not_independently_verified",
+  "auth_schema_mismatches_found": 0,
+
+  "id_translation_required": false,
+
+  "real_student_classification": {
+    "clean": 352,
+    "requires_transformation": 0,
+    "blocked": 0
+  },
+
+  "migration_order": ["users", "student_section_assignments", "test_runs", "attempts", "learn_progress", "practice_progress"],
+
+  "student_migration_gate": "OPEN_WITH_CONDITIONS",
+  "gate_blockers": [
+    "Auth-compatibility hashing-code claim remains externally sourced, not independently re-verified (no OLD source checkout available in this environment)",
+    "ADMIN_RESET_KEY secret not set on NEW (carried over from Phase 7, not addressed this phase by design)",
+    "click-backend not deployed to NEW (carried over from Phase 7)",
+    "index.html hardcodes OLD's URL/anon key (carried over from Phase 7)",
+    "GitHub SUPABASE_PROJECT_ID secret's current value unknown (carried over from Phase 7)"
+  ],
+  "required_human_decisions": [
+    "Staff-provisioning approach: recreate staff accounts fresh on NEW (loses staff_messages history, 4 rows) vs. migrate staff_users with identical staff_id values (preserves staff_messages) -- low-stakes (1 staff user, 4 messages) but genuinely a product choice, not resolvable from data alone.",
+    "Whether to independently verify OLD's click-backend hashing code (diff against NEW's source, or test one real login) before migrating any real credential, given this remains the single unresolved technical assumption underpinning auth compatibility."
+  ],
+
+  "new_users": 0,
+  "new_student_progress": 0,
+  "new_migrations_applied": 45,
+
+  "old_database_unchanged": true,
+  "old_database_operations_this_phase": [
+    "supabase db query --linked --project-ref jnxevalckgitxuunjcvv (SELECT only, ~20 calls)",
+    "supabase migration list --project-ref jnxevalckgitxuunjcvv (read-only, start and end of phase)"
+  ],
+
+  "source_code_modified": false,
+  "database_modified": false,
+  "edge_functions_deployed": false,
+  "frontend_deployed": false,
+  "commit": false,
+  "push": false,
+
+  "files_created_this_phase": [
+    "migration/phase8-old-row-reconnaissance.md",
+    "migration/phase8-migration-gate-summary.json"
+  ]
+}
