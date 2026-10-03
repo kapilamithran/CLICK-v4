@@ -1,0 +1,98 @@
+{
+  "audit": "phase11b-github-supabase-deployment",
+  "date": "2026-10-03",
+  "repository": "Andryandurai/Click-NewTrial",
+  "branch": "main",
+  "main_head": "656ab78",
+  "main_tree_equals": "9c365bf",
+  "read_only": true,
+  "secrets_added": false,
+  "workflows_changed": false,
+  "deployments_run": false,
+  "migrations_run": false,
+  "databases_contacted_by_audit": false,
+  "frontend_production_backend_ref": "jnxevalckgitxuunjcvv",
+  "wrangler_worker_name_on_main": "puc-v2",
+  "config_toml_project_id": "jnxevalckgitxuunjcvv",
+  "repo_secrets_present": [],
+  "repo_variables_present": [],
+  "environments": [],
+  "branch_protection": "unavailable (HTTP 403, private repo plan)",
+  "workflows": [
+    {
+      "file": ".github/workflows/cloudflare-frontend.yml",
+      "triggers": ["push:main", "workflow_dispatch"],
+      "paths_ignore": ["supabase/**", "admin-tools/**", "vscode-extension/**", "desktop-app/**", "CSVs/**", "CLICK - Google Play package/**", "appscript-code.txt", ".github/workflows/supabase-*.yml"],
+      "secrets": ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"],
+      "target": "Cloudflare Worker named in wrangler.jsonc (puc-v2 on main)",
+      "latest_main_run": "37099077528 failure (no token)"
+    },
+    {
+      "file": ".github/workflows/supabase-functions.yml",
+      "triggers": ["push:main (supabase/functions/**, supabase/config.toml)", "workflow_dispatch"],
+      "secrets": ["SUPABASE_ACCESS_TOKEN", "SUPABASE_PROJECT_ID"],
+      "command": "supabase functions deploy click-backend --project-ref \"$SUPABASE_PROJECT_ID\"",
+      "target": "SUPABASE_PROJECT_ID secret (explicit ref)",
+      "latest_main_run": "37099077522 failure (no token)"
+    },
+    {
+      "file": ".github/workflows/supabase-migrations.yml",
+      "triggers": ["push:main (supabase/migrations/**)", "workflow_dispatch"],
+      "secrets": ["SUPABASE_ACCESS_TOKEN", "SUPABASE_DB_PASSWORD", "SUPABASE_PROJECT_ID"],
+      "command": "supabase link --project-ref \"$SUPABASE_PROJECT_ID\"; supabase migration list; supabase db push --yes",
+      "target": "SUPABASE_PROJECT_ID secret (explicit ref); applies all pending migrations without approval",
+      "latest_main_run": "37098808143 failure (no token), from the 9c365bf push"
+    }
+  ],
+  "native_supabase_integration": {
+    "observed": "Supabase Preview check on commit d539355 succeeded",
+    "linked_project": "eyevmykfavooeiklzebe"
+  },
+  "migrations": {
+    "count_on_main": 45,
+    "destructive_findings": [
+      {
+        "file": "20260924000000_clear_test_accounts.sql",
+        "severity": "critical",
+        "statement": "delete from users where user_id not in ('U1A8B0A6D8810','U485B9DDDA04E')",
+        "effect": "cascades to sessions, attempts, test_runs, learn_progress, practice_progress, practice_pairings, student_section_assignments, staff_messages",
+        "risk": "if pending on OLD (354 users, 352 approved students at last read), deletes students and their progress"
+      },
+      {
+        "file": "20260916120000_remove_experiments.sql",
+        "severity": "high",
+        "statement": "delete from practice_mistakes / practice_tests / practice_progress / practice_bank for experiment rows",
+        "effect": "deletes student practice_progress rows for those items"
+      },
+      {
+        "file": "20260907090000_remove_stage0_practice_challenges.sql",
+        "severity": "high",
+        "statement": "delete from practice_bank",
+        "effect": "cascades to practice_progress and practice_tests"
+      },
+      {
+        "file": "20260919130000_match_following_to_codefill.sql",
+        "severity": "medium",
+        "statement": "delete from options where question_id in ('Q000175','Q000242')"
+      },
+      {
+        "files": ["20260928000000", "20260928030000", "20260928050000", "20260928070000", "20260929020000", "20260930010000", "20261001010000", "20261001020000"],
+        "severity": "medium",
+        "statement": "delete from prerequisites (self-lock rules and chapter order rules)",
+        "effect": "changes which students can open which stages or chapters"
+      }
+    ],
+    "ddl_findings": [
+      {"file": "20260101000000_baseline_schema.sql", "note": "create table without IF NOT EXISTS; fails on an existing database unless recorded in history"},
+      {"files": ["20260914120000_staff_monitoring.sql", "20260920100000_staff_messages.sql", "20261001030000_activity_attempts.sql"], "note": "enable row level security without policies; safe only if no client reads these tables directly (unverified)"}
+    ],
+    "drop_statements_found": false
+  },
+  "blockers": [
+    "B1: 20260924000000_clear_test_accounts.sql must be resolved before any SUPABASE_PROJECT_ID = OLD secret",
+    "B2: OLD migration history unknown; read with supabase migration list (read-only) before deciding",
+    "B3: no production target decision for Edge Functions and migrations",
+    "B4: Phase 11A Cloudflare test deploy denied by the auto-mode classifier; not done"
+  ],
+  "secret_values_recorded": false
+}
