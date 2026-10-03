@@ -3018,10 +3018,7 @@ async function checkTestAnswer(){
   $("testHeartsText").textContent=testState.hearts;
   $("testPendingText").textContent=testState.pending;
 
- if(correct){
-  ClickExperience.solve(testState,qid);
-  ClickExperience.advance(true);
-}
+  if(correct){const firstSolve=ClickExperience.solve(testState,qid);if(firstSolve)ClickExperience.advance(true);}
   else if(attemptNo>=3){ClickExperience.defer(testState);}
   persistMastery();
   if(!review)queueTestAttempt(q,answer);
