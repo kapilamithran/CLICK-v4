@@ -930,7 +930,7 @@ pre,.test-v11-code,.learn-page-body pre{
 pre,.test-code,.test-v11-code,.test-code-fill-editor,.test-code-fill-box,.pair-code,.learn-page-body pre,.test-v11-token,.test-v11-selected,.learn-page-body code{font-variant-ligatures:none}
 </style>
 <style>
-/* Practice question list/detail styling (Practice tab; shared by Stage 0-5 practice questions) */
+/* Practice question list/detail styling (Practice tab; shared by the S0-S9 Practice questions) */
 .exp-section{margin-top:28px}
 .exp-list{display:grid;gap:12px}
 .exp-week-eyebrow{font-size:12px;font-weight:900;color:var(--purple);letter-spacing:.04em}
@@ -2186,6 +2186,8 @@ function mdBlock(text){return mdInline(text).replace(/\n/g,'<br>')}
 function diffLabel(d){return d.charAt(0).toUpperCase()+d.slice(1)}
 let stagePracticeOpen=new Set(),stagePracticeQuestionId=null;
 function stagePracticeQuestions(){return (app.practice||[]).filter(x=>x.stage_id)}
+// Practice labels use the Practice S-number from the server (S6, S7...), never the curriculum stage_no.
+function practiceStageLabelOf(q){return q&&q.practice_stage_label?q.practice_stage_label:'Practice'}
 function stagePracticeById(pid){return stagePracticeQuestions().find(x=>String(x.practice_id||x.id)===String(pid))}
 function openStagePracticeQuestionInVSCode(q){
   if(practiceConnection&&practiceConnection.connected){
@@ -2222,7 +2224,7 @@ function renderStagePracticeQuestionView(root,q){
   const ioGrid=(q.input_format||q.output_format)?`<div class="exp-qsection exp-io-grid">${q.input_format?`<div><h4>Input Format</h4><p>${mdBlock(q.input_format)}</p></div>`:'<div></div>'}${q.output_format?`<div><h4>Output Format</h4><p>${mdBlock(q.output_format)}</p></div>`:'<div></div>'}</div>`:'';
   const sampleGrid=practiceSampleHTML(q);
   const badges=[q.difficulty?`<span class="exp-badge ${esc(q.difficulty)}">${diffLabel(q.difficulty)}</span>`:'',q.marks!=null?`<span class="exp-badge">${q.marks} marks</span>`:'',q.time_limit_seconds?`<span class="exp-badge">${q.time_limit_seconds}s time limit</span>`:'',q.memory_limit_mb?`<span class="exp-badge">${q.memory_limit_mb} MB memory</span>`:''].join('');
-  root.innerHTML=`<div class="exp-breadcrumb"><a data-back-to="stages">Practice</a> / <a data-back-to="stage" data-stage="${esc(q.stage_id)}">Stage ${stage?.stage_no??''}: ${esc(stage?.title||'')}</a> / ${esc(q.title)}</div><div class="card exp-question-detail"><div class="exp-week-eyebrow">STAGE ${stage?.stage_no??''} · ${esc(stage?.title||'')}</div><h2>${complete?'✓ ':''}${esc(q.title)}</h2><div class="exp-badge-row">${badges}</div><div class="exp-qsection"><h4>Question</h4><p>${mdBlock(q.problem_statement)}</p></div>${ioGrid}${q.constraints?`<div class="exp-qsection"><h4>Constraints</h4><p>${mdBlock(q.constraints)}</p></div>`:''}${sampleGrid}<div class="exp-qsection"><h4>Starter code</h4><pre class="exp-pre">${esc(q.starter_code)}</pre></div><div class="exp-actions"><button class="btn" type="button" data-open-vscode="1">${complete?'Review in VS Code':'Open in VS Code'}</button><button class="btn ghost" type="button" data-back-to="stage" data-stage="${esc(q.stage_id)}">Back to Stage ${stage?.stage_no??''}</button></div><p class="meta" style="margin-top:10px">VS Code opens with a workspace folder Programming-C/${esc(q.workspace_folder||'')}/ containing solution.c, the question panel, and Run / Submit buttons in the CLICK Practice extension.</p></div>`;
+  root.innerHTML=`<div class="exp-breadcrumb"><a data-back-to="stages">Practice</a> / <a data-back-to="stage" data-stage="${esc(q.stage_id)}">${esc(practiceStageLabelOf(q))}: ${esc(stage?.title||'')}</a> / ${esc(q.title)}</div><div class="card exp-question-detail"><div class="exp-week-eyebrow">${esc(practiceStageLabelOf(q))} · ${esc(stage?.title||'')}</div><h2>${complete?'✓ ':''}${esc(q.title)}</h2><div class="exp-badge-row">${badges}</div><div class="exp-qsection"><h4>Question</h4><p>${mdBlock(q.problem_statement)}</p></div>${ioGrid}${q.constraints?`<div class="exp-qsection"><h4>Constraints</h4><p>${mdBlock(q.constraints)}</p></div>`:''}${sampleGrid}<div class="exp-qsection"><h4>Starter code</h4><pre class="exp-pre">${esc(q.starter_code)}</pre></div><div class="exp-actions"><button class="btn" type="button" data-open-vscode="1">${complete?'Review in VS Code':'Open in VS Code'}</button><button class="btn ghost" type="button" data-back-to="stage" data-stage="${esc(q.stage_id)}">Back to Stage ${stage?.stage_no??''}</button></div><p class="meta" style="margin-top:10px">VS Code opens with a workspace folder Programming-C/${esc(q.workspace_folder||'')}/ containing solution.c, the question panel, and Run / Submit buttons in the CLICK Practice extension.</p></div>`;
   root.querySelectorAll('[data-back-to]').forEach(el=>el.onclick=()=>{
     stagePracticeQuestionId=null;
     if(el.dataset.backTo==='stage')stagePracticeOpen.add(el.dataset.stage);
@@ -2237,11 +2239,11 @@ function renderStagePractice(){
   if(!all.length){root.innerHTML='';return}
   const done=practiceDoneSet();
   const groups=app.stages.filter(s=>all.some(q=>String(q.stage_id)===String(s.stage_id))).sort((a,b)=>Number(a.stage_no||0)-Number(b.stage_no||0));
-  root.innerHTML=`<div class="section-title"><div><h2>Practice</h2><div class="meta">Real C coding questions from the Stage 0–5 curriculum, by stage.</div></div></div><div class="exp-list">${groups.map(s=>{
+  root.innerHTML=`<div class="section-title"><div><h2>Practice</h2><div class="meta">Real C coding questions, grouped by Practice S0–S9.</div></div></div><div class="exp-list">${groups.map(s=>{
     const rows=all.filter(q=>String(q.stage_id)===String(s.stage_id)).sort((a,b)=>Number(a.order||0)-Number(b.order||0));
     const doneCount=rows.filter(r=>done.has(String(r.practice_id||r.id))).length;
     const isOpen=stagePracticeOpen.has(String(s.stage_id));
-    return `<div class="card practice-stage-group"><div class="practice-setup-head" role="button" tabindex="0" data-stage-toggle="${esc(s.stage_id)}" aria-expanded="${isOpen}"><div><div class="exp-week-eyebrow">STAGE ${s.stage_no}</div><h3>${esc(s.title)} <span class="setup-chevron">${isOpen?'▴':'▾'}</span></h3></div><div class="exp-badge-row"><span class="exp-badge">${rows.length} question${rows.length===1?'':'s'}</span><span class="exp-badge">${doneCount}/${rows.length} complete</span></div></div><div class="${isOpen?'':'hidden'}" data-stage-body="${esc(s.stage_id)}">${rows.map(r=>{
+    return `<div class="card practice-stage-group"><div class="practice-setup-head" role="button" tabindex="0" data-stage-toggle="${esc(s.stage_id)}" aria-expanded="${isOpen}"><div><div class="exp-week-eyebrow">${esc(practiceStageLabelOf(rows[0]))}</div><h3>${esc(s.title)}<span class="setup-chevron">${isOpen?'▴':'▾'}</span></h3></div><div class="exp-badge-row"><span class="exp-badge">${rows.length} question${rows.length===1?'':'s'}</span><span class="exp-badge">${doneCount}/${rows.length} complete</span></div></div><div class="${isOpen?'':'hidden'}" data-stage-body="${esc(s.stage_id)}">${rows.map(r=>{
       const pid=String(r.practice_id||r.id),complete=done.has(pid);
       return `<div class="exp-question-card" data-q="${esc(pid)}"><h3 style="margin:0">${complete?'✓ ':''}${esc(r.title)}</h3><p>${esc((r.problem_statement||'').split('\n')[0])}</p><div class="exp-question-foot"><span>${r.difficulty?diffLabel(r.difficulty):''}</span><span>Open question →</span></div></div>`
     }).join('')}</div></div>`
@@ -2300,7 +2302,7 @@ function renderPracticeProgress(){
     const doneCount=rows.filter(r=>done.has(String(r.practice_id||r.id))).length;
     const pct=rows.length?Math.round(doneCount/rows.length*100):0;
     const isOpen=profilePracticeOpen.has(String(s.stage_id));
-    return `<div class="card" style="margin-bottom:12px"><div class="practice-progress-head" role="button" tabindex="0" data-progress-toggle="${esc(s.stage_id)}" aria-expanded="${isOpen}" style="cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><b>Stage ${s.stage_no}: ${esc(s.title)} <span class="setup-chevron">${isOpen?'▴':'▾'}</span></b><span class="meta">${doneCount}/${rows.length} · ${pct}%</span></div><div class="bar"><div class="fill" style="width:${pct}%"></div></div></div><div class="${isOpen?'':'hidden'}" data-progress-body="${esc(s.stage_id)}" style="margin-top:14px;display:flex;flex-direction:column;gap:10px">${rows.map(r=>{
+    return `<div class="card" style="margin-bottom:12px"><div class="practice-progress-head" role="button" tabindex="0" data-progress-toggle="${esc(s.stage_id)}" aria-expanded="${isOpen}" style="cursor:pointer"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><b>${esc(practiceStageLabelOf(rows[0]))}: ${esc(s.title)} <span class="setup-chevron">${isOpen?'▴':'▾'}</span></b><span class="meta">${doneCount}/${rows.length} · ${pct}%</span></div><div class="bar"><div class="fill" style="width:${pct}%"></div></div></div><div class="${isOpen?'':'hidden'}" data-progress-body="${esc(s.stage_id)}" style="margin-top:14px;display:flex;flex-direction:column;gap:10px">${rows.map(r=>{
       const rDone=done.has(String(r.practice_id||r.id));
       return `<div><div style="display:flex;justify-content:space-between;gap:8px;font-size:13px"><span>${rDone?'✅':'⬜'} ${esc(r.title)}</span><span class="meta">${rDone?'100%':'0%'}</span></div><div class="bar" style="height:7px;margin:5px 0 0"><div class="fill" style="width:${rDone?100:0}%"></div></div></div>`;
     }).join('')}</div></div>`;
