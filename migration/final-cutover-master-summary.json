@@ -1,0 +1,49 @@
+{
+  "phase": "final-master-cutover",
+  "date": "2026-10-03",
+  "final_status": "NOT READY",
+  "stages": {
+    "A_state_audit": "completed",
+    "B_old_read_only_audit": "completed",
+    "C_migration_strategy": "completed (recommendation; owner to confirm)",
+    "D_11_chapter_conflict": "premise corrected: no conflict; Phase 11D blocker withdrawn",
+    "E_new_curriculum_validation": "completed (read-only)",
+    "F_cloudflare_test_deploy": "BLOCKED: wrangler deploy denied by auto-mode classifier; not retried",
+    "G_browser_s0_s9": "NOT RUN (depends on F)",
+    "H_vscode_extension": "completed locally: compile, 14/14 tests, local VSIX in scratch; default backendUrl = OLD",
+    "I_student_reconciliation": "FAILED: current OLD counts differ from plan; protected accounts both present",
+    "J_student_dry_run": "NOT GENERATED (stopped at I)",
+    "K_student_execution": "NOT EXECUTED (gate 1 not passed)",
+    "L_post_migration_validation": "NOT APPLICABLE",
+    "M_production_edge_function": "NOT DEPLOYED (NEW click-backend v3 ACTIVE already)",
+    "N_production_cloudflare": "NOT DEPLOYED (cutover gate not passed)",
+    "O_production_browser": "NOT RUN",
+    "H_github_production_environment": "NOT CONFIGURED: cannot be established from this tooling; manual steps documented"
+  },
+  "old": {"ref": "jnxevalckgitxuunjcvv", "role": "production (unchanged)", "migrations_recorded": 26, "pending_local": 19, "clear_test_accounts_recorded": true},
+  "new": {"ref": "eyevmykfavooeiklzebe", "stages": 13, "chapters": 98, "learn_content": 98, "practice_questions": 70, "practice_tests": 402, "hidden_tests": 332, "public_tests": 70, "practice_prerequisites": 0, "stg000_present": false, "users": 1, "migrations_recorded": 45},
+  "student_reconciliation": {
+    "result": "FAILED",
+    "old_current": {"users": 354, "protected_U1A8B0A6D8810": 1, "protected_U485B9DDDA04E": 1, "test_runs": 954, "attempts": 5080, "learn_progress": 539, "learn_progress_stg000": 60, "test_runs_stg000": 92, "practice_progress": 5, "practice_pairings": 32, "sessions": 754, "student_section_assignments": 352, "staff_messages": 4, "users_missing_hash_or_salt": 0},
+    "plan_values": {"users": 353, "test_runs": 894, "attempts": 4967, "learn_progress": 501, "learn_progress_stg000": 30, "test_runs_stg000": 52, "protected_present": 1},
+    "new_collision": "NEW has 1 existing user (test account); handling not documented"
+  },
+  "learn_content_corrections": {"total": 17, "clearly_corrected_on_new": 14, "ambiguous_on_new": 2, "substring_artifact": 1, "old_guard_passes": true},
+  "question_limits": {"CH0086": {"old": null, "new": 6}, "CH0103": {"old": null, "new": 6}, "CH0104": {"old": null, "new": 7}, "CH0105": {"old": null, "new": 7}, "CH0108": {"old": null, "new": 6}, "CH0119": {"old": "absent", "new": 6}},
+  "stage_6_to_10_chapter_comparison": {"old": 53, "identical_except_question_limit": 48, "differences": "question_limit only (5)"},
+  "blockers": [
+    "Cloudflare test deploy requires explicit permission (classifier denial)",
+    "OLD live counts differ from plan; protected-account state differs",
+    "NEW test-account collision handling not documented",
+    "GitHub production environment protection not establishable from this tooling",
+    "Production target still OLD (frontend, extension default, config.toml)",
+    "Two learn-content corrections not applied on NEW (L_CH0031 p2, L_CH0035 p4)"
+  ],
+  "production_changed": false,
+  "old_modified": false,
+  "student_data_modified": false,
+  "migrations_applied_or_repaired": false,
+  "secrets_added": false,
+  "deployments_run": false,
+  "secret_values_recorded": false
+}

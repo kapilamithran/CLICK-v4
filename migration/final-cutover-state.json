@@ -1,0 +1,59 @@
+{
+  "captured": "2026-10-03",
+  "stage": "A (baseline, before any cutover action)",
+  "repository": "Andryandurai/Click-NewTrial",
+  "production_branch": "main",
+  "main_head": "cff2af8",
+  "local_working_branch": "new-supabase-test (not switched)",
+  "local_untracked": ["test-click.html (not committed)"],
+  "production_frontend": {
+    "backend_host_on_main": "jnxevalckgitxuunjcvv (OLD)",
+    "new_ref_present_on_main": false
+  },
+  "cloudflare": {
+    "production_worker_name_on_main": "puc-v2",
+    "test_worker": "click-test",
+    "test_worker_exists": true
+  },
+  "supabase_config_toml_project_id": "jnxevalckgitxuunjcvv (OLD)",
+  "github_workflows_on_main": [
+    "cloudflare-frontend.yml (credential-gated, skips without CLOUDFLARE_* secrets)",
+    "supabase-functions.yml (credential-gated, skips without SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_ID)",
+    "supabase-migrations.yml (credential-gated, skips without SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD and SUPABASE_PROJECT_ID)"
+  ],
+  "repo_secrets": [],
+  "github_environments": [],
+  "old": {
+    "ref": "jnxevalckgitxuunjcvv",
+    "role": "current production; read-only in this workflow",
+    "migrations_recorded": 26,
+    "migrations_pending_local": 19,
+    "clear_test_accounts_recorded": true
+  },
+  "new": {
+    "ref": "eyevmykfavooeiklzebe",
+    "role": "intended authoritative production",
+    "migrations_recorded": 45,
+    "stages": 13,
+    "chapters": 98,
+    "learn_content": 98,
+    "practice_questions": 70,
+    "practice_tests": 402,
+    "hidden_tests": 332,
+    "public_tests": 70,
+    "practice_prerequisites": 0,
+    "stg000_present": false,
+    "users": 1,
+    "clear_test_accounts_recorded": true
+  },
+  "backend": {
+    "new_click_backend_version": 3,
+    "new_click_backend_status": "ACTIVE",
+    "old_click_backend": "not modified by this workflow"
+  },
+  "vscode_extension": {
+    "version": "0.1.3",
+    "backend_url_default": "jnxevalckgitxuunjcvv (OLD)"
+  },
+  "secrets_recorded": false
+}

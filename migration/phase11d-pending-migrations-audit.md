@@ -1,5 +1,7 @@
 # Phase 11D — Read-only audit of the 19 pending OLD migrations
 
+> **Correction (final cutover stage, 2026-10-03).** The chapter-conflict finding below is wrong. `20260927000000_content_stage6_arrays.sql` contains a single chapter insert, `CH0116`, which is absent on OLD. It does not insert `CH0062`–`CH0072`. Those 11 chapter rows are created by `20260917120000_stage6to10_placeholders.sql` (recorded on OLD), and the arrays file only references them. The file therefore does not conflict with OLD on chapter IDs. The "11 existing rows" blocker, the "12 chapter rows" description of file 3, and blocker 1 in the Remaining blockers section are superseded. The rest of this report stands, except that the learn-content corrections are not all present on NEW (see `final-cutover-master-report.md`, section D).
+
 Date: 2026-10-03. Repository: `Andryandurai/Click-NewTrial`, `main` at `6a92374` before this report.
 
 Nothing was applied, repaired, deleted, renamed, or marked. No secrets were added. No deployment ran. No student data was read beyond aggregate counts. OLD (`jnxevalckgitxuunjcvv`) and NEW (`eyevmykfavooeiklzebe`) were only read with guarded `SELECT` statements.

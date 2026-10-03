@@ -15,7 +15,7 @@
   "pending_files": [
     {"n": 1, "file": "20260910130000_add_missing_legacy_glossary_terms.sql", "class": "historical/curriculum support", "ops": ["insert glossary (on conflict do nothing)"], "old_conflict": "TERM024 already present", "new": "A"},
     {"n": 2, "file": "20260926150000_learn_content_corrections.sql", "class": "curriculum text correction", "ops": ["17 exact-text replaces in learn_content for 7 chapters"], "old_guard_check": "all 17 match exactly once", "new": "D"},
-    {"n": 3, "file": "20260927000000_content_stage6_arrays.sql", "class": "curriculum content", "ops": ["insert 12 chapters", "insert content rows"], "old_conflict": "11 chapter rows exist (CH0062-CH0072); no on conflict", "blocked": true, "new": "A"},
+    {"n": 3, "file": "20260927000000_content_stage6_arrays.sql", "class": "curriculum content", "ops": ["insert 1 chapter (CH0116)", "insert content rows"], "old_conflict": "none (correction: earlier 11-row conflict claim was wrong; CH0062-CH0072 come from 20260917120000)", "blocked": false, "new": "A"},
     {"n": 4, "file": "20260928000000_unlock_stage6_arrays.sql", "class": "prerequisite cleanup", "ops": ["delete STG007 self-lock"], "old_row_present": true, "new": "A"},
     {"n": 5, "file": "20260928020000_content_stage8_searching_sorting.sql", "class": "curriculum content", "ops": ["insert content rows", "update chapters question_limit CH0086"], "old_conflict": "none on inserts", "new": "A"},
     {"n": 6, "file": "20260928030000_unlock_stage8_searching_sorting.sql", "class": "prerequisite cleanup", "ops": ["delete STG009 self-lock"], "old_row_present": true, "new": "A"},
@@ -38,7 +38,7 @@
   "drop_statements_in_pending": 0,
   "function_or_trigger_creation_in_pending": 0,
   "blockers": [
-    "file 3 chapter insert conflicts with 11 existing OLD chapters",
+    "CORRECTED: file 3 has no chapter conflict (single insert CH0116, absent on OLD)",
     "OLD stage 6-10 chapters are shells with no content",
     "structure dependency (file 11) for files 12-18",
     "STG000 on OLD (30 chapters) not in NEW; not explained by pending set",
