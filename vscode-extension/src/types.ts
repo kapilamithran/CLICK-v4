@@ -17,8 +17,6 @@ export interface PracticeQuestion {
   stage_id: string;
   stage_title?: string;
   stage_no?: number | null;
-  // Practice S-number from practice_id ("S6" for S6-C1-Q1). Use this for labels; stage_no is the curriculum number.
-  practice_stage_label?: string | null;
   title: string;
   objective: string;
   problem_statement: string;

@@ -5,8 +5,12 @@ export class PracticeTreeItem extends vscode.TreeItem {
   constructor(public readonly question: PracticeQuestion, isCurrent: boolean) {
     super(question.title, vscode.TreeItemCollapsibleState.None);
 
-    // Practice S-number (S0-S9) from the server, never the curriculum stage_no.
-    const stageLabel = question.practice_stage_label || "";
+    const stageLabel =
+      typeof question.stage_no === "number"
+        ? `Stage ${question.stage_no}`
+        : question.stage_id
+        ? `Stage ${question.stage_id}`
+        : "";
     const statusLabel = question.completed ? "Completed" : !question.available ? "Locked" : isCurrent ? "In progress" : "Available";
     this.description = stageLabel ? `${stageLabel} · ${statusLabel}` : statusLabel;
 

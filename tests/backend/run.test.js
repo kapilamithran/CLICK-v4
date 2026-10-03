@@ -25,12 +25,3 @@ test("backend: unified chapter run (XP once, hearts, unlocking, legacy students,
   assert.strictEqual(r.status, 0, out.replace(/\x1b\[[0-9;]*m/g, "").slice(-3000));
   assert.match(out.replace(/\x1b\[[0-9;]*m/g, ""), /ok \| \d+ passed \| 0 failed/);
 });
-
-test("backend: Practice S0-S9 labels come from the Practice S-number (practice_id), not the curriculum stage_no", { timeout: 300000 }, (t) => {
-  const deno = findDeno();
-  if (!deno) return t.skip("Deno is not installed (npm i deno, or set DENO=<path>)");
-  const r = cp.spawnSync(deno, ["test", "--allow-read", "--allow-env", "--import-map=tests/backend/import_map.json", "tests/backend/practice-labels.test.ts"], { cwd: ROOT, encoding: "utf8", shell: process.platform === "win32" });
-  const out = String(r.stdout || "") + String(r.stderr || "");
-  assert.strictEqual(r.status, 0, out.replace(/\x1b\[[0-9;]*m/g, "").slice(-3000));
-  assert.match(out.replace(/\x1b\[[0-9;]*m/g, ""), /ok \| \d+ passed \| 0 failed/);
-});

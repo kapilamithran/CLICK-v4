@@ -62,9 +62,8 @@ function safeFileName(s: string): string {
 }
 
 /**
- * Questions with a `workspace_folder` (the S0-S9 Practice questions, whose
- * folders are named Stage-<S-number>/...) get the richer
- * Programming-C/<workspace_folder>/ folder structure the web
+ * Questions with a `workspace_folder` (the Stage 0-5 curriculum questions)
+ * get the richer Programming-C/<workspace_folder>/ folder structure the web
  * question page describes, instead of the flat click-practice/ naming used
  * for regular Practice Bank challenges that don't set one.
  */
@@ -191,7 +190,7 @@ async function openChallenge(context: vscode.ExtensionContext, q: PracticeQuesti
     fs.writeFileSync(file, starterFileContents(q), "utf8");
   }
 
-  // Every CLICK coding question - Practice Bank (S0-S9) - opens
+  // Every CLICK coding question - Practice Bank and Stage 0-5 - opens
   // through this one function, so this is the single place that needs to
   // turn anti-assistance mode on to cover all of them.
   await activateGuard(context);
@@ -285,7 +284,7 @@ async function syncQuestions(
       return;
     }
 
-    // Practice S0-S9 coding questions are deliberately excluded from
+    // Stage 0-5 curriculum coding questions are deliberately excluded from
     // the auto "next" pick - they're a separately-browsed collection (no
     // fixed sequence), opened by explicit selection (web deep-link or the
     // tree view) only, never surprising a student who just wants their next
